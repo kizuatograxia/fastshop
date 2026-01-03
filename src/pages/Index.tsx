@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import Hero from "@/components/Hero";
 import ProductGrid from "@/components/ProductGrid";
+import { api } from "@/lib/api";
 
 interface Product {
   id: number;
@@ -69,37 +70,68 @@ const Index = () => {
   const [cartCount, setCartCount] = useState(0);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const user = JSON.parse(localStorage.getItem("user") || "null");
 
   useEffect(() => {
-    // Simulate loading products
-    const timer = setTimeout(() => {
+    // Simulate loading products and fetch cart count
+    const loadData = async () => {
+      // Mock loading products
+      await new Promise(resolve => setTimeout(resolve, 500));
       setProducts(mockProducts);
       setIsLoading(false);
-    }, 500);
 
-    return () => clearTimeout(timer);
-  }, []);
+      // Fetch cart if user is logged in
+      if (user) {
+        try {
+          const cart = await api.getCart(user.id);
+          const count = cart.reduce((acc: number, item: any) => acc + item.quantidade, 0);
+          setCartCount(count);
+        } catch (error) {
+          console.error("Failed to load cart count", error);
+        }
+      }
+    };
 
-  const handleAddToCart = (product: Product) => {
-    setCartCount((prev) => prev + 1);
-    toast.success(`${product.nome} adicionado ao carrinho!`, {
-      description: "Acesse o carrinho para finalizar sua compra.",
-      duration: 3000,
-    });
+    loadData();
+  }, [user]); // user dependency in case they login elsewhere and return (though simpler to just reload)
+
+  const handleAddToCart = async (product: Product) => {
+    if (!user) {
+      toast.error("Você precisa estar logado para adicionar ao carrinho", {
+        description: "Por favor, faça login ou crie uma conta.",
+        action: {
+          label: "Login",
+          onClick: () => window.location.href = "/login",
+        }
+      });
+      return;
+    }
+
+    try {
+      const updatedCart = await api.addToCart(user.id, product);
+      const newCount = updatedCart.reduce((acc: number, item: any) => acc + item.quantidade, 0);
+      setCartCount(newCount);
+      toast.success(`${product.nome} adicionado ao carrinho!`, {
+        description: "Acesse o carrinho para finalizar sua compra.",
+        duration: 3000,
+      });
+    } catch (error) {
+      toast.error("Erro ao adicionar ao carrinho");
+    }
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      
-      <Header 
-        onMenuClick={() => setSidebarOpen(true)} 
-        cartCount={cartCount} 
+
+      <Header
+        onMenuClick={() => setSidebarOpen(true)}
+        cartCount={cartCount}
       />
-      
+
       <main>
         <Hero />
-        
+
         {isLoading ? (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
