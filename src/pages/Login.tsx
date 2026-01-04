@@ -60,8 +60,8 @@ const Login = () => {
 
       <div className="flex-1 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold">Entrar</CardTitle>
+          <CardHeader className="space-y-1 text-center pb-6">
+            <CardTitle className="text-3xl font-bold">Entrar</CardTitle>
             <CardDescription>
               Digite seu email e senha para acessar sua conta
             </CardDescription>
@@ -74,6 +74,7 @@ const Login = () => {
                   id="email"
                   type="email"
                   placeholder="seu@email.com"
+                  className="text-green-500 text-center"
                   {...register("email")}
                 />
                 {errors.email && (
@@ -115,9 +116,6 @@ const Login = () => {
               </Link>
             </div>
 
-            <div className="text-center text-xs text-muted-foreground bg-muted p-2 rounded">
-              <p>Dica: Use `POST /api/register` para criar usuários.</p>
-            </div>
           </CardFooter>
         </Card>
       </div>

@@ -1,92 +1,82 @@
-import { ShoppingCart, Heart } from "lucide-react";
-import { Button } from "./ui/button";
-import { useState } from "react";
-
-interface Product {
-  id: number;
-  nome: string;
-  preco: number;
-  imagem: string;
-}
+import React from "react";
+import { ShoppingCart, Tag } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Product } from "@/types/product";
+import { useCart } from "@/contexts/CartContext";
+import { toast } from "sonner";
 
 interface ProductCardProps {
   product: Product;
-  onAddToCart: (product: Product) => void;
+  index: number;
 }
 
-const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
-  const [isLiked, setIsLiked] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
+const ProductCard: React.FC<ProductCardProps> = ({ product, index }) => {
+  const { addToCart } = useCart();
 
-  const precoAntigo = (product.preco * 1.15).toFixed(2);
-  const parcela = (product.preco / 12).toFixed(2);
-  const desconto = Math.round(((product.preco * 1.15 - product.preco) / (product.preco * 1.15)) * 100);
+  const handleAddToCart = () => {
+    addToCart(product);
+    toast.success(`${product.nome.substring(0, 30)}... adicionado ao carrinho!`, {
+      duration: 2000,
+    });
+  };
+
+  const parcela = (product.preco / product.parcelas).toFixed(2);
+  const desconto = Math.round(
+    ((product.precoAntigo - product.preco) / product.precoAntigo) * 100
+  );
 
   return (
-    <article className="group relative bg-card rounded-xl border border-border p-5 transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1 hover:border-primary/30">
+    <article
+      className="group relative bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 hover:shadow-elevated hover:border-primary/30 hover:-translate-y-1 animate-fade-in"
+      style={{ animationDelay: `${index * 0.1}s` }}
+    >
       {/* Discount Badge */}
-      <div className="absolute top-3 left-3 z-10">
-        <span className="bg-primary text-primary-foreground text-xs font-bold px-2.5 py-1 rounded-full">
+      {desconto > 0 && (
+        <div className="absolute top-4 left-4 z-10 flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded-lg text-xs font-bold">
+          <Tag className="h-3 w-3" />
           -{desconto}%
-        </span>
-      </div>
+        </div>
+      )}
 
-      {/* Wishlist Button */}
-      <button
-        onClick={() => setIsLiked(!isLiked)}
-        className={`absolute top-3 right-3 z-10 h-9 w-9 flex items-center justify-center rounded-full transition-all duration-300 ${
-          isLiked
-            ? "bg-destructive/10 text-destructive"
-            : "bg-card/80 backdrop-blur-sm text-muted-foreground hover:text-primary hover:bg-primary/10"
-        }`}
-        aria-label={isLiked ? "Remover dos favoritos" : "Adicionar aos favoritos"}
-      >
-        <Heart className={`h-4 w-4 ${isLiked ? "fill-current" : ""}`} />
-      </button>
-
-      {/* Product Image */}
-      <div className="relative aspect-square mb-4 rounded-lg overflow-hidden bg-muted">
-        {!imageLoaded && (
-          <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted/50 animate-pulse" />
-        )}
+      {/* Image Container */}
+      <div className="relative aspect-square overflow-hidden bg-secondary/30">
         <img
           src={product.imagem}
           alt={product.nome}
-          className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${
-            imageLoaded ? "opacity-100" : "opacity-0"
-          }`}
-          onLoad={() => setImageLoaded(true)}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           loading="lazy"
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
 
-      {/* Product Info */}
-      <div className="space-y-3">
-        <h3 className="font-medium text-foreground text-sm leading-snug line-clamp-2 h-10">
+      {/* Content */}
+      <div className="p-4 space-y-3">
+        <h3 className="font-medium text-sm text-foreground leading-tight line-clamp-2 h-10 group-hover:text-primary transition-colors">
           {product.nome}
         </h3>
 
-        {/* Pricing */}
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground line-through">
-            R$ {precoAntigo}
+            R$ {product.precoAntigo.toFixed(2).replace(".", ",")}
           </p>
-          <p className="font-display text-2xl font-bold text-primary">
-            R$ {product.preco.toFixed(2)}
+          <p className="text-2xl font-bold text-gradient">
+            R$ {product.preco.toFixed(2).replace(".", ",")}
           </p>
           <p className="text-xs text-muted-foreground">
-            à vista ou <span className="font-medium text-foreground">12x de R$ {parcela}</span>
+            à vista ou {product.parcelas}x de{" "}
+            <span className="text-foreground font-medium">
+              R$ {parcela.replace(".", ",")}
+            </span>
           </p>
         </div>
 
-        {/* Add to Cart Button */}
         <Button
           variant="cart"
-          size="lg"
-          onClick={() => onAddToCart(product)}
-          className="mt-4"
+          size="default"
+          className="w-full"
+          onClick={handleAddToCart}
         >
-          <ShoppingCart className="h-4 w-4 mr-2" />
+          <ShoppingCart className="h-4 w-4" />
           Adicionar
         </Button>
       </div>

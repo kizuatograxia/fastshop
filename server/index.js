@@ -3,10 +3,20 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 
 const app = express();
-const PORT = 3000;
+const PORT = 5050;
 
-app.use(cors());
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(bodyParser.json());
+
+// Logging middleware
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} ${req.method} ${req.url}`);
+    next();
+});
 
 // In-memory data store
 const users = [];

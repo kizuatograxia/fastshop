@@ -4,11 +4,12 @@ import { Link } from "react-router-dom";
 
 interface HeaderProps {
   onMenuClick: () => void;
-  cartCount: number;
+  onCartClick?: () => void; // Made optional to avoid breaking other usages optionally
+  cartCount?: number; // Optional as index might pass context driven count or logic
   hideSearch?: boolean;
 }
 
-const Header = ({ onMenuClick, cartCount, hideSearch = false }: HeaderProps) => {
+const Header = ({ onMenuClick, onCartClick, cartCount = 0, hideSearch = false }: HeaderProps) => {
   return (
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -41,7 +42,7 @@ const Header = ({ onMenuClick, cartCount, hideSearch = false }: HeaderProps) => 
                 <input
                   type="text"
                   placeholder="Buscar equipamento..."
-                  className="w-full h-11 pl-11 pr-4 bg-secondary/50 border border-border rounded-full text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+                  className="w-full h-11 pl-11 pr-4 bg-secondary/50 border border-border rounded-full text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all text-foreground"
                 />
               </div>
             </div>
@@ -53,7 +54,7 @@ const Header = ({ onMenuClick, cartCount, hideSearch = false }: HeaderProps) => 
           {/* Icons */}
           <div className="flex items-center gap-2 sm:gap-4">
             <Button
-              variant="icon"
+              variant="ghost"
               size="icon"
               className="hidden sm:flex"
               aria-label="Minha conta"
@@ -65,20 +66,18 @@ const Header = ({ onMenuClick, cartCount, hideSearch = false }: HeaderProps) => 
             </Button>
 
             <Button
-              variant="icon"
+              variant="ghost"
               size="icon"
               className="relative"
               aria-label="Carrinho"
-              asChild
+              onClick={onCartClick}
             >
-              <Link to="/cart">
-                <ShoppingCart className="h-5 w-5" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center bg-primary text-primary-foreground text-xs font-bold rounded-full animate-scale-in">
-                    {cartCount}
-                  </span>
-                )}
-              </Link>
+              <ShoppingCart className="h-5 w-5" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center bg-primary text-primary-foreground text-xs font-bold rounded-full animate-scale-in">
+                  {cartCount}
+                </span>
+              )}
             </Button>
 
             <span className="hidden sm:inline-block text-sm font-medium text-foreground">
@@ -96,7 +95,7 @@ const Header = ({ onMenuClick, cartCount, hideSearch = false }: HeaderProps) => 
             <input
               type="text"
               placeholder="Buscar equipamento..."
-              className="w-full h-10 pl-11 pr-4 bg-secondary/50 border border-border rounded-full text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+              className="w-full h-10 pl-11 pr-4 bg-secondary/50 border border-border rounded-full text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all text-foreground"
             />
           </div>
         </div>
