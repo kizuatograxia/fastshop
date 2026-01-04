@@ -6,7 +6,7 @@ interface CategoryNavProps {
     onCategoryChange: (category: string) => void;
 }
 
-import { categories } from '@/data/products';
+import { categories } from '@/data/raffles';
 
 const CategoryNav: React.FC<CategoryNavProps> = ({ activeCategory, onCategoryChange }) => {
     return (

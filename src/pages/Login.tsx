@@ -16,7 +16,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import { useState } from "react";
-import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -27,6 +27,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -40,12 +41,7 @@ const Login = () => {
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
     try {
-      const response = await api.login(data.email, data.password);
-
-      // Store user in local storage for simple session management
-      localStorage.setItem("user", JSON.stringify(response.user));
-
-      toast.success("Login realizado com sucesso!");
+      await login(data.email, data.password);
       navigate("/");
     } catch (error: any) {
       toast.error(error.message || "Erro ao realizar login");
@@ -56,7 +52,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header onMenuClick={() => { }} cartCount={0} hideSearch />
+      <Header onMenuClick={() => { }} onCartClick={() => { }} onWalletClick={() => { }} />
 
       <div className="flex-1 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -74,7 +70,7 @@ const Login = () => {
                   id="email"
                   type="email"
                   placeholder="seu@email.com"
-                  className="text-green-500 text-center"
+                  className="text-center"
                   {...register("email")}
                 />
                 {errors.email && (
@@ -84,12 +80,7 @@ const Login = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Senha</Label>
-                  <Link
-                    to="#"
-                    className="text-sm font-medium text-primary hover:underline"
-                  >
-                    Esqueceu a senha?
-                  </Link>
+                  {/* Removed forgot password for now */}
                 </div>
                 <Input
                   id="password"
@@ -110,7 +101,6 @@ const Login = () => {
           <CardFooter className="flex flex-col gap-4">
             <div className="text-center text-sm text-muted-foreground">
               Não tem uma conta?{" "}
-              {/* For now, register also goes here or we implement separate register flow later */}
               <Link to="/register" className="text-primary hover:underline font-medium">
                 Cadastre-se
               </Link>

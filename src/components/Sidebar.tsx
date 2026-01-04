@@ -1,7 +1,9 @@
 import React from "react";
-import { X, User, Package } from "lucide-react";
+import { X, User, Trophy, Ticket, HelpCircle, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { categories } from "@/data/products";
+import { categories } from "@/data/raffles";
+import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -16,8 +18,10 @@ const Sidebar: React.FC<SidebarProps> = ({
   activeCategory,
   onCategoryChange,
 }) => {
-  const handleCategoryClick = (categoryId: string) => {
-    onCategoryChange(categoryId);
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
     onClose();
   };
 
@@ -32,32 +36,40 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-72 bg-card border-r border-border z-[110] transition-transform duration-300 ease-out ${isOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed top-0 left-0 h-full w-full max-w-xs bg-card border-r border-border z-[110] transition-transform duration-300 ease-out ${isOpen ? "translate-x-0" : "-translate-x-full"
           }`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-4 bg-gradient-primary">
-            <span className="font-bold text-lg text-primary-foreground">
-              MENU 621
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🎰</span>
+              <span className="font-bold text-lg text-primary-foreground">
+                Mundo Pix
+              </span>
+            </div>
             <Button
               variant="ghost"
               size="icon"
+              className="text-primary-foreground hover:bg-white/20"
               onClick={onClose}
-              className="text-primary-foreground hover:bg-primary-foreground/20"
-              aria-label="Fechar menu"
             >
-              <X className="h-6 w-6" />
+              <X className="h-5 w-5" />
             </Button>
           </div>
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto py-4">
+            <p className="px-4 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Categorias
+            </p>
             {categories.map((category) => (
               <button
                 key={category.id}
-                onClick={() => handleCategoryClick(category.id)}
+                onClick={() => {
+                  onCategoryChange(category.id);
+                  onClose();
+                }}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all border-l-4 ${activeCategory === category.id
                   ? "bg-secondary border-primary text-primary"
                   : "border-transparent text-foreground hover:bg-secondary/50 hover:border-primary/50"
@@ -70,27 +82,56 @@ const Sidebar: React.FC<SidebarProps> = ({
 
             <div className="my-4 mx-4 border-t border-border" />
 
-            <button
-              onClick={() => {
-                const user = localStorage.getItem("user");
-                if (!user) {
-                  window.location.href = "/login";
-                } else {
-                  // Optional: Add feedback or navigation for logged in users
-                  // For now, we can show a simple message or navigation to a profile placeholder
-                  const userData = JSON.parse(user);
-                  alert(`Você já está conectado como ${userData.email}`);
-                }
-              }}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent"
-            >
-              <User className="h-5 w-5 text-muted-foreground" />
-              <span className="font-medium">Minha Conta</span>
-            </button>
+            <p className="px-4 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Minha Conta
+            </p>
+
+            {user ? (
+              <>
+                <div className="px-4 py-2 mb-2">
+                  <p className="text-sm font-medium text-foreground truncate">{user.email}</p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-destructive hover:bg-destructive/10 hover:border-l-4 hover:border-destructive transition-all border-l-4 border-transparent"
+                >
+                  <User className="h-5 w-5" />
+                  <span className="font-medium">Sair</span>
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                onClick={onClose}
+                className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent"
+              >
+                <User className="h-5 w-5 text-muted-foreground" />
+                <span className="font-medium">Entrar / Cadastrar</span>
+              </Link>
+            )}
+
+            {user && (
+              <>
+                <button className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent">
+                  <Gift className="h-5 w-5 text-muted-foreground" />
+                  <span className="font-medium">Meus NFTs</span>
+                </button>
+                <button className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent">
+                  <Ticket className="h-5 w-5 text-muted-foreground" />
+                  <span className="font-medium">Meus Sorteios</span>
+                </button>
+                <button className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent">
+                  <Trophy className="h-5 w-5 text-muted-foreground" />
+                  <span className="font-medium">Meus Prêmios</span>
+                </button>
+              </>
+            )}
+
+            <div className="my-4 mx-4 border-t border-border" />
 
             <button className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent">
-              <Package className="h-5 w-5 text-muted-foreground" />
-              <span className="font-medium">Meus Pedidos</span>
+              <HelpCircle className="h-5 w-5 text-muted-foreground" />
+              <span className="font-medium">Como Funciona</span>
             </button>
           </nav>
         </div>

@@ -20,7 +20,7 @@ app.use((req, res, next) => {
 
 // In-memory data store
 const users = [];
-const carts = {}; // userId -> [items]
+const wallets = {}; // userId -> [ownedNFTs]
 
 // Helper to find user
 const findUser = (email) => users.find(u => u.email === email);
@@ -41,7 +41,7 @@ app.post('/api/register', (req, res) => {
 
     const newUser = { id: Date.now(), email, password };
     users.push(newUser);
-    carts[newUser.id] = []; // Init cart
+    wallets[newUser.id] = []; // Init wallet
 
     console.log('User registered:', email);
     res.json({ message: 'Usuário criado com sucesso', user: { id: newUser.id, email: newUser.email } });
@@ -60,44 +60,51 @@ app.post('/api/login', (req, res) => {
     res.json({ message: 'Login realizado', user: { id: user.id, email: user.email } });
 });
 
-// Get Cart
-app.get('/api/cart', (req, res) => {
+// Get Wallet
+app.get('/api/wallet', (req, res) => {
     const userId = parseInt(req.query.userId);
     if (!userId) return res.status(400).json({ message: 'UserId required' });
 
-    const cart = carts[userId] || [];
-    res.json(cart);
+    const wallet = wallets[userId] || [];
+    res.json(wallet);
 });
 
-// Add to Cart
-app.post('/api/cart', (req, res) => {
-    const { userId, product } = req.body;
-    if (!userId || !product) return res.status(400).json({ message: 'UserId and product required' });
+// Add to Wallet (Buy NFT)
+app.post('/api/wallet', (req, res) => {
+    const { userId, nft } = req.body;
+    if (!userId || !nft) return res.status(400).json({ message: 'UserId and nft required' });
 
-    if (!carts[userId]) carts[userId] = [];
+    if (!wallets[userId]) wallets[userId] = [];
 
-    const existingItem = carts[userId].find(item => item.id === product.id);
+    const existingItem = wallets[userId].find(item => item.id === nft.id);
     if (existingItem) {
         existingItem.quantidade += 1;
     } else {
-        carts[userId].push({ ...product, quantidade: 1 });
+        wallets[userId].push({ ...nft, quantidade: 1 });
     }
 
-    res.json(carts[userId]);
+    res.json(wallets[userId]);
 });
 
-// Remove/Update Cart
-app.delete('/api/cart/:productId', (req, res) => {
-    const userId = parseInt(req.query.userId);
-    const productId = parseInt(req.params.productId);
+// Remove from Wallet (Use NFT for raffle or burn)
+app.post('/api/wallet/remove', (req, res) => {
+    const { userId, nftId, quantity } = req.body;
+    const qty = quantity || 1;
 
-    if (!userId) return res.status(400).json({ message: 'UserId required' });
+    if (!userId || !nftId) return res.status(400).json({ message: 'UserId and nftId required' });
 
-    if (carts[userId]) {
-        carts[userId] = carts[userId].filter(item => item.id !== productId);
+    if (!wallets[userId]) return res.json([]);
+
+    const existingItem = wallets[userId].find(item => item.id === nftId);
+    if (existingItem) {
+        if (existingItem.quantidade <= qty) {
+            wallets[userId] = wallets[userId].filter(item => item.id !== nftId);
+        } else {
+            existingItem.quantidade -= qty;
+        }
     }
 
-    res.json(carts[userId] || []);
+    res.json(wallets[userId]);
 });
 
 app.listen(PORT, () => {

@@ -16,7 +16,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import { useState } from "react";
-import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 const registerSchema = z.object({
     email: z.string().email("Email inválido"),
@@ -31,6 +31,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 
 const Register = () => {
     const navigate = useNavigate();
+    const { register: registerUser } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
 
     const {
@@ -44,12 +45,7 @@ const Register = () => {
     const onSubmit = async (data: RegisterForm) => {
         setIsLoading(true);
         try {
-            const response = await api.register(data.email, data.password);
-
-            // Store user in local storage to auto-login after register
-            localStorage.setItem("user", JSON.stringify(response.user));
-
-            toast.success("Conta criada com sucesso!");
+            await registerUser(data.email, data.password);
             navigate("/");
         } catch (error: any) {
             toast.error(error.message || "Erro ao criar conta");
@@ -60,7 +56,7 @@ const Register = () => {
 
     return (
         <div className="min-h-screen bg-background flex flex-col">
-            <Header onMenuClick={() => { }} cartCount={0} hideSearch />
+            <Header onMenuClick={() => { }} onCartClick={() => { }} onWalletClick={() => { }} />
 
             <div className="flex-1 flex items-center justify-center p-4">
                 <Card className="w-full max-w-md">

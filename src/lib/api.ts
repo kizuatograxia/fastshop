@@ -21,27 +21,29 @@ export const api = {
         return res.json();
     },
 
-    getCart: async (userId) => {
-        const res = await fetch(`${API_URL}/cart?userId=${userId}`);
-        if (!res.ok) throw new Error("Failed to fetch cart");
+    getWallet: async (userId: number) => {
+        const res = await fetch(`${API_URL}/wallet?userId=${userId}`);
+        if (!res.ok) throw new Error("Failed to fetch wallet");
         return res.json();
     },
 
-    addToCart: async (userId, product) => {
-        const res = await fetch(`${API_URL}/cart`, {
+    addToWallet: async (userId: number, nft: any) => {
+        const res = await fetch(`${API_URL}/wallet`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId, product }),
+            body: JSON.stringify({ userId, nft }),
         });
-        if (!res.ok) throw new Error("Failed to add to cart");
+        if (!res.ok) throw new Error("Failed to add to wallet");
         return res.json();
     },
 
-    removeFromCart: async (userId, productId) => {
-        const res = await fetch(`${API_URL}/cart/${productId}?userId=${userId}`, {
-            method: "DELETE",
+    removeFromWallet: async (userId: number, nftId: string, quantity: number = 1) => {
+        const res = await fetch(`${API_URL}/wallet/remove`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId, nftId, quantity }),
         });
-        if (!res.ok) throw new Error("Failed to remove from cart");
+        if (!res.ok) throw new Error("Failed to remove from wallet");
         return res.json();
     },
 };
