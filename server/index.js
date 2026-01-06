@@ -3,7 +3,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 
 const app = express();
-const PORT = 5050;
+const PORT = process.env.PORT || 5050;
 
 app.use(cors({
     origin: '*',

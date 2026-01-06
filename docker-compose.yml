@@ -16,7 +16,7 @@ services:
   server:
     build: ./server
     ports:
-      - "3000:3000"
+      - "5050:5050"
     environment:
       - DATABASE_URL=postgres://postgres:postgrespassword@db:5432/fastshop
     depends_on:

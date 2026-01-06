@@ -8,7 +8,7 @@ RUN npm install
 
 COPY . .
 
-EXPOSE 3000
+EXPOSE 5050
 
 # Wait for DB before starting could be handled by a script, 
 # but for simplicity we rely on restart policy or depends_on condition (if advanced)
