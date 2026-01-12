@@ -11,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -87,15 +88,19 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="icon" size="icon" aria-label="Menu do usuário">
-                    <User className="h-5 w-5" />
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user?.picture} alt={user?.name || "User"} />
+                      <AvatarFallback>{user?.name?.charAt(0) || user?.email?.charAt(0) || "U"}</AvatarFallback>
+                    </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <div className="px-2 py-1.5">
-                    <p className="text-sm font-medium">{user?.email}</p>
+                    <p className="text-sm font-medium">{user?.name || "Usuário"}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                     {user?.walletAddress && (
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className="text-xs text-muted-foreground truncate mt-1">
                         {user.walletAddress.slice(0, 6)}...{user.walletAddress.slice(-4)}
                       </p>
                     )}

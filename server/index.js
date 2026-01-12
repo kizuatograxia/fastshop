@@ -77,20 +77,38 @@ app.post('/api/auth/google', async (req, res) => {
             audience: process.env.VITE_GOOGLE_CLIENT_ID,
         });
         const payload = ticket.getPayload();
-        const email = payload.email;
+        const { email, name, picture } = payload;
         console.log('Backend: Token verified. Email:', email);
 
         let user = findUser(email);
         if (!user) {
             console.log('Backend: User not found, registering new user.');
             // Create new user for Google login
-            user = { id: Date.now(), email, password: 'GOOGLE_AUTH_USER' };
+            user = {
+                id: Date.now(),
+                email,
+                password: 'GOOGLE_AUTH_USER',
+                name,
+                picture
+            };
             users.push(user);
             wallets[user.id] = [];
+        } else {
+            // Update existing user with latest Google info
+            user.name = name;
+            user.picture = picture;
         }
 
         console.log('Backend: User logged in via Google:', email);
-        res.json({ message: 'Login realizado com Google', user: { id: user.id, email: user.email } });
+        res.json({
+            message: 'Login realizado com Google',
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                picture: user.picture
+            }
+        });
     } catch (error) {
         console.error('Backend: Google Auth Error:', error);
         res.status(401).json({ message: 'Falha na autenticação com Google', error: error.message });

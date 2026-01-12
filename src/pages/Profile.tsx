@@ -18,6 +18,7 @@ import {
     Check,
     LogOut,
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -101,12 +102,15 @@ const Profile = () => {
                     <div className="h-24 bg-gradient-primary opacity-20" />
                     <CardContent className="relative pt-0 pb-6 -mt-12">
                         <div className="flex flex-col md:flex-row items-start md:items-end gap-4">
-                            <div className="w-24 h-24 rounded-full bg-gradient-primary flex items-center justify-center text-4xl shadow-glow">
-                                <User className="h-12 w-12 text-primary-foreground" />
-                            </div>
+                            <Avatar className="w-24 h-24 rounded-full border-4 border-background shadow-glow">
+                                <AvatarImage src={user?.picture} alt={user?.name || "User"} />
+                                <AvatarFallback className="text-4xl bg-gradient-primary text-primary-foreground">
+                                    {user?.name?.charAt(0) || user?.email?.charAt(0) || "U"}
+                                </AvatarFallback>
+                            </Avatar>
                             <div className="flex-1 space-y-2">
                                 <h2 className="text-2xl font-bold text-foreground">
-                                    {user.email.split("@")[0]}
+                                    {user.name || user.email.split("@")[0]}
                                 </h2>
                                 <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
                                     <div className="flex items-center gap-2">

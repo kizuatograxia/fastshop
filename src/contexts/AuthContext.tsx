@@ -5,6 +5,8 @@ import { toast } from "sonner";
 interface User {
     id: string;
     email: string;
+    name?: string;
+    picture?: string;
     walletAddress?: string;
 }
 
@@ -74,6 +76,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const sessionUser: User = {
                     id: String(response.user.id),
                     email: response.user.email,
+                    name: response.user.name,
+                    picture: response.user.picture,
                     walletAddress: response.user.walletAddress
                 };
                 setUser(sessionUser);
