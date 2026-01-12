@@ -1,197 +1,300 @@
-
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Mail, Lock, Eye, EyeOff, Sparkles, ArrowLeft, Wallet, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { thirdwebClient } from "@/lib/thirdweb";
+import { ConnectEmbed } from "thirdweb/react";
 import { GoogleLogin } from "@react-oauth/google";
-import Header from "@/components/Header";
 
-interface AuthProps {
-    defaultTab?: "login" | "register";
-}
-
-const Auth = ({ defaultTab = "login" }: AuthProps) => {
-    const navigate = useNavigate();
-    const { login, register, googleLogin: loginWithGoogle } = useAuth();
-    const [loading, setLoading] = useState(false);
-
-    // Login State
-    const [loginEmail, setLoginEmail] = useState("");
-    const [loginPassword, setLoginPassword] = useState("");
-
-    // Register State
-    const [registerEmail, setRegisterEmail] = useState("");
-    const [registerPassword, setRegisterPassword] = useState("");
+const Auth: React.FC = () => {
+    const [isLogin, setIsLogin] = useState(true);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showWalletConnect, setShowWalletConnect] = useState(false);
 
-    const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            await login(loginEmail, loginPassword);
-            navigate("/");
-        } catch (error: any) {
-            toast.error(error.message || "Erro ao entrar");
-        } finally {
-            setLoading(false);
-        }
-    };
+    const { login, register, googleLogin, isAuthenticated, isLoading } = useAuth();
+    const navigate = useNavigate();
 
-    const handleRegister = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (registerPassword !== confirmPassword) {
-            toast.error("Senhas não conferem");
-            return;
-        }
-        setLoading(true);
-        try {
-            await register(registerEmail, registerPassword);
+    useEffect(() => {
+        if (isAuthenticated && !isLoading) {
             navigate("/");
-        } catch (error: any) {
-            toast.error(error.message || "Erro ao registrar");
-        } finally {
-            setLoading(false);
         }
+    }, [isAuthenticated, isLoading, navigate]);
+
+    const validateEmail = (email: string) => {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
     };
 
     const handleGoogleSuccess = async (credentialResponse: any) => {
-        console.log("AuthPage: Google Success callback triggered", credentialResponse);
         try {
-            await loginWithGoogle(credentialResponse.credential!);
-            console.log("AuthPage: Login successful, navigating to home");
-            navigate("/");
+            const result = await googleLogin(credentialResponse.credential!);
+            if (result.success) {
+                navigate("/");
+            }
         } catch (error) {
             console.error("AuthPage: Login error", error);
-            toast.error("Falha no login com Google");
+            // Error is handled in context toast
         }
     };
 
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!validateEmail(email)) {
+            toast.error("Email inválido", { description: "Por favor, insira um email válido." });
+            return;
+        }
+
+        if (password.length < 6) {
+            toast.error("Senha muito curta", { description: "A senha deve ter pelo menos 6 caracteres." });
+            return;
+        }
+
+        if (!isLogin && password !== confirmPassword) {
+            toast.error("Senhas não coincidem", { description: "Por favor, verifique as senhas digitadas." });
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            const result = isLogin
+                ? await login(email, password)
+                : await register(email, password);
+
+            if (result.success) {
+                if (!isLogin) {
+                    setShowWalletConnect(true);
+                }
+                // If login, context effect will redirect
+            } else {
+                // Context shows toast for specific errors usually, but we can ensure it here
+                if (!result.error) toast.error("Ocorreu um erro", { description: "Tente novamente." });
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
+    if (showWalletConnect) {
+        return (
+            <div className="min-h-screen bg-background flex flex-col">
+                <div className="bg-gradient-hero absolute inset-0 opacity-50" />
+
+                <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-4">
+                    <div className="w-full max-w-md">
+                        <div className="text-center mb-8">
+                            <div className="flex items-center justify-center gap-2 mb-4">
+                                <span className="text-4xl">🎰</span>
+                                <Sparkles className="h-6 w-6 text-primary animate-pulse" />
+                            </div>
+                            <h1 className="text-2xl font-bold text-foreground mb-2">
+                                Conecte sua Carteira Digital
+                            </h1>
+                            <p className="text-muted-foreground">
+                                Para armazenar seus NFTs, conecte ou crie uma carteira digital
+                            </p>
+                        </div>
+
+                        <div className="bg-card border border-border rounded-xl p-6 shadow-elevated">
+                            <div className="flex items-center gap-3 mb-6 p-4 bg-secondary/50 rounded-lg">
+                                <Wallet className="h-5 w-5 text-primary" />
+                                <p className="text-sm text-muted-foreground">
+                                    Uma carteira será criada automaticamente para você
+                                </p>
+                            </div>
+
+                            <ConnectEmbed
+                                client={thirdwebClient}
+                                modalSize="compact"
+                                theme="dark"
+                                style={{ width: "100%" }}
+                            />
+
+                            <Button
+                                variant="ghost"
+                                className="w-full mt-4"
+                                onClick={() => navigate("/")}
+                            >
+                                Pular por enquanto
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-background flex flex-col">
-            <Header onMenuClick={() => { }} onWalletClick={() => { }} />
+            <div className="bg-gradient-hero absolute inset-0 opacity-50" />
 
-            <div className="flex-1 flex items-center justify-center p-4">
-                <Tabs defaultValue={defaultTab} className="w-full max-w-md">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="login">Entrar</TabsTrigger>
-                        <TabsTrigger value="register">Cadastrar</TabsTrigger>
-                    </TabsList>
+            <div className="relative z-10 p-4">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate("/")}
+                    className="gap-2"
+                >
+                    <ArrowLeft className="h-4 w-4" />
+                    Voltar
+                </Button>
+            </div>
 
-                    <TabsContent value="login">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Entrar</CardTitle>
-                                <CardDescription>Acesse sua conta para continuar</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <form onSubmit={handleLogin} className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="login-email">Email</Label>
-                                        <Input
-                                            id="login-email"
-                                            type="email"
-                                            placeholder="seu@email.com"
-                                            value={loginEmail}
-                                            onChange={(e) => setLoginEmail(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="login-password">Senha</Label>
-                                        <Input
-                                            id="login-password"
-                                            type="password"
-                                            value={loginPassword}
-                                            onChange={(e) => setLoginPassword(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                    <Button type="submit" className="w-full" disabled={loading}>
-                                        {loading ? "Entrando..." : "Entrar"}
-                                    </Button>
-                                </form>
+            <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-4">
+                <div className="w-full max-w-md">
+                    <div className="text-center mb-8">
+                        <div className="flex items-center justify-center gap-2 mb-4">
+                            <span className="text-4xl">🎰</span>
+                            <Sparkles className="h-6 w-6 text-primary animate-pulse" />
+                        </div>
+                        <h1 className="text-3xl font-black text-gradient mb-2">LuckyNFT</h1>
+                        <p className="text-muted-foreground">
+                            {isLogin
+                                ? "Bem-vindo de volta! Entre na sua conta"
+                                : "Crie sua conta e ganhe uma carteira digital"}
+                        </p>
+                    </div>
 
-                                <div className="relative my-4">
-                                    <div className="absolute inset-0 flex items-center">
-                                        <span className="w-full border-t" />
-                                    </div>
-                                    <div className="relative flex justify-center text-xs uppercase">
-                                        <span className="bg-background px-2 text-muted-foreground">Ou continue com</span>
-                                    </div>
+                    <div className="bg-card border border-border rounded-xl p-6 shadow-elevated">
+                        <div className="flex gap-2 mb-6">
+                            <Button
+                                variant={isLogin ? "default" : "ghost"}
+                                className="flex-1"
+                                onClick={() => setIsLogin(true)}
+                            >
+                                Entrar
+                            </Button>
+                            <Button
+                                variant={!isLogin ? "default" : "ghost"}
+                                className="flex-1"
+                                onClick={() => setIsLogin(false)}
+                            >
+                                Cadastrar
+                            </Button>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="email">Email</Label>
+                                <div className="relative">
+                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        placeholder="seu@email.com"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        className="pl-10"
+                                        required
+                                    />
                                 </div>
+                            </div>
 
-                                <div className="flex justify-center">
-                                    <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => toast.error("Erro Google")} />
+                            <div className="space-y-2">
+                                <Label htmlFor="password">Senha</Label>
+                                <div className="relative">
+                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        id="password"
+                                        type={showPassword ? "text" : "password"}
+                                        placeholder="••••••••"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        className="pl-10 pr-10"
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                    >
+                                        {showPassword ? (
+                                            <EyeOff className="h-4 w-4" />
+                                        ) : (
+                                            <Eye className="h-4 w-4" />
+                                        )}
+                                    </button>
                                 </div>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
+                            </div>
 
-                    <TabsContent value="register">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Criar Conta</CardTitle>
-                                <CardDescription>Comece sua jornada hoje</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <form onSubmit={handleRegister} className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="reg-email">Email</Label>
+                            {!isLogin && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                                    <div className="relative">
+                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                         <Input
-                                            id="reg-email"
-                                            type="email"
-                                            placeholder="seu@email.com"
-                                            value={registerEmail}
-                                            onChange={(e) => setRegisterEmail(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="reg-pass">Senha</Label>
-                                        <Input
-                                            id="reg-pass"
-                                            type="password"
-                                            value={registerPassword}
-                                            onChange={(e) => setRegisterPassword(e.target.value)}
-                                            required
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="confirm-pass">Confirmar Senha</Label>
-                                        <Input
-                                            id="confirm-pass"
-                                            type="password"
+                                            id="confirmPassword"
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder="••••••••"
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
+                                            className="pl-10"
                                             required
                                         />
                                     </div>
-                                    <Button type="submit" className="w-full" disabled={loading}>
-                                        {loading ? "Criando..." : "Criar Conta"}
-                                    </Button>
-                                </form>
-
-                                <div className="relative my-4">
-                                    <div className="absolute inset-0 flex items-center">
-                                        <span className="w-full border-t" />
-                                    </div>
-                                    <div className="relative flex justify-center text-xs uppercase">
-                                        <span className="bg-background px-2 text-muted-foreground">Ou continue com</span>
-                                    </div>
                                 </div>
+                            )}
 
-                                <div className="flex justify-center">
-                                    <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => toast.error("Erro Google")} />
+                            <Button
+                                type="submit"
+                                className="w-full"
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Aguarde...
+                                    </>
+                                ) : isLogin ? (
+                                    "Entrar"
+                                ) : (
+                                    "Criar Conta"
+                                )}
+                            </Button>
+                        </form>
+
+                        <div className="relative my-4">
+                            <div className="absolute inset-0 flex items-center">
+                                <span className="w-full border-t" />
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                                <span className="bg-background px-2 text-muted-foreground">Ou continue com</span>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-center">
+                            <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => toast.error("Erro Google")} />
+                        </div>
+
+                        {!isLogin && (
+                            <div className="mt-6 p-4 bg-secondary/50 rounded-lg">
+                                <div className="flex items-center gap-3">
+                                    <Wallet className="h-5 w-5 text-primary shrink-0" />
+                                    <p className="text-sm text-muted-foreground">
+                                        Ao criar sua conta, você receberá uma carteira digital para armazenar seus NFTs
+                                    </p>
                                 </div>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                </Tabs>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     );

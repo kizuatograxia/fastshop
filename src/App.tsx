@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThirdwebProvider } from "thirdweb/react";
 import { AuthProvider } from "@/contexts/AuthContext";
+<<<<<<< HEAD
 import { WalletProvider } from "@/contexts/WalletContext";
 import { UserRafflesProvider } from "@/contexts/UserRafflesContext";
 import Index from "./pages/Index";
@@ -49,6 +50,33 @@ const App = () => (
       </ThirdwebProvider>
     </QueryClientProvider>
   </GoogleOAuthProvider>
+=======
+import Index from "./pages/Index";
+import Auth from "./pages/Auth";
+import NotFound from "./pages/NotFound";
+
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <ThirdwebProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </ThirdwebProvider>
+  </QueryClientProvider>
+>>>>>>> 00e0883f8dcaf83f5cc873ecdaaa0808fe610b8b
 );
 
 export default App;

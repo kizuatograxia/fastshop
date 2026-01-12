@@ -19,10 +19,16 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
   const { getTotalNFTs } = useWallet();
+<<<<<<< HEAD
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const totalNFTs = getTotalNFTs();
   const isAuthenticated = !!user;
+=======
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
+  const totalNFTs = getTotalNFTs();
+>>>>>>> 00e0883f8dcaf83f5cc873ecdaaa0808fe610b8b
 
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
@@ -100,10 +106,13 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
                     )}
                   </div>
                   <DropdownMenuSeparator />
+<<<<<<< HEAD
                   <DropdownMenuItem onClick={() => navigate("/profile")}>
                     <User className="mr-2 h-4 w-4" />
                     Minha Conta
                   </DropdownMenuItem>
+=======
+>>>>>>> 00e0883f8dcaf83f5cc873ecdaaa0808fe610b8b
                   <DropdownMenuItem onClick={() => { logout(); navigate("/"); }}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Sair
