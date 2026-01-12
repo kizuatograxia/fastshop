@@ -1,8 +1,10 @@
 import React from "react";
-import { Clock, Users, Ticket } from "lucide-react";
+import { Clock, Users, Ticket, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Raffle } from "@/types/raffle";
 import { useWallet } from "@/contexts/WalletContext";
+import { useUserRaffles } from "@/contexts/UserRafflesContext";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 interface RaffleCardProps {
@@ -12,18 +14,35 @@ interface RaffleCardProps {
 
 const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index }) => {
     const { getTotalNFTs } = useWallet();
+    const { addUserRaffle, isParticipating } = useUserRaffles();
+    const navigate = useNavigate();
     const totalNFTs = getTotalNFTs();
+    const alreadyParticipating = isParticipating(raffle.id);
 
-    const handleParticipate = () => {
+    const handleParticipate = (e: React.MouseEvent) => {
+        e.stopPropagation();
+
+        if (alreadyParticipating) {
+            toast.info("Você já está participando deste sorteio!");
+            return;
+        }
+
         if (totalNFTs < raffle.custoNFT) {
             toast.error(`Você precisa de ${raffle.custoNFT} NFT(s) para participar!`, {
                 description: "Compre NFTs na seção abaixo.",
             });
             return;
         }
+
+        addUserRaffle(raffle, raffle.custoNFT);
         toast.success(`Você entrou no sorteio: ${raffle.titulo}!`, {
             description: `Custo: ${raffle.custoNFT} NFT(s)`,
         });
+    };
+
+    const handleMoreInfo = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        navigate(`/raffle/${raffle.id}`);
     };
 
     const progressPercent = (raffle.participantes / raffle.maxParticipantes) * 100;
@@ -37,8 +56,9 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index }) => {
 
     return (
         <article
-            className="group relative bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 hover:shadow-elevated hover:border-primary/30 hover:-translate-y-1 animate-fade-in"
+            className="group relative bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 hover:shadow-elevated hover:border-primary/30 hover:-translate-y-1 animate-fade-in cursor-pointer"
             style={{ animationDelay: `${index * 0.1}s` }}
+            onClick={() => navigate(`/raffle/${raffle.id}`)}
         >
             {/* Status Badge */}
             <div className="absolute top-4 left-4 z-10 flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded-lg text-xs font-bold">
@@ -67,6 +87,7 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index }) => {
                 <h3 className="font-bold text-lg text-foreground leading-tight group-hover:text-primary transition-colors">
                     {raffle.titulo}
                 </h3>
+
                 <p className="text-sm text-muted-foreground line-clamp-2">
                     {raffle.descricao}
                 </p>
@@ -94,15 +115,28 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index }) => {
                     <span className="font-bold text-primary">{raffle.custoNFT} NFT</span>
                 </div>
 
-                <Button
-                    variant="hero"
-                    size="default"
-                    className="w-full"
-                    onClick={handleParticipate}
-                >
-                    <Ticket className="h-4 w-4" />
-                    Participar
-                </Button>
+                {/* Buttons */}
+                <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        size="default"
+                        className="flex-1"
+                        onClick={handleMoreInfo}
+                    >
+                        <Info className="h-4 w-4" />
+                        Mais informações
+                    </Button>
+                    <Button
+                        variant="hero"
+                        size="default"
+                        className="flex-1"
+                        onClick={handleParticipate}
+                        disabled={alreadyParticipating}
+                    >
+                        <Ticket className="h-4 w-4" />
+                        {alreadyParticipating ? "Participando" : "Participar"}
+                    </Button>
+                </div>
             </div>
         </article>
     );

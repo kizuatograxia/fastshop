@@ -2,6 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import { OAuth2Client } from 'google-auth-library';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '../.env' });
 
 const app = express();
 const PORT = process.env.PORT || 5050;
@@ -62,7 +65,7 @@ app.post('/api/login', (req, res) => {
 });
 
 // Google Login
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID || '209517161514-fvf6rka4abj5b1lslgflln48eghhekmc.apps.googleusercontent.com');
+const client = new OAuth2Client(process.env.VITE_GOOGLE_CLIENT_ID);
 
 app.post('/api/auth/google', async (req, res) => {
     const { token } = req.body;
@@ -71,7 +74,7 @@ app.post('/api/auth/google', async (req, res) => {
         console.log('Backend: Verifying token...');
         const ticket = await client.verifyIdToken({
             idToken: token,
-            audience: process.env.GOOGLE_CLIENT_ID || '209517161514-fvf6rka4abj5b1lslgflln48eghhekmc.apps.googleusercontent.com',
+            audience: process.env.VITE_GOOGLE_CLIENT_ID,
         });
         const payload = ticket.getPayload();
         const email = payload.email;

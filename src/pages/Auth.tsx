@@ -10,8 +10,12 @@ import { thirdwebClient } from "@/lib/thirdweb";
 import { ConnectEmbed } from "thirdweb/react";
 import { GoogleLogin } from "@react-oauth/google";
 
-const Auth: React.FC = () => {
-    const [isLogin, setIsLogin] = useState(true);
+interface AuthProps {
+    defaultTab?: "login" | "register";
+}
+
+const Auth: React.FC<AuthProps> = ({ defaultTab = "login" }) => {
+    const [isLogin, setIsLogin] = useState(defaultTab === "login");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
