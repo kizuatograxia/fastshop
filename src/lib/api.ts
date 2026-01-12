@@ -1,4 +1,4 @@
-export const API_URL = "http://localhost:5050/api";
+export const API_URL = "http://localhost:3000/api";
 
 export const api = {
     login: async (email, password) => {
@@ -6,6 +6,16 @@ export const api = {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password }),
+        });
+        if (!res.ok) throw new Error((await res.json()).message);
+        return res.json();
+    },
+
+    googleLogin: async (credential: string) => {
+        const res = await fetch(`${API_URL}/auth/google`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: credential }),
         });
         if (!res.ok) throw new Error((await res.json()).message);
         return res.json();

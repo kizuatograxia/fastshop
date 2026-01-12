@@ -25,9 +25,11 @@ const loginSchema = z.object({
 
 type LoginForm = z.infer<typeof loginSchema>;
 
+import { GoogleLogin } from "@react-oauth/google";
+
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, googleLogin: loginWithGoogle } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -97,6 +99,33 @@ const Login = () => {
                 {isLoading ? "Entrando..." : "Entrar"}
               </Button>
             </form>
+
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Ou continue com
+                </span>
+              </div>
+            </div>
+
+            <div className="flex justify-center">
+              <GoogleLogin
+                onSuccess={async (credentialResponse) => {
+                  try {
+                    await loginWithGoogle(credentialResponse.credential!);
+                    navigate("/");
+                  } catch (error) {
+                    toast.error("Falha no login com Google");
+                  }
+                }}
+                onError={() => {
+                  toast.error("Falha no login com Google");
+                }}
+              />
+            </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <div className="text-center text-sm text-muted-foreground">

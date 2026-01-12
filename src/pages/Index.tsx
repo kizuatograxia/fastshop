@@ -7,7 +7,6 @@ import RaffleGrid from "@/components/RaffleGrid";
 import NFTGrid from "@/components/NFTGrid";
 import HowItWorks from "@/components/HowItWorks";
 import WalletDrawer from "@/components/WalletDrawer";
-import { WalletProvider } from "@/contexts/WalletContext";
 import { raffles, nfts } from "@/data/raffles";
 
 const Index: React.FC = () => {
@@ -21,46 +20,45 @@ const Index: React.FC = () => {
       : raffles.filter((r) => r.categoria === activeCategory);
 
   return (
-    <WalletProvider>
-      <div className="min-h-screen bg-background">
-        <Header
-          onMenuClick={() => setSidebarOpen(true)}
-          onCartClick={() => { }} // Deprecated/Not used
-          onWalletClick={() => setWalletOpen(true)}
-        />
-        <Sidebar
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          activeCategory={activeCategory}
-          onCategoryChange={setActiveCategory}
-        />
-        <WalletDrawer isOpen={walletOpen} onClose={() => setWalletOpen(false)} />
+    <div className="min-h-screen bg-background">
+      <Header
+        onMenuClick={() => setSidebarOpen(true)}
+        onWalletClick={() => setWalletOpen(true)}
+      />
 
-        <CategoryNav
-          activeCategory={activeCategory}
-          onCategoryChange={setActiveCategory}
-        />
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        activeCategory={activeCategory}
+        onCategoryChange={setActiveCategory}
+      />
 
-        <main>
-          <Hero />
-          <RaffleGrid raffles={filteredRaffles} />
-          <NFTGrid nfts={nfts} />
-          <HowItWorks />
-        </main>
+      <WalletDrawer isOpen={walletOpen} onClose={() => setWalletOpen(false)} />
 
-        <footer className="border-t border-border py-8 mt-12">
-          <div className="container mx-auto px-4 text-center">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <span className="text-2xl">🎰</span>
-              <p className="text-gradient font-bold text-xl">Mundo Pix</p>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              © 2026 Mundo Pix. Colecione, participe e ganhe!
-            </p>
+      <CategoryNav
+        activeCategory={activeCategory}
+        onCategoryChange={setActiveCategory}
+      />
+
+      <main>
+        <Hero />
+        <RaffleGrid raffles={filteredRaffles} />
+        <NFTGrid nfts={nfts} />
+        <HowItWorks />
+      </main>
+
+      <footer className="border-t border-border py-8 mt-12">
+        <div className="container mx-auto px-4 text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <span className="text-2xl">🎰</span>
+            <p className="text-gradient font-bold text-xl">LuckyNFT</p>
           </div>
-        </footer>
-      </div>
-    </WalletProvider>
+          <p className="text-sm text-muted-foreground">
+            © 2026 LuckyNFT. Colecione, participe e ganhe!
+          </p>
+        </div>
+      </footer>
+    </div>
   );
 };
 

@@ -5,11 +5,13 @@ import { toast } from "sonner";
 interface User {
     id: number;
     email: string;
+    walletAddress?: string;
 }
 
 interface AuthContextType {
     user: User | null;
     login: (email: string, password: string) => Promise<void>;
+    googleLogin: (token: string) => Promise<void>;
     register: (email: string, password: string) => Promise<void>;
     logout: () => void;
     isLoading: boolean;
@@ -47,6 +49,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const googleLogin = async (token: string) => {
+        console.log("AuthContext: Starting Google Login...");
+        try {
+            const response = await api.googleLogin(token);
+            console.log("AuthContext: Google Login response:", response);
+            setUser(response.user);
+            localStorage.setItem("user", JSON.stringify(response.user));
+            toast.success("Login com Google realizado!");
+        } catch (error: any) {
+            console.error("Google Login failed:", error);
+            throw error;
+        }
+    };
+
     const register = async (email: string, password: string) => {
         try {
             const response = await api.register(email, password);
@@ -66,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
+        <AuthContext.Provider value={{ user, login, googleLogin, register, logout, isLoading }}>
             {children}
         </AuthContext.Provider>
     );
