@@ -16,7 +16,6 @@ const Hero: React.FC = () => {
 
       {/* Floating Emojis */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <span className="absolute top-20 left-[10%] text-4xl animate-float opacity-50">🎰</span>
         <span className="absolute top-32 right-[15%] text-3xl animate-float opacity-40" style={{ animationDelay: "0.5s" }}>🦊</span>
         <span className="absolute bottom-20 left-[20%] text-3xl animate-float opacity-30" style={{ animationDelay: "1s" }}>⭐</span>
         <span className="absolute bottom-32 right-[25%] text-4xl animate-float opacity-40" style={{ animationDelay: "1.5s" }}>🐱</span>

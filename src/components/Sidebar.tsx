@@ -43,7 +43,6 @@ const Sidebar: React.FC<SidebarProps> = ({
           {/* Header */}
           <div className="flex items-center justify-between p-4 bg-gradient-primary">
             <div className="flex items-center gap-2">
-              <span className="text-xl">🎰</span>
               <span className="font-bold text-lg text-primary-foreground">
                 Mundo Pix
               </span>

@@ -41,11 +41,10 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
 
             <div className="flex items-center gap-2">
               <div className="relative">
-                <span className="text-2xl">🎰</span>
                 <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-primary animate-glow-pulse" />
               </div>
               <span className="text-2xl md:text-3xl font-black text-gradient">
-                LuckyNFT
+                MundoPix
               </span>
               <span className="hidden sm:inline text-xs font-medium text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
                 BETA

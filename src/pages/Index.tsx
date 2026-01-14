@@ -50,11 +50,10 @@ const Index: React.FC = () => {
       <footer className="border-t border-border py-8 mt-12">
         <div className="container mx-auto px-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <span className="text-2xl">🎰</span>
-            <p className="text-gradient font-bold text-xl">LuckyNFT</p>
+            <p className="text-gradient font-bold text-xl">MundoPix</p>
           </div>
           <p className="text-sm text-muted-foreground">
-            © 2026 LuckyNFT. Colecione, participe e ganhe!
+            © 2026 MundoPix. Colecione, participe e ganhe!
           </p>
         </div>
       </footer>

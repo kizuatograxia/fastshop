@@ -162,7 +162,7 @@ export const raffles: Raffle[] = [
 ];
 
 export const categories = [
-    { id: "todos", nome: "Todos Sorteios", emoji: "🎰" },
+    { id: "todos", nome: "Todos Sorteios", emoji: "🎟️" },
     { id: "tech", nome: "Tecnologia", emoji: "📱" },
     { id: "games", nome: "Games", emoji: "🎮" },
     { id: "dinheiro", nome: "Dinheiro", emoji: "💰" },
