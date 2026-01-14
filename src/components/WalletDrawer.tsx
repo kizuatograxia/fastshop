@@ -17,7 +17,7 @@ const rarityColors: Record<string, string> = {
 };
 
 const WalletDrawer: React.FC<WalletDrawerProps> = ({ isOpen, onClose }) => {
-    const { ownedNFTs, getTotalNFTs, removeNFT } = useWallet();
+    const { cartItems, getTotalNFTs, removeFromCart } = useWallet();
     const totalNFTs = getTotalNFTs();
     const navigate = useNavigate();
 
@@ -74,7 +74,7 @@ const WalletDrawer: React.FC<WalletDrawerProps> = ({ isOpen, onClose }) => {
 
                     {/* NFT Items */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                        {ownedNFTs.length === 0 ? (
+                        {cartItems.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full text-center">
                                 <ShoppingCart className="h-16 w-16 text-muted-foreground/50 mb-4" />
                                 <p className="text-lg font-medium text-muted-foreground">
@@ -85,7 +85,7 @@ const WalletDrawer: React.FC<WalletDrawerProps> = ({ isOpen, onClose }) => {
                                 </p>
                             </div>
                         ) : (
-                            ownedNFTs.map((nft) => (
+                            cartItems.map((nft) => (
                                 <div
                                     key={nft.id}
                                     className="flex gap-4 bg-secondary/30 rounded-xl p-3 border border-border"
@@ -108,7 +108,7 @@ const WalletDrawer: React.FC<WalletDrawerProps> = ({ isOpen, onClose }) => {
                                         variant="ghost"
                                         size="icon"
                                         className="h-8 w-8 text-destructive hover:text-destructive self-center"
-                                        onClick={() => removeNFT(nft.id, 1)}
+                                        onClick={() => removeFromCart(nft.id)}
                                         title="Remover 1 NFT"
                                     >
                                         <Trash2 className="h-4 w-4" />
@@ -119,12 +119,12 @@ const WalletDrawer: React.FC<WalletDrawerProps> = ({ isOpen, onClose }) => {
                     </div>
 
                     {/* Footer */}
-                    {ownedNFTs.length > 0 && (
+                    {cartItems.length > 0 && (
                         <div className="p-4 border-t border-border space-y-3">
                             <div className="flex justify-between items-center">
                                 <span className="text-sm text-muted-foreground">Total</span>
                                 <span className="text-lg font-bold text-gradient">
-                                    R$ {ownedNFTs.reduce((sum, nft) => sum + nft.preco * nft.quantidade, 0).toFixed(2)}
+                                    R$ {cartItems.reduce((sum, nft) => sum + nft.preco * nft.quantidade, 0).toFixed(2)}
                                 </span>
                             </div>
                             <Button

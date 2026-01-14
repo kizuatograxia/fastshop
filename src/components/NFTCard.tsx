@@ -25,14 +25,14 @@ const rarityLabels = {
 };
 
 const NFTCard: React.FC<NFTCardProps> = ({ nft, index }) => {
-    const { addNFT, getNFTCount } = useWallet();
+    const { addToCart, getNFTCount } = useWallet();
     const ownedCount = getNFTCount(nft.id);
 
     const handleBuy = () => {
-        addNFT(nft);
-        toast.success(`${nft.nome} adquirido!`, {
-            description: "O NFT foi adicionado à sua carteira.",
-            icon: nft.emoji,
+        addToCart(nft);
+        toast.success(`${nft.nome} adcionado ao carrinho!`, {
+            description: "Continue comprando ou finalize seu pedido.",
+            icon: "🛒",
         });
     };
 

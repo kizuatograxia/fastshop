@@ -5,6 +5,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 interface WalletContextType {
+    cartItems: OwnedNFT[];
+    addToCart: (nft: NFT) => void;
+    removeFromCart: (nftId: string) => void;
+    clearCart: () => void;
     ownedNFTs: OwnedNFT[];
     balance: number;
     addNFT: (nft: NFT) => Promise<void>;
@@ -19,6 +23,7 @@ const WalletContext = createContext<WalletContextType | undefined>(undefined);
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user } = useAuth();
     const [ownedNFTs, setOwnedNFTs] = useState<OwnedNFT[]>([]);
+    const [cartItems, setCartItems] = useState<OwnedNFT[]>([]);
     const [balance] = useState(0);
 
     // Load wallet from backend when user changes
@@ -31,6 +36,59 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             setOwnedNFTs([]);
         }
     }, [user]);
+
+    // Load cart from localStorage
+    useEffect(() => {
+        const savedCart = localStorage.getItem("fastshop_cart");
+        if (savedCart) {
+            try {
+                setCartItems(JSON.parse(savedCart));
+            } catch (e) {
+                console.error("Failed to parse cart", e);
+            }
+        }
+    }, []);
+
+    // Save cart to localStorage
+    useEffect(() => {
+        localStorage.setItem("fastshop_cart", JSON.stringify(cartItems));
+    }, [cartItems]);
+
+    const addToCart = useCallback((nft: NFT) => {
+        setCartItems((current) => {
+            const existing = current.find((item) => item.id === nft.id);
+            if (existing) {
+                return current.map((item) =>
+                    item.id === nft.id
+                        ? { ...item, quantidade: item.quantidade + 1 }
+                        : item
+                );
+            }
+            return [...current, { ...nft, quantidade: 1 }];
+        });
+    }, []);
+
+    const removeFromCart = useCallback((nftId: string) => {
+        setCartItems((current) => {
+            const existing = current.find((item) => item.id === nftId);
+            if (!existing) return current;
+
+            if (existing.quantidade <= 1) {
+                return current.filter((item) => item.id !== nftId);
+            }
+
+            return current.map((item) =>
+                item.id === nftId
+                    ? { ...item, quantidade: item.quantidade - 1 }
+                    : item
+            );
+        });
+    }, []);
+
+    const clearCart = useCallback(() => {
+        setCartItems([]);
+    }, []);
+
 
     const addNFT = useCallback(async (nft: NFT) => {
         if (!user) {
@@ -92,8 +150,8 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }, [user]);
 
     const getTotalNFTs = useCallback(() => {
-        return ownedNFTs.reduce((sum, nft) => sum + nft.quantidade, 0);
-    }, [ownedNFTs]);
+        return cartItems.reduce((sum, nft) => sum + nft.quantidade, 0);
+    }, [cartItems]);
 
     const hasNFT = useCallback((nftId: string) => {
         return ownedNFTs.some((nft) => nft.id === nftId && nft.quantidade > 0);
@@ -107,6 +165,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return (
         <WalletContext.Provider
             value={{
+                cartItems,
+                addToCart,
+                removeFromCart,
+                clearCart,
                 ownedNFTs,
                 balance,
                 addNFT,
