@@ -1,21 +1,80 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, Users, Ticket, Trophy, Calendar, Target, Info } from "lucide-react";
+import { ArrowLeft, Clock, Users, Ticket, Trophy, Calendar, Target, Info, CheckCircle2, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { raffles } from "@/data/raffles";
 import { useWallet } from "@/contexts/WalletContext";
 import { useUserRaffles } from "@/contexts/UserRafflesContext";
 import { toast } from "sonner";
+import { OwnedNFT } from "@/types/raffle";
+
+const rarityColors: Record<string, string> = {
+    comum: "from-gray-400 to-gray-500",
+    raro: "from-blue-400 to-cyan-500",
+    epico: "from-purple-400 to-pink-500",
+    lendario: "from-yellow-400 to-orange-500",
+};
 
 const RaffleDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { getTotalNFTs } = useWallet();
-    const { addUserRaffle, isParticipating } = useUserRaffles();
+    const { ownedNFTs, removeNFT } = useWallet();
+    const { addUserRaffle, getUserValue } = useUserRaffles();
+
+    const [selectedNFTs, setSelectedNFTs] = useState<Record<string, number>>({});
 
     const raffle = raffles.find((r) => r.id === id);
-    const totalNFTs = getTotalNFTs();
-    const alreadyParticipating = raffle ? isParticipating(raffle.id) : false;
+    const userCurrentValue = raffle ? getUserValue(raffle.id) : 0;
+
+    // Mock pool value for estimation (since backend is mock)
+    // Assume average participant contributes ~R$ 10.00 worth of NFTs
+    const AVG_CONTRIBUTION = 10;
+    const estimatedPoolValue = (raffle?.participantes || 0) * AVG_CONTRIBUTION;
+
+    const availableNFTs = ownedNFTs.filter(nft => nft.quantidade > 0);
+
+    const handleQuantityChange = (nftId: string, delta: number, max: number) => {
+        setSelectedNFTs(prev => {
+            const current = prev[nftId] || 0;
+            const next = Math.max(0, Math.min(max, current + delta));
+
+            const newState = { ...prev, [nftId]: next };
+            if (next === 0) delete newState[nftId];
+            return newState;
+        });
+    };
+
+    const toggleSelection = (nftId: string, max: number) => {
+        setSelectedNFTs(prev => {
+            const current = prev[nftId] || 0;
+            if (current > 0) {
+                const newState = { ...prev };
+                delete newState[nftId];
+                return newState;
+            } else {
+                return { ...prev, [nftId]: 1 };
+            }
+        });
+    };
+
+    const selectionStats = useMemo(() => {
+        let count = 0;
+        let value = 0;
+
+        availableNFTs.forEach(nft => {
+            const qty = selectedNFTs[nft.id] || 0;
+            count += qty;
+            value += qty * nft.preco;
+        });
+
+        return { count, value };
+    }, [availableNFTs, selectedNFTs]);
+
+    const calculateChance = (userVal: number) => {
+        const totalPool = estimatedPoolValue + userVal;
+        if (totalPool === 0) return 0;
+        return (userVal / totalPool) * 100;
+    };
 
     if (!raffle) {
         return (
@@ -31,26 +90,31 @@ const RaffleDetails: React.FC = () => {
         );
     }
 
-    const handleParticipate = () => {
-        if (alreadyParticipating) {
-            toast.info("Você já está participando deste sorteio!");
+    const { count: selectedCount, value: selectedValue } = selectionStats;
+    const currentChance = calculateChance(userCurrentValue);
+    const potentialChance = calculateChance(userCurrentValue + selectedValue);
+
+    const handleParticipate = async () => {
+        if (selectedCount === 0) {
+            toast.error("Selecione pelo menos 1 NFT para participar");
             return;
         }
 
-        if (totalNFTs < raffle.custoNFT) {
-            toast.error(`Você precisa de ${raffle.custoNFT} NFT(s) para participar!`, {
-                description: "Compre NFTs na página inicial.",
-            });
-            return;
+        // Add to raffle
+        addUserRaffle(raffle, selectedCount, selectedValue);
+
+        // Remove from wallet
+        for (const [nftId, qty] of Object.entries(selectedNFTs)) {
+            await removeNFT(nftId, qty);
         }
 
-        addUserRaffle(raffle, raffle.custoNFT);
-        toast.success(`Você entrou no sorteio: ${raffle.titulo}!`, {
-            description: `Custo: ${raffle.custoNFT} NFT(s)`,
+        // Reset selection
+        setSelectedNFTs({});
+
+        toast.success(`Você entrou no sorteio com ${selectedCount} NFTs!`, {
+            description: `Valor total adicionado: R$ ${selectedValue.toFixed(2)}`,
         });
     };
-
-    const progressPercent = (raffle.participantes / raffle.maxParticipantes) * 100;
 
     const daysLeft = () => {
         const end = new Date(raffle.dataFim);
@@ -68,7 +132,7 @@ const RaffleDetails: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background pb-24 lg:pb-8">
             {/* Header */}
             <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
                 <div className="container mx-auto px-4 py-4">
@@ -85,39 +149,35 @@ const RaffleDetails: React.FC = () => {
 
             <main className="container mx-auto px-4 py-8">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Image Section */}
-                    <div className="space-y-4">
-                        <div className="relative aspect-square rounded-2xl overflow-hidden bg-secondary/30 border border-border">
-                            <img
-                                src={raffle.imagem}
-                                alt={raffle.titulo}
-                                className="w-full h-full object-cover"
-                            />
-                            {/* Status Badge */}
-                            <div className="absolute top-4 left-4 flex items-center gap-1 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-sm font-bold">
-                                <Clock className="h-4 w-4" />
-                                {daysLeft()} dias restantes
+                    {/* LEFT COLUMN: Raffle Info */}
+                    <div className="space-y-6">
+                        {/* Image & Status */}
+                        <div className="space-y-4">
+                            <div className="relative aspect-video rounded-2xl overflow-hidden bg-secondary/30 border border-border group">
+                                <img
+                                    src={raffle.imagem}
+                                    alt={raffle.titulo}
+                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                />
+                                <div className="absolute top-4 left-4 flex items-center gap-1 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-sm font-bold shadow-lg">
+                                    <Clock className="h-4 w-4" />
+                                    {daysLeft()} dias restantes
+                                </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="px-3 py-1 bg-secondary text-secondary-foreground rounded-full text-sm font-medium">
+                                    {raffle.categoria}
+                                </span>
+                                <span className={`px-3 py-1 rounded-full text-sm font-medium ${raffle.status === "ativo" ? "bg-green-500/20 text-green-500" :
+                                        raffle.status === "encerrado" ? "bg-red-500/20 text-red-500" : "bg-yellow-500/20 text-yellow-500"
+                                    }`}>
+                                    {raffle.status === "ativo" ? "Ativo" : raffle.status === "encerrado" ? "Encerrado" : "Em breve"}
+                                </span>
                             </div>
                         </div>
 
-                        {/* Category Tag */}
-                        <div className="flex items-center gap-2">
-                            <span className="px-3 py-1 bg-secondary text-secondary-foreground rounded-full text-sm font-medium">
-                                {raffle.categoria}
-                            </span>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${raffle.status === "ativo"
-                                    ? "bg-green-500/20 text-green-500"
-                                    : raffle.status === "encerrado"
-                                        ? "bg-red-500/20 text-red-500"
-                                        : "bg-yellow-500/20 text-yellow-500"
-                                }`}>
-                                {raffle.status === "ativo" ? "Ativo" : raffle.status === "encerrado" ? "Encerrado" : "Em breve"}
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Details Section */}
-                    <div className="space-y-6">
+                        {/* Title & Desc */}
                         <div>
                             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
                                 {raffle.titulo}
@@ -127,23 +187,21 @@ const RaffleDetails: React.FC = () => {
                             </p>
                         </div>
 
-                        {/* Prize Info */}
-                        <div className="p-6 bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl border border-primary/20">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="p-2 bg-primary/20 rounded-lg">
-                                    <Trophy className="h-6 w-6 text-primary" />
-                                </div>
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Prêmio</p>
-                                    <p className="text-xl font-bold text-foreground">{raffle.premio}</p>
-                                </div>
+                        {/* Prize Card */}
+                        <div className="p-6 bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl border border-primary/20 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-4 opacity-10">
+                                <Trophy className="h-32 w-32" />
                             </div>
-                            <div className="text-3xl font-bold text-primary">
-                                R$ {raffle.premioValor.toLocaleString("pt-BR")}
+                            <div className="relative z-10">
+                                <p className="text-sm font-medium text-primary mb-1">Grande Prêmio</p>
+                                <h2 className="text-2xl font-bold text-foreground mb-2">{raffle.premio}</h2>
+                                <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
+                                    R$ {raffle.premioValor.toLocaleString("pt-BR")}
+                                </p>
                             </div>
                         </div>
 
-                        {/* Stats Grid */}
+                        {/* Raffle Stats */}
                         <div className="grid grid-cols-2 gap-4">
                             <div className="p-4 bg-card rounded-xl border border-border">
                                 <div className="flex items-center gap-2 text-muted-foreground mb-1">
@@ -151,97 +209,149 @@ const RaffleDetails: React.FC = () => {
                                     <span className="text-sm">Participantes</span>
                                 </div>
                                 <p className="text-2xl font-bold text-foreground">
-                                    {raffle.participantes} <span className="text-sm text-muted-foreground font-normal">/ {raffle.maxParticipantes}</span>
+                                    {raffle.participantes}
                                 </p>
                             </div>
-
-                            <div className="p-4 bg-card rounded-xl border border-border">
-                                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                                    <Ticket className="h-4 w-4" />
-                                    <span className="text-sm">Custo</span>
-                                </div>
-                                <p className="text-2xl font-bold text-primary">
-                                    {raffle.custoNFT} NFT
-                                </p>
-                            </div>
-
-                            <div className="p-4 bg-card rounded-xl border border-border">
-                                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                                    <Calendar className="h-4 w-4" />
-                                    <span className="text-sm">Data do Sorteio</span>
-                                </div>
-                                <p className="text-sm font-medium text-foreground">
-                                    {formatDate(raffle.dataFim)}
-                                </p>
-                            </div>
-
                             <div className="p-4 bg-card rounded-xl border border-border">
                                 <div className="flex items-center gap-2 text-muted-foreground mb-1">
                                     <Target className="h-4 w-4" />
-                                    <span className="text-sm">Suas Chances</span>
+                                    <span className="text-sm">Sua Chance Atual</span>
                                 </div>
-                                <p className="text-2xl font-bold text-foreground">
-                                    {alreadyParticipating
-                                        ? `${((1 / (raffle.participantes + 1)) * 100).toFixed(2)}%`
-                                        : "0%"
-                                    }
+                                <p className="text-2xl font-bold text-primary">
+                                    {currentChance.toFixed(4)}%
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                    Valor inserido: R$ {userCurrentValue.toFixed(2)}
                                 </p>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Progress Bar */}
-                        <div className="space-y-2">
-                            <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Progresso do sorteio</span>
-                                <span className="font-medium text-foreground">{Math.round(progressPercent)}%</span>
-                            </div>
-                            <div className="h-3 bg-secondary rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500"
-                                    style={{ width: `${progressPercent}%` }}
-                                />
+                    {/* RIGHT COLUMN: Selection & Action */}
+                    <div className="space-y-6">
+                        <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
+                            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                <Ticket className="h-5 w-5 text-primary" />
+                                Escolha seus Ingressos (NFTs)
+                            </h3>
+
+                            <p className="text-sm text-muted-foreground mb-6">
+                                Selecione quais NFTs deseja usar para entrar no sorteio. Quanto maior o valor dos NFTs, maior sua chance de ganhar!
+                            </p>
+
+                            {/* NFT List */}
+                            <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                {availableNFTs.length === 0 ? (
+                                    <div className="text-center py-8 text-muted-foreground bg-secondary/30 rounded-xl border border-dashed border-border">
+                                        <p>Você não possui NFTs disponíveis.</p>
+                                        <Button variant="link" onClick={() => navigate("/")}>
+                                            Comprar NFTs
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    availableNFTs.map(nft => {
+                                        const isSelected = (selectedNFTs[nft.id] || 0) > 0;
+                                        const qtySelected = selectedNFTs[nft.id] || 0;
+
+                                        return (
+                                            <div
+                                                key={nft.id}
+                                                className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 ${isSelected
+                                                        ? "bg-primary/10 border-primary shadow-[0_0_0_1px_rgba(var(--primary),1)]"
+                                                        : "bg-background border-border hover:border-primary/50"
+                                                    }`}
+                                                onClick={() => toggleSelection(nft.id, nft.quantidade)}
+                                            >
+                                                {/* Checkbox-ish indicator */}
+                                                <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${isSelected ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground"
+                                                    }`}>
+                                                    {isSelected && <CheckCircle2 className="h-3.5 w-3.5" />}
+                                                </div>
+
+                                                {/* Avatar */}
+                                                <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${rarityColors[nft.raridade]} flex items-center justify-center text-2xl shadow-sm`}>
+                                                    {nft.emoji}
+                                                </div>
+
+                                                {/* Info */}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex justify-between items-start">
+                                                        <h4 className="font-bold text-sm truncate">{nft.nome}</h4>
+                                                        <span className="text-sm font-bold text-primary">R$ {nft.preco.toFixed(2)}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center mt-1">
+                                                        <span className="text-xs text-muted-foreground capitalize">{nft.raridade}</span>
+                                                        <span className="text-xs text-muted-foreground">Disp: {nft.quantidade}</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Quantity Controls (Only show if selected) */}
+                                                {isSelected && (
+                                                    <div className="flex items-center gap-2 bg-background rounded-lg border border-border p-1 shadow-sm" onClick={e => e.stopPropagation()}>
+                                                        <button
+                                                            className="p-1 hover:bg-secondary rounded-md transition-colors disabled:opacity-50"
+                                                            onClick={() => handleQuantityChange(nft.id, -1, nft.quantidade)}
+                                                            disabled={qtySelected <= 0}
+                                                        >
+                                                            <Minus className="h-3 w-3" />
+                                                        </button>
+                                                        <span className="text-xs font-bold w-4 text-center">{qtySelected}</span>
+                                                        <button
+                                                            className="p-1 hover:bg-secondary rounded-md transition-colors disabled:opacity-50"
+                                                            onClick={() => handleQuantityChange(nft.id, 1, nft.quantidade)}
+                                                            disabled={qtySelected >= nft.quantidade}
+                                                        >
+                                                            <Plus className="h-3 w-3" />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })
+                                )}
                             </div>
                         </div>
 
-                        {/* Participate Button */}
-                        <div className="space-y-3">
+                        {/* Summary Sticky Footer (Mobile) or Panel (Desktop) */}
+                        <div className="bg-card rounded-2xl border border-border p-6 shadow-lg space-y-4">
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">NFTs Selecionados</span>
+                                    <span className="font-bold">{selectedCount}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Valor Total Contribuição</span>
+                                    <span className="font-bold text-primary">R$ {selectedValue.toFixed(2)}</span>
+                                </div>
+                                <div className="h-px bg-border my-2" />
+                                <div className="flex justify-between items-center">
+                                    <span className="font-bold">Nova Chance Estimada</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-muted-foreground text-sm line-through decoration-red-500">
+                                            {currentChance.toFixed(2)}%
+                                        </span>
+                                        <ArrowLeft className="h-4 w-4 rotate-180 text-muted-foreground" />
+                                        <span className="text-xl font-bold text-green-500">
+                                            {potentialChance.toFixed(2)}%
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
                             <Button
                                 variant="hero"
                                 size="lg"
-                                className="w-full text-lg py-6"
+                                className="w-full text-lg py-6 shadow-xl shadow-primary/20"
                                 onClick={handleParticipate}
-                                disabled={raffle.status !== "ativo" || alreadyParticipating}
+                                disabled={selectedCount === 0 || raffle.status !== "ativo"}
                             >
-                                <Ticket className="h-5 w-5" />
-                                {alreadyParticipating
-                                    ? "Você já está participando"
-                                    : `Participar por ${raffle.custoNFT} NFT`
-                                }
+                                <Ticket className="h-5 w-5 mr-2" />
+                                Confirmar Entrada (R$ {selectedValue.toFixed(2)})
                             </Button>
 
-                            {alreadyParticipating && (
-                                <p className="text-center text-sm text-green-500 font-medium">
-                                    ✓ Você está participando deste sorteio
-                                </p>
-                            )}
-
-                            <p className="text-center text-xs text-muted-foreground">
-                                Você possui {totalNFTs} NFT(s) disponíveis
+                            <p className="text-xs text-center text-muted-foreground">
+                                Ao confirmar, os NFTs selecionados serão removidos da sua carteira permanentemente.
                             </p>
-                        </div>
-
-                        {/* Additional Info */}
-                        <div className="p-4 bg-secondary/30 rounded-xl border border-border">
-                            <div className="flex items-center gap-2 mb-3">
-                                <Info className="h-4 w-4 text-muted-foreground" />
-                                <span className="text-sm font-medium text-foreground">Informações importantes</span>
-                            </div>
-                            <ul className="text-sm text-muted-foreground space-y-2">
-                                <li>• O sorteio será realizado automaticamente na data indicada</li>
-                                <li>• Os NFTs utilizados serão descontados da sua carteira</li>
-                                <li>• O vencedor será notificado por e-mail e na plataforma</li>
-                                <li>• Quanto mais NFTs você usar, maiores suas chances</li>
-                            </ul>
                         </div>
                     </div>
                 </div>
