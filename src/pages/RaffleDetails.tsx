@@ -71,9 +71,15 @@ const RaffleDetails: React.FC = () => {
     }, [availableNFTs, selectedNFTs]);
 
     const calculateChance = (userVal: number) => {
-        const totalPool = estimatedPoolValue + userVal;
-        if (totalPool === 0) return 0;
-        return (userVal / totalPool) * 100;
+        // User requested formula: (Value Contributed / Prize Value) * 75%
+        // Example: 10 real contribution / 100 real prize = 0.1 * 75% = 7.5%
+        const prizeValue = raffle?.premioValor || 0;
+
+        if (prizeValue === 0) return 0;
+
+        const chance = (userVal / prizeValue) * 75;
+        // Cap at 100% just in case
+        return Math.min(chance, 100);
     };
 
     if (!raffle) {
@@ -170,7 +176,7 @@ const RaffleDetails: React.FC = () => {
                                     {raffle.categoria}
                                 </span>
                                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${raffle.status === "ativo" ? "bg-green-500/20 text-green-500" :
-                                        raffle.status === "encerrado" ? "bg-red-500/20 text-red-500" : "bg-yellow-500/20 text-yellow-500"
+                                    raffle.status === "encerrado" ? "bg-red-500/20 text-red-500" : "bg-yellow-500/20 text-yellow-500"
                                     }`}>
                                     {raffle.status === "ativo" ? "Ativo" : raffle.status === "encerrado" ? "Encerrado" : "Em breve"}
                                 </span>
@@ -257,8 +263,8 @@ const RaffleDetails: React.FC = () => {
                                             <div
                                                 key={nft.id}
                                                 className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 ${isSelected
-                                                        ? "bg-primary/10 border-primary shadow-[0_0_0_1px_rgba(var(--primary),1)]"
-                                                        : "bg-background border-border hover:border-primary/50"
+                                                    ? "bg-primary/10 border-primary shadow-[0_0_0_1px_rgba(var(--primary),1)]"
+                                                    : "bg-background border-border hover:border-primary/50"
                                                     }`}
                                                 onClick={() => toggleSelection(nft.id, nft.quantidade)}
                                             >
