@@ -124,7 +124,7 @@ const WalletDrawer: React.FC<WalletDrawerProps> = ({ isOpen, onClose }) => {
                             <div className="flex justify-between items-center">
                                 <span className="text-sm text-muted-foreground">Total</span>
                                 <span className="text-lg font-bold text-gradient">
-                                    {ownedNFTs.reduce((sum, nft) => sum + nft.preco * nft.quantidade, 0).toFixed(2)} MATIC
+                                    R$ {ownedNFTs.reduce((sum, nft) => sum + nft.preco * nft.quantidade, 0).toFixed(2)}
                                 </span>
                             </div>
                             <Button

@@ -36,7 +36,7 @@ const Checkout: React.FC = () => {
 
     const totalNFTs = getTotalNFTs();
     const totalPrice = ownedNFTs.reduce((sum, nft) => sum + nft.preco * nft.quantidade, 0);
-    const totalPriceInBRL = totalPrice * 5; // Conversão simulada MATIC -> BRL
+    const totalPriceInBRL = totalPrice; // Valor já está em BRL
 
     const handlePayWithPix = async () => {
         setIsLoading(true);
@@ -152,7 +152,7 @@ const Checkout: React.FC = () => {
                                         </div>
                                         <div className="text-right">
                                             <p className="font-bold text-primary">
-                                                R$ {(nft.preco * nft.quantidade * 5).toFixed(2)}
+                                                R$ {(nft.preco * nft.quantidade).toFixed(2)}
                                             </p>
                                         </div>
                                     </div>
