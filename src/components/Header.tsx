@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Menu, Wallet, Sparkles, User, LogOut } from "lucide-react";
+import { Menu, ShoppingCart, Sparkles, User, LogOut, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useWallet } from "@/contexts/WalletContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,11 +20,9 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
   const { getTotalNFTs } = useWallet();
-  const { user, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const totalNFTs = getTotalNFTs();
-  const isAuthenticated = !!user;
-
 
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
@@ -75,9 +73,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
               size="icon"
               onClick={onWalletClick}
               className="relative"
-              aria-label="Abrir carteira"
+              aria-label="Abrir carrinho"
             >
-              <Wallet className="h-5 w-5" />
+              <ShoppingCart className="h-5 w-5" />
               {totalNFTs > 0 && (
                 <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center animate-fade-in">
                   {totalNFTs}
@@ -110,7 +108,6 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
                     <User className="mr-2 h-4 w-4" />
                     Minha Conta
                   </DropdownMenuItem>
-
                   <DropdownMenuItem onClick={() => { logout(); navigate("/"); }}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Sair

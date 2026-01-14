@@ -1,14 +1,15 @@
 import React from "react";
-import { X, Wallet, Sparkles, Trash2 } from "lucide-react";
+import { X, ShoppingCart, Sparkles, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useWallet } from "@/contexts/WalletContext";
+import { useNavigate } from "react-router-dom";
 
 interface WalletDrawerProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
-const rarityColors = {
+const rarityColors: Record<string, string> = {
     comum: "from-gray-400 to-gray-500",
     raro: "from-blue-400 to-cyan-500",
     epico: "from-purple-400 to-pink-500",
@@ -18,6 +19,12 @@ const rarityColors = {
 const WalletDrawer: React.FC<WalletDrawerProps> = ({ isOpen, onClose }) => {
     const { ownedNFTs, getTotalNFTs, removeNFT } = useWallet();
     const totalNFTs = getTotalNFTs();
+    const navigate = useNavigate();
+
+    const handleCheckout = () => {
+        onClose();
+        navigate("/checkout");
+    };
 
     return (
         <>
@@ -37,16 +44,16 @@ const WalletDrawer: React.FC<WalletDrawerProps> = ({ isOpen, onClose }) => {
                     {/* Header */}
                     <div className="flex items-center justify-between p-4 border-b border-border">
                         <div className="flex items-center gap-3">
-                            <Wallet className="h-5 w-5 text-primary" />
+                            <ShoppingCart className="h-5 w-5 text-primary" />
                             <span className="font-bold text-lg text-foreground">
-                                Minha Carteira
+                                Meu Carrinho
                             </span>
                         </div>
                         <Button
                             variant="ghost"
                             size="icon"
                             onClick={onClose}
-                            aria-label="Fechar carteira"
+                            aria-label="Fechar carrinho"
                         >
                             <X className="h-5 w-5" />
                         </Button>
@@ -69,12 +76,12 @@ const WalletDrawer: React.FC<WalletDrawerProps> = ({ isOpen, onClose }) => {
                     <div className="flex-1 overflow-y-auto p-4 space-y-3">
                         {ownedNFTs.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full text-center">
-                                <Wallet className="h-16 w-16 text-muted-foreground/50 mb-4" />
+                                <ShoppingCart className="h-16 w-16 text-muted-foreground/50 mb-4" />
                                 <p className="text-lg font-medium text-muted-foreground">
-                                    Sua carteira está vazia
+                                    Seu carrinho está vazio
                                 </p>
                                 <p className="text-sm text-muted-foreground mt-1">
-                                    Compre NFTs para participar dos sorteios
+                                    Adicione NFTs para participar dos sorteios
                                 </p>
                             </div>
                         ) : (
@@ -113,10 +120,20 @@ const WalletDrawer: React.FC<WalletDrawerProps> = ({ isOpen, onClose }) => {
 
                     {/* Footer */}
                     {ownedNFTs.length > 0 && (
-                        <div className="p-4 border-t border-border">
-                            <p className="text-sm text-muted-foreground text-center">
-                                Use seus NFTs para participar dos sorteios acima!
-                            </p>
+                        <div className="p-4 border-t border-border space-y-3">
+                            <div className="flex justify-between items-center">
+                                <span className="text-sm text-muted-foreground">Total</span>
+                                <span className="text-lg font-bold text-gradient">
+                                    {ownedNFTs.reduce((sum, nft) => sum + nft.preco * nft.quantidade, 0).toFixed(2)} MATIC
+                                </span>
+                            </div>
+                            <Button
+                                className="w-full"
+                                size="lg"
+                                onClick={handleCheckout}
+                            >
+                                Finalizar Compra
+                            </Button>
                         </div>
                     )}
                 </div>
