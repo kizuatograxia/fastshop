@@ -14,6 +14,13 @@ dotenv.config({ path: '../.env' });
 const app = express();
 const PORT = process.env.PORT || 5050;
 
+// Validate essential environment variables
+if (!process.env.DATABASE_URL) {
+    console.error('CRITICAL ERROR: DATABASE_URL is not defined!');
+    console.error('Please configure DATABASE_URL in your Railway Project Settings.');
+    // Don't crash immediately, allow health check to maybe fail gracefully or just log
+}
+
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -28,12 +35,26 @@ app.use((req, res, next) => {
 });
 
 // Database connection
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-});
+let pool;
+try {
+    if (process.env.DATABASE_URL) {
+        pool = new Pool({
+            connectionString: process.env.DATABASE_URL,
+            ssl: process.env.RAILWAY_ENVIRONMENT ? { rejectUnauthorized: false } : false // Handle SSL for Railway
+        });
+    } else {
+        console.warn('Database pool not initialized due to missing DATABASE_URL');
+    }
+} catch (err) {
+    console.error('Failed to create database pool:', err);
+}
 
 // Initialize Database
 const initDB = async () => {
+    if (!pool) {
+        console.warn('Skipping DB initialization: Pool not ready');
+        return;
+    }
     try {
         await pool.query(`
             CREATE TABLE IF NOT EXISTS users (
@@ -109,6 +130,7 @@ initDB();
 // Routes
 app.get('/health', async (req, res) => {
     try {
+        if (!pool) throw new Error('Database pool not initialized');
         await pool.query('SELECT 1');
         res.json({ status: 'ok', database: 'connected' });
     } catch (error) {
