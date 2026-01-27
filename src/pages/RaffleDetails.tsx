@@ -1,12 +1,16 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Clock, Users, Ticket, Trophy, Calendar, Target, Info, CheckCircle2, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { raffles } from "@/data/raffles";
 import { useWallet } from "@/contexts/WalletContext";
 import { useUserRaffles } from "@/contexts/UserRafflesContext";
+import { api } from "@/lib/api";
 import { toast } from "sonner";
+// Removed duplicate toast import
 import { OwnedNFT } from "@/types/raffle";
+import { Progress } from "@/components/ui/progress";
+
 
 const rarityColors: Record<string, string> = {
     comum: "from-gray-400 to-gray-500",
@@ -22,8 +26,50 @@ const RaffleDetails: React.FC = () => {
     const { addUserRaffle, getUserValue } = useUserRaffles();
 
     const [selectedNFTs, setSelectedNFTs] = useState<Record<string, number>>({});
+    const [raffle, setRaffle] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
 
-    const raffle = raffles.find((r) => r.id === id);
+    useEffect(() => {
+        if (id) {
+            api.getRaffle(id)
+                .then(data => {
+                    // Map backend data to frontend model if needed
+                    // For now assuming existing mapping or compatible structure
+                    // The api.getRaffle should return mapped data similar to api.getActiveRaffles
+                    // But api.ts getRaffle just does res.json(). 
+                    // We need to ensure we map it correctly.
+
+                    // Actually, let's look at api.ts getRaffle. It returns raw JSON.
+                    // We should probably map it here or in api.ts.
+                    // Let's assume raw data for now and map it locally.
+
+                    const mapped = {
+                        id: String(data.id),
+                        titulo: data.title,
+                        descricao: data.description,
+                        imagem: data.image_url && !data.image_url.includes('example.com')
+                            ? data.image_url
+                            : "https://images.unsplash.com/photo-1635326444826-06c8f8d2e61d?w=800&q=80",
+                        status: data.status === 'active' ? 'ativo' : 'encerrado',
+                        premio: data.prize_pool,
+                        premioValor: 5000,
+                        dataFim: data.draw_date || "2024-12-31",
+                        custoNFT: data.ticket_price,
+                        participantes: parseInt(data.tickets_sold) || 0,
+                        categoria: "geral",
+                        raridade: "comum",
+                        emoji: "🎫"
+                    };
+                    setRaffle(mapped);
+                })
+                .catch(err => {
+                    console.error("Error fetching raffle", err);
+                    toast.error("Erro ao carregar sorteio. Tente novamente.");
+                })
+                .finally(() => setLoading(false));
+        }
+    }, [id]);
+
     const userCurrentValue = raffle ? getUserValue(raffle.id) : 0;
 
     // Mock pool value for estimation (since backend is mock)
@@ -82,6 +128,14 @@ const RaffleDetails: React.FC = () => {
         return Math.min(chance, 100);
     };
 
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
     if (!raffle) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
@@ -100,14 +154,34 @@ const RaffleDetails: React.FC = () => {
     const currentChance = calculateChance(userCurrentValue);
     const potentialChance = calculateChance(userCurrentValue + selectedValue);
 
+    const ticketPrice = raffle.custoNFT;
+    const ticketsToReceive = Math.floor(selectedValue / ticketPrice);
+
+    // Calculate progress/revenue
+    // Target: 1.5x Prize Value (e.g. 5000 prize -> 7500 target)
+    const targetRevenue = (raffle.premioValor || 5000) * 1.5;
+    const currentRevenue = (raffle.participantes * ticketPrice);
+    const revenueProgress = Math.min((currentRevenue / targetRevenue) * 100, 100);
+
     const handleParticipate = async () => {
         if (selectedCount === 0) {
             toast.error("Selecione pelo menos 1 NFT para participar");
             return;
         }
 
-        // Add to raffle
-        addUserRaffle(raffle, selectedCount, selectedValue);
+        if (ticketsToReceive === 0) {
+            toast.error(`O valor selecionado (R$ ${selectedValue.toFixed(2)}) é insuficiente para um bilhete (R$ ${ticketPrice})`);
+            return;
+        }
+
+        // Add to raffle (Use ticketsToReceive, not selectedCount)
+        await addUserRaffle(raffle, ticketsToReceive, selectedValue);
+
+        // Update local raffle state instantly
+        setRaffle((prev: any) => ({
+            ...prev,
+            participantes: prev.participantes + ticketsToReceive
+        }));
 
         // Remove from wallet
         for (const [nftId, qty] of Object.entries(selectedNFTs)) {
@@ -117,7 +191,20 @@ const RaffleDetails: React.FC = () => {
         // Reset selection
         setSelectedNFTs({});
 
-        toast.success(`Você entrou no sorteio com ${selectedCount} NFTs!`, {
+        // Force refresh from server to confirm persistence
+        try {
+            const data = await api.getRaffle(raffle.id);
+            if (data && data.tickets_sold) {
+                setRaffle((prev: any) => ({
+                    ...prev,
+                    participantes: parseInt(data.tickets_sold) || 0
+                }));
+            }
+        } catch (error) {
+            console.error("Failed to refresh raffle stats", error);
+        }
+
+        toast.success(`Você entrou no sorteio com ${ticketsToReceive} Bilhetes!`, {
             description: `Valor total adicionado: R$ ${selectedValue.toFixed(2)}`,
         });
     };
@@ -164,6 +251,9 @@ const RaffleDetails: React.FC = () => {
                                     src={raffle.imagem}
                                     alt={raffle.titulo}
                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                    onError={(e) => {
+                                        e.currentTarget.src = "https://images.unsplash.com/photo-1635326444826-06c8f8d2e61d?w=800&q=80";
+                                    }}
                                 />
                                 <div className="absolute top-4 left-4 flex items-center gap-1 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-sm font-bold shadow-lg">
                                     <Clock className="h-4 w-4" />
@@ -208,11 +298,26 @@ const RaffleDetails: React.FC = () => {
                         </div>
 
                         {/* Raffle Stats */}
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="col-span-1 md:col-span-2 p-4 bg-card rounded-xl border border-border space-y-3">
+                                <div className="flex justify-between items-center text-sm font-medium">
+                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                        <Target className="h-4 w-4" />
+                                        <span>Progresso da Arrecadação</span>
+                                    </div>
+                                    <span className="text-primary">{revenueProgress.toFixed(1)}%</span>
+                                </div>
+                                <Progress value={revenueProgress} className="h-3" />
+                                <div className="flex justify-between text-xs text-muted-foreground">
+                                    <span>Atual: R$ {currentRevenue.toLocaleString()}</span>
+                                    <span>Meta: R$ {targetRevenue.toLocaleString()}</span>
+                                </div>
+                            </div>
+
                             <div className="p-4 bg-card rounded-xl border border-border">
                                 <div className="flex items-center gap-2 text-muted-foreground mb-1">
                                     <Users className="h-4 w-4" />
-                                    <span className="text-sm">Participantes</span>
+                                    <span className="text-sm">Bilhetes Vendidos</span>
                                 </div>
                                 <p className="text-2xl font-bold text-foreground">
                                     {raffle.participantes}
@@ -233,7 +338,6 @@ const RaffleDetails: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* RIGHT COLUMN: Selection & Action */}
                     <div className="space-y-6">
                         <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
                             <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
@@ -329,6 +433,10 @@ const RaffleDetails: React.FC = () => {
                                     <span className="text-muted-foreground">Valor Total Contribuição</span>
                                     <span className="font-bold text-primary">R$ {selectedValue.toFixed(2)}</span>
                                 </div>
+                                <div className="flex justify-between text-sm border-t border-dashed pt-2">
+                                    <span className="text-muted-foreground">Bilhetes a Receber</span>
+                                    <span className="font-bold text-green-500">{ticketsToReceive}</span>
+                                </div>
                                 <div className="h-px bg-border my-2" />
                                 <div className="flex justify-between items-center">
                                     <span className="font-bold">Nova Chance Estimada</span>
@@ -356,10 +464,13 @@ const RaffleDetails: React.FC = () => {
                             </Button>
 
                             <p className="text-xs text-center text-muted-foreground">
-                                Ao confirmar, os NFTs selecionados serão removidos da sua carteira permanentemente.
+                                Ao confirmar, os NFTs selecionados serão convertidos em bilhetes proporcionalmente ao seu valor.
+                                (1 Bilhete = R$ {ticketPrice})
                             </p>
                         </div>
                     </div>
+
+
                 </div>
             </main>
         </div>

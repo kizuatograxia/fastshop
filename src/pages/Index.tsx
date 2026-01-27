@@ -7,12 +7,24 @@ import RaffleGrid from "@/components/RaffleGrid";
 import NFTGrid from "@/components/NFTGrid";
 import HowItWorks from "@/components/HowItWorks";
 import WalletDrawer from "@/components/WalletDrawer";
-import { raffles, nfts } from "@/data/raffles";
+import { raffles as localRaffles, nfts } from "@/data/raffles";
+import { api } from "@/lib/api";
+import { Raffle } from "@/types/raffle";
 
 const Index: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [walletOpen, setWalletOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState("todos");
+  const [raffles, setRaffles] = useState<Raffle[]>([]);
+
+  React.useEffect(() => {
+    api.getActiveRaffles()
+      .then(setRaffles)
+      .catch(err => {
+        console.error("Failed to fetch raffles, falling back to local", err);
+        setRaffles(localRaffles);
+      });
+  }, []);
 
   const filteredRaffles =
     activeCategory === "todos"

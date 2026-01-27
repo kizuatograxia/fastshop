@@ -4,6 +4,11 @@ import bodyParser from 'body-parser';
 import { OAuth2Client } from 'google-auth-library';
 import dotenv from 'dotenv';
 
+import pkg from 'pg';
+
+import crypto from 'crypto';
+const { Pool } = pkg;
+
 dotenv.config({ path: '../.env' });
 
 const app = express();
@@ -22,46 +27,135 @@ app.use((req, res, next) => {
     next();
 });
 
-// In-memory data store
-const users = [];
-const wallets = {}; // userId -> [ownedNFTs]
+// Database connection
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+});
 
-// Helper to find user
-const findUser = (email) => users.find(u => u.email === email);
+// Initialize Database
+const initDB = async () => {
+    try {
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                email VARCHAR(255) UNIQUE NOT NULL,
+                password VARCHAR(255) NOT NULL,
+                name VARCHAR(255),
+                picture TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS wallets (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
+                nft_id VARCHAR(255) NOT NULL,
+                nft_metadata JSONB,
+                quantity INTEGER DEFAULT 1,
+                UNIQUE(user_id, nft_id)
+            );
+        `);
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS raffles (
+                id SERIAL PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                prize_pool VARCHAR(255),
+                ticket_price INTEGER NOT NULL,
+                max_tickets INTEGER,
+                status VARCHAR(50) DEFAULT 'active', -- active, completed
+                draw_date TIMESTAMP,
+                image_url TEXT,
+                draw_date TIMESTAMP,
+                image_url TEXT,
+                prize_value INTEGER DEFAULT 0,
+                category VARCHAR(50) DEFAULT 'tech',
+                rarity VARCHAR(50) DEFAULT 'comum',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS tickets (
+                id SERIAL PRIMARY KEY,
+                raffle_id INTEGER REFERENCES raffles(id),
+                user_id INTEGER REFERENCES users(id),
+                hash VARCHAR(255), -- blockchain tx hash
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        // Seed some raffles if empty
+        const rafflesCheck = await pool.query('SELECT count(*) FROM raffles');
+        if (parseInt(rafflesCheck.rows[0].count) === 0) {
+            await pool.query(`
+                INSERT INTO raffles (title, description, prize_pool, ticket_price, max_tickets, draw_date, image_url)
+                VALUES 
+                ('Sorteio iPhone 15 Pro Max', 'Concorra a um iPhone 15 Pro Max novinho!', 'iPhone 15 Pro Max', 10, 1000, NOW() + INTERVAL '7 days', 'https://images.unsplash.com/photo-1696446701796-da61225697cc?w=800&q=80'),
+                ('Sorteio PlayStation 5', 'Leve para casa o console mais desejado do momento.', 'PlayStation 5', 5, 2000, NOW() + INTERVAL '14 days', 'https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=800&q=80');
+            `);
+            console.log('Seeded initial raffles');
+        }
+
+        console.log('Database initialized successfully');
+    } catch (error) {
+        console.error('Error initializing database:', error);
+    }
+};
+
+initDB();
+
+// Routes
 
 // Routes
 
 // Register
-app.post('/api/register', (req, res) => {
+app.post('/api/register', async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
         return res.status(400).json({ message: 'Email e senha são obrigatórios' });
     }
 
-    if (findUser(email)) {
-        return res.status(400).json({ message: 'Usuário já existe' });
+    try {
+        const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (userCheck.rows.length > 0) {
+            return res.status(400).json({ message: 'Usuário já existe' });
+        }
+
+        const newUserResult = await pool.query(
+            'INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id, email',
+            [email, password]
+        );
+        const newUser = newUserResult.rows[0];
+
+        console.log('User registered:', email);
+        res.json({ message: 'Usuário criado com sucesso', user: newUser });
+    } catch (error) {
+        console.error('Error registering user:', error);
+        res.status(500).json({ message: 'Erro ao registrar usuário' });
     }
-
-    const newUser = { id: Date.now(), email, password };
-    users.push(newUser);
-    wallets[newUser.id] = []; // Init wallet
-
-    console.log('User registered:', email);
-    res.json({ message: 'Usuário criado com sucesso', user: { id: newUser.id, email: newUser.email } });
 });
 
 // Login
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
-    const user = findUser(email);
 
-    if (!user || user.password !== password) {
-        return res.status(401).json({ message: 'Credenciais inválidas' });
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        const user = result.rows[0];
+
+        if (!user || user.password !== password) {
+            return res.status(401).json({ message: 'Credenciais inválidas' });
+        }
+
+        console.log('User logged in:', email);
+        res.json({ message: 'Login realizado', user: { id: user.id, email: user.email, name: user.name, picture: user.picture } });
+    } catch (error) {
+        console.error('Error logging in:', error);
+        res.status(500).json({ message: 'Erro ao realizar login' });
     }
-
-    console.log('User logged in:', email);
-    res.json({ message: 'Login realizado', user: { id: user.id, email: user.email } });
 });
 
 // Google Login
@@ -80,21 +174,20 @@ app.post('/api/auth/google', async (req, res) => {
         const { email, name, picture } = payload;
         console.log('Backend: Token verified. Email:', email);
 
-        let user = findUser(email);
+        let userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        let user = userResult.rows[0];
+
         if (!user) {
             console.log('Backend: User not found, registering new user.');
             // Create new user for Google login
-            user = {
-                id: Date.now(),
-                email,
-                password: 'GOOGLE_AUTH_USER',
-                name,
-                picture
-            };
-            users.push(user);
-            wallets[user.id] = [];
+            const newUserResult = await pool.query(
+                'INSERT INTO users (email, password, name, picture) VALUES ($1, $2, $3, $4) RETURNING *',
+                [email, 'GOOGLE_AUTH_USER', name, picture]
+            );
+            user = newUserResult.rows[0];
         } else {
             // Update existing user with latest Google info
+            await pool.query('UPDATE users SET name = $1, picture = $2 WHERE id = $3', [name, picture, user.id]);
             user.name = name;
             user.picture = picture;
         }
@@ -116,50 +209,243 @@ app.post('/api/auth/google', async (req, res) => {
 });
 
 // Get Wallet
-app.get('/api/wallet', (req, res) => {
+app.get('/api/wallet', async (req, res) => {
     const userId = parseInt(req.query.userId);
     if (!userId) return res.status(400).json({ message: 'UserId required' });
 
-    const wallet = wallets[userId] || [];
-    res.json(wallet);
+    try {
+        const result = await pool.query('SELECT nft_id as id, nft_metadata, quantity as quantidade FROM wallets WHERE user_id = $1', [userId]);
+        // Map back to expected properties
+        const wallet = result.rows.map(row => ({
+            id: row.id,
+            ...row.nft_metadata,
+            quantidade: row.quantidade
+        }));
+        res.json(wallet);
+    } catch (error) {
+        console.error('Error fetching wallet:', error);
+        res.status(500).json({ message: 'Erro ao buscar carteira' });
+    }
 });
 
 // Add to Wallet (Buy NFT)
-app.post('/api/wallet', (req, res) => {
+app.post('/api/wallet', async (req, res) => {
     const { userId, nft } = req.body;
     if (!userId || !nft) return res.status(400).json({ message: 'UserId and nft required' });
 
-    if (!wallets[userId]) wallets[userId] = [];
+    try {
+        const check = await pool.query('SELECT * FROM wallets WHERE user_id = $1 AND nft_id = $2', [userId, nft.id]);
 
-    const existingItem = wallets[userId].find(item => item.id === nft.id);
-    if (existingItem) {
-        existingItem.quantidade += 1;
-    } else {
-        wallets[userId].push({ ...nft, quantidade: 1 });
+        const newHash = crypto.randomUUID();
+        const timestamp = new Date().toISOString();
+        const hashData = { hash: newHash, created_at: timestamp };
+
+        if (check.rows.length > 0) {
+            // Get existing metadata and hashes
+            let currentMetadata = check.rows[0].nft_metadata || {};
+            let currentHashes = currentMetadata.hashes || [];
+            currentHashes.push(hashData);
+
+            // Update metadata with new hash list
+            currentMetadata = { ...currentMetadata, hashes: currentHashes };
+
+            await pool.query('UPDATE wallets SET quantity = quantity + 1, nft_metadata = $1 WHERE user_id = $2 AND nft_id = $3',
+                [JSON.stringify(currentMetadata), userId, nft.id]);
+        } else {
+            // New item, init hashes
+            const metadata = { ...nft, hashes: [hashData] };
+            await pool.query('INSERT INTO wallets (user_id, nft_id, nft_metadata, quantity) VALUES ($1, $2, $3, $4)',
+                [userId, nft.id, JSON.stringify(metadata), 1]);
+        }
+
+        // Return updated wallet
+        const result = await pool.query('SELECT nft_id as id, nft_metadata, quantity as quantidade FROM wallets WHERE user_id = $1', [userId]);
+        const wallet = result.rows.map(row => ({
+            id: row.id,
+            ...row.nft_metadata,
+            quantidade: row.quantidade
+        }));
+        res.json(wallet);
+
+    } catch (error) {
+        console.error('Error adding to wallet:', error);
+        res.status(500).json({ message: 'Erro ao adicionar item à carteira' });
     }
-
-    res.json(wallets[userId]);
 });
 
 // Remove from Wallet (Use NFT for raffle or burn)
-app.post('/api/wallet/remove', (req, res) => {
+app.post('/api/wallet/remove', async (req, res) => {
     const { userId, nftId, quantity } = req.body;
     const qty = quantity || 1;
 
     if (!userId || !nftId) return res.status(400).json({ message: 'UserId and nftId required' });
 
-    if (!wallets[userId]) return res.json([]);
+    try {
+        const check = await pool.query('SELECT quantity FROM wallets WHERE user_id = $1 AND nft_id = $2', [userId, nftId]);
 
-    const existingItem = wallets[userId].find(item => item.id === nftId);
-    if (existingItem) {
-        if (existingItem.quantidade <= qty) {
-            wallets[userId] = wallets[userId].filter(item => item.id !== nftId);
-        } else {
-            existingItem.quantidade -= qty;
+        if (check.rows.length > 0) {
+            const currentQty = check.rows[0].quantity;
+            if (currentQty <= qty) {
+                await pool.query('DELETE FROM wallets WHERE user_id = $1 AND nft_id = $2', [userId, nftId]);
+            } else {
+                await pool.query('UPDATE wallets SET quantity = quantity - $1 WHERE user_id = $2 AND nft_id = $3', [qty, userId, nftId]);
+            }
         }
-    }
 
-    res.json(wallets[userId]);
+        // Return updated wallet
+        const result = await pool.query('SELECT nft_id as id, nft_metadata, quantity as quantidade FROM wallets WHERE user_id = $1', [userId]);
+        const wallet = result.rows.map(row => ({
+            id: row.id,
+            ...row.nft_metadata,
+            quantidade: row.quantidade
+        }));
+        res.json(wallet);
+
+    } catch (error) {
+        console.error('Error removing from wallet:', error);
+        res.status(500).json({ message: 'Erro ao remover item da carteira' });
+    }
+});
+
+// RAFFLES ROUTES
+
+// List Active Raffles
+app.get('/api/raffles', async (req, res) => {
+    try {
+        const query = `
+            SELECT r.*, COUNT(t.id) as tickets_sold
+            FROM raffles r
+            LEFT JOIN tickets t ON r.id = t.raffle_id
+            WHERE r.status = 'active'
+            GROUP BY r.id
+            ORDER BY r.created_at DESC
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching raffles:', error);
+        res.status(500).json({ message: 'Erro ao buscar sorteios' });
+    }
+});
+
+// Get Raffle Details
+app.get('/api/raffles/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query('SELECT * FROM raffles WHERE id = $1', [id]);
+        if (result.rows.length === 0) return res.status(404).json({ message: 'Sorteio não encontrado' });
+
+        const raffle = result.rows[0];
+
+        // Get ticket count
+        const ticketsResult = await pool.query('SELECT count(*) FROM tickets WHERE raffle_id = $1', [id]);
+        raffle.tickets_sold = parseInt(ticketsResult.rows[0].count);
+
+        res.json(raffle);
+    } catch (error) {
+        console.error('Error fetching raffle details:', error);
+        res.status(500).json({ message: 'Erro ao buscar detalhes do sorteio' });
+    }
+});
+
+// Get Raffle Participants (Pool for Roulette)
+app.get('/api/raffles/:id/participants', async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Return list of tickets with user info
+        const query = `
+            SELECT 
+                t.id as ticket_id,
+                t.hash,
+                u.id as user_id,
+                u.name,
+                u.picture
+            FROM tickets t
+            JOIN users u ON t.user_id = u.id
+            WHERE t.raffle_id = $1
+            ORDER BY t.created_at DESC
+        `;
+        const result = await pool.query(query, [id]);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching participants:', error);
+        res.status(500).json({ message: 'Erro ao buscar participantes' });
+    }
+});
+
+// Join Raffle (Buy Ticket)
+app.post('/api/raffles/:id/join', async (req, res) => {
+    const { id } = req.params;
+    const { userId, ticketCount, txHash } = req.body;
+
+    if (!userId || !ticketCount) return res.status(400).json({ message: 'Dados incompletos' });
+
+    try {
+        // In real web3, we would verify txHash here or via listener
+
+        const values = [];
+        const placeholders = [];
+        for (let i = 0; i < ticketCount; i++) {
+            values.push(id, userId, txHash || 'OFF_CHAIN_SIMULATION');
+            placeholders.push(`($${i * 3 + 1}, $${i * 3 + 2}, $${i * 3 + 3})`);
+        }
+
+        const query = `INSERT INTO tickets (raffle_id, user_id, hash) VALUES ${placeholders.join(',')} RETURNING id`;
+        // Flatten values array
+        // actually node-postgres doesn't support flat values array for multi-insert easily like this without expanding
+        // Let's do a loop for simplicity or better, generate the query string properly.
+
+        // Simpler loop approach for robustness in this snippet
+        for (let i = 0; i < ticketCount; i++) {
+            await pool.query('INSERT INTO tickets (raffle_id, user_id, hash) VALUES ($1, $2, $3)', [id, userId, txHash || 'pending']);
+        }
+
+        res.json({ message: 'Tickets comprados com sucesso!' });
+
+    } catch (error) {
+        console.error('Error joining raffle:', error);
+        res.status(500).json({ message: 'Erro ao comprar tickets' });
+    }
+});
+
+// Get User Raffles
+app.get('/api/user/raffles', async (req, res) => {
+    const userId = parseInt(req.query.userId);
+    if (!userId) return res.status(400).json({ message: 'UserId required' });
+
+    try {
+        const query = `
+            SELECT 
+                r.*, 
+                count(t.id) as tickets_comprados
+            FROM tickets t
+            JOIN raffles r ON t.raffle_id = r.id
+            WHERE t.user_id = $1
+            GROUP BY r.id
+        `;
+        const result = await pool.query(query, [userId]);
+
+        const userRaffles = result.rows.map(row => ({
+            raffle: {
+                id: row.id,
+                title: row.title,
+                description: row.description,
+                image: row.image_url,
+                price: row.ticket_price,
+                prize: row.prize_pool,
+                drawDate: row.draw_date,
+                status: row.status
+            },
+            ticketsComprados: parseInt(row.tickets_comprados),
+            totalValueContributed: parseInt(row.tickets_comprados) * row.ticket_price,
+            dataParticipacao: new Date().toISOString() // approximation
+        }));
+
+        res.json(userRaffles);
+    } catch (error) {
+        console.error('Error fetching user raffles:', error);
+        res.status(500).json({ message: 'Erro ao buscar sorteios do usuário' });
+    }
 });
 
 app.listen(PORT, () => {

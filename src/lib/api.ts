@@ -56,4 +56,56 @@ export const api = {
         if (!res.ok) throw new Error("Failed to remove from wallet");
         return res.json();
     },
+
+    // Raffles
+    getActiveRaffles: async () => {
+        const res = await fetch(`${API_URL}/raffles`);
+        if (!res.ok) throw new Error("Failed to fetch raffles");
+        const data = await res.json();
+
+        // Map backend fields to frontend interface
+        return data.map((r: any) => ({
+            id: String(r.id),
+            titulo: r.title,
+            descricao: r.description,
+            premio: r.prize_pool,
+            premioValor: r.prize_value || 0,
+            imagem: r.image_url,
+            dataFim: r.draw_date,
+            participantes: parseInt(r.tickets_sold) || 0,
+            maxParticipantes: r.max_tickets,
+            custoNFT: r.ticket_price,
+            status: r.status === 'active' ? 'ativo' : 'encerrado',
+            categoria: r.category || 'tech',
+            raridade: r.rarity || 'comum'
+        }));
+    },
+
+    getRaffle: async (id: string) => {
+        const res = await fetch(`${API_URL}/raffles/${id}`);
+        if (!res.ok) throw new Error("Failed to fetch raffle details");
+        return res.json();
+    },
+
+    getRaffleParticipants: async (id: string) => {
+        const res = await fetch(`${API_URL}/raffles/${id}/participants`);
+        if (!res.ok) throw new Error("Failed to fetch participants");
+        return res.json();
+    },
+
+    joinRaffle: async (raffleId: number, userId: number, ticketCount: number, txHash?: string) => {
+        const res = await fetch(`${API_URL}/raffles/${raffleId}/join`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId, ticketCount, txHash }),
+        });
+        if (!res.ok) throw new Error((await res.json()).message);
+        return res.json();
+    },
+
+    getUserRaffles: async (userId: number) => {
+        const res = await fetch(`${API_URL}/user/raffles?userId=${userId}`);
+        if (!res.ok) throw new Error("Failed to fetch user raffles");
+        return res.json();
+    },
 };

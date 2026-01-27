@@ -56,7 +56,7 @@ const Hero: React.FC = () => {
           <div className="grid grid-cols-3 gap-4 md:gap-8 mt-12 animate-fade-in" style={{ animationDelay: "0.4s" }}>
             <div className="text-center">
               <p className="text-2xl md:text-4xl font-black text-gradient">2.5K+</p>
-              <p className="text-xs md:text-sm text-muted-foreground">Participantes</p>
+              <p className="text-xs md:text-sm text-muted-foreground">Bilhetes Vendidos</p>
             </div>
             <div className="text-center">
               <p className="text-2xl md:text-4xl font-black text-gradient">R$50K+</p>

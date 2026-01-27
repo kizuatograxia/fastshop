@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { Raffle } from "@/types/raffle";
+import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 interface UserRaffle {
     raffle: Raffle;
@@ -10,7 +13,7 @@ interface UserRaffle {
 
 interface UserRafflesContextType {
     userRaffles: UserRaffle[];
-    addUserRaffle: (raffle: Raffle, tickets: number, value: number) => void;
+    addUserRaffle: (raffle: Raffle, tickets: number, value: number) => Promise<void>;
     removeUserRaffle: (raffleId: string) => void;
     isParticipating: (raffleId: string) => boolean;
     getTicketCount: (raffleId: string) => number;
@@ -20,42 +23,82 @@ interface UserRafflesContextType {
 const UserRafflesContext = createContext<UserRafflesContextType | undefined>(undefined);
 
 export const UserRafflesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [userRaffles, setUserRaffles] = useState<UserRaffle[]>(() => {
-        const saved = localStorage.getItem("fastshop_user_raffles");
-        return saved ? JSON.parse(saved) : [];
-    });
+    const { user } = useAuth();
+    const [userRaffles, setUserRaffles] = useState<UserRaffle[]>([]);
+
+    const fetchUserRaffles = useCallback(async () => {
+        if (!user) {
+            setUserRaffles([]);
+            return;
+        }
+        try {
+            const uid = parseInt(user.id);
+            if (!isNaN(uid)) {
+                const data = await api.getUserRaffles(uid);
+                setUserRaffles(data);
+            }
+        } catch (error) {
+            console.error("Failed to load user raffles", error);
+        }
+    }, [user]);
 
     useEffect(() => {
-        localStorage.setItem("fastshop_user_raffles", JSON.stringify(userRaffles));
-    }, [userRaffles]);
+        fetchUserRaffles();
+    }, [fetchUserRaffles]);
 
-    const addUserRaffle = useCallback((raffle: Raffle, tickets: number, value: number) => {
-        setUserRaffles((current) => {
-            const existing = current.find((ur) => ur.raffle.id === raffle.id);
-            if (existing) {
-                return current.map((ur) =>
-                    ur.raffle.id === raffle.id
-                        ? {
-                            ...ur,
-                            ticketsComprados: ur.ticketsComprados + tickets,
-                            totalValueContributed: (ur.totalValueContributed || 0) + value
-                        }
-                        : ur
-                );
-            }
-            return [
-                ...current,
-                {
-                    raffle,
-                    ticketsComprados: tickets,
-                    totalValueContributed: value,
-                    dataParticipacao: new Date().toISOString(),
-                },
-            ];
-        });
-    }, []);
+    const addUserRaffle = useCallback(async (raffle: Raffle, tickets: number, value: number) => {
+        if (!user) return;
+        try {
+            // Optimistic update
+            setUserRaffles((current) => {
+                const existing = current.find((ur) => ur.raffle.id === raffle.id);
+                if (existing) {
+                    return current.map((ur) =>
+                        ur.raffle.id === raffle.id
+                            ? {
+                                ...ur,
+                                ticketsComprados: ur.ticketsComprados + tickets,
+                                totalValueContributed: (ur.totalValueContributed || 0) + value
+                            }
+                            : ur
+                    );
+                }
+                return [
+                    ...current,
+                    {
+                        raffle,
+                        ticketsComprados: tickets,
+                        totalValueContributed: value,
+                        dataParticipacao: new Date().toISOString(),
+                    },
+                ];
+            });
+
+            // Validate IDs
+            const rId = parseInt(raffle.id);
+            const uId = parseInt(user.id);
+
+            if (isNaN(rId)) throw new Error("ID do sorteio inválido");
+            if (isNaN(uId)) throw new Error("ID do usuário inválido");
+
+            // Call API
+            await api.joinRaffle(rId, uId, tickets);
+
+            // Refresh to ensure sync with backend
+            await fetchUserRaffles();
+
+            toast.success("Participação registrada com sucesso!");
+
+        } catch (error: any) {
+            console.error("Failed to join raffle", error);
+            // Revert optimistic update
+            fetchUserRaffles();
+            toast.error(error.message || "Erro ao registrar participação");
+        }
+    }, [user, fetchUserRaffles]);
 
     const removeUserRaffle = useCallback((raffleId: string) => {
+        // Not implemented in API yet for user removal of participation, assuming permanent for now
         setUserRaffles((current) => current.filter((ur) => ur.raffle.id !== raffleId));
     }, []);
 

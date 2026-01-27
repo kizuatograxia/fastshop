@@ -34,7 +34,7 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index }) => {
             return;
         }
 
-        addUserRaffle(raffle, raffle.custoNFT);
+        addUserRaffle(raffle, 1, raffle.custoNFT);
         toast.success(`Você entrou no sorteio: ${raffle.titulo}!`, {
             description: `Custo: ${raffle.custoNFT} NFT(s)`,
         });
@@ -78,6 +78,9 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index }) => {
                     alt={raffle.titulo}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     loading="lazy"
+                    onError={(e) => {
+                        e.currentTarget.src = "https://images.unsplash.com/photo-1635326444826-06c8f8d2e61d?w=800&q=80";
+                    }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
@@ -97,7 +100,7 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index }) => {
                     <div className="flex justify-between text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                             <Users className="h-3 w-3" />
-                            {raffle.participantes} participantes
+                            {raffle.participantes} bilhetes vendidos
                         </span>
                         <span>{Math.round(progressPercent)}%</span>
                     </div>

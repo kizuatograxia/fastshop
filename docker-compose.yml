@@ -16,11 +16,7 @@ services:
   server:
     build: ./server
     ports:
-<<<<<<< HEAD
-      - "8085:3000"
-=======
       - "5050:5050"
->>>>>>> 00e0883f8dcaf83f5cc873ecdaaa0808fe610b8b
     environment:
       - DATABASE_URL=postgres://postgres:postgrespassword@db:5432/fastshop
     depends_on:
