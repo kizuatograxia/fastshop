@@ -88,8 +88,6 @@ const initDB = async () => {
                 status VARCHAR(50) DEFAULT 'active', -- active, completed
                 draw_date TIMESTAMP,
                 image_url TEXT,
-                draw_date TIMESTAMP,
-                image_url TEXT,
                 prize_value INTEGER DEFAULT 0,
                 category VARCHAR(50) DEFAULT 'tech',
                 rarity VARCHAR(50) DEFAULT 'comum',
