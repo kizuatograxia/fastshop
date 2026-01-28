@@ -12,6 +12,7 @@ import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import RaffleDetails from "./pages/RaffleDetails";
 import Checkout from "./pages/Checkout";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
@@ -37,7 +38,9 @@ const App = () => (
                     <Route path="/register" element={<Auth defaultTab="register" />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/raffle/:id" element={<RaffleDetails />} />
+                    <Route path="/raffle/:id" element={<RaffleDetails />} />
                     <Route path="/checkout" element={<Checkout />} />
+                    <Route path="/admin" element={<Admin />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                     <Route path="*" element={<NotFound />} />
                   </Routes>

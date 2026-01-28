@@ -430,6 +430,59 @@ app.get('/api/raffles/:id/participants', async (req, res) => {
     }
 });
 
+// ADMIN ROUTES
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+
+app.post('/api/admin/verify', (req, res) => {
+    const { password } = req.body;
+    if (password === ADMIN_PASSWORD) {
+        res.json({ success: true, message: "Acesso autorizado" });
+    } else {
+        res.status(401).json({ success: false, message: "Senha incorreta" });
+    }
+});
+
+app.post('/api/raffles', async (req, res) => {
+    const { password, raffle } = req.body;
+
+    // Simple security check
+    if (password !== ADMIN_PASSWORD) {
+        return res.status(401).json({ message: "Não autorizado" });
+    }
+
+    if (!raffle || !raffle.title || !raffle.ticket_price) {
+        return res.status(400).json({ message: "Dados do sorteio incompletos" });
+    }
+
+    try {
+        const query = `
+            INSERT INTO raffles (title, description, prize_pool, ticket_price, max_tickets, draw_date, image_url, prize_value, category, rarity)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            RETURNING *
+        `;
+        const values = [
+            raffle.title,
+            raffle.description,
+            raffle.prize_pool || raffle.title,
+            raffle.ticket_price,
+            raffle.max_tickets || 1000,
+            raffle.draw_date,
+            raffle.image_url,
+            raffle.prize_value || 0,
+            raffle.category || 'tech',
+            raffle.rarity || 'comum'
+        ];
+
+        const result = await pool.query(query, values);
+        console.log('Admin created new raffle:', result.rows[0].title);
+        res.json(result.rows[0]);
+
+    } catch (error) {
+        console.error('Error creating raffle:', error);
+        res.status(500).json({ message: 'Erro ao criar sorteio' });
+    }
+});
+
 // Join Raffle (Buy Ticket)
 app.post('/api/raffles/:id/join', async (req, res) => {
     const { id } = req.params;

@@ -111,4 +111,25 @@ export const api = {
         if (!res.ok) throw new Error("Failed to fetch user raffles");
         return res.json();
     },
+
+    // Admin
+    verifyAdmin: async (password: string) => {
+        const res = await fetch(`${API_URL}/admin/verify`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password }),
+        });
+        if (!res.ok) throw new Error("Senha incorreta");
+        return res.json();
+    },
+
+    createRaffle: async (password: string, raffle: any) => {
+        const res = await fetch(`${API_URL}/raffles`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password, raffle }),
+        });
+        if (!res.ok) throw new Error("Falha ao criar sorteio");
+        return res.json();
+    }
 };
