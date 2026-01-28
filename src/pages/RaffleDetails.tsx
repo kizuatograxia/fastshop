@@ -168,6 +168,11 @@ const RaffleDetails: React.FC = () => {
     const revenueProgress = Math.min((currentRevenue / targetRevenue) * 100, 100);
 
     const handleParticipate = async () => {
+        if (raffle.status !== 'ativo') {
+            toast.error("Este sorteio já foi encerrado!");
+            return;
+        }
+
         if (selectedCount === 0) {
             toast.error("Selecione pelo menos 1 NFT para participar");
             return;
