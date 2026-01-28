@@ -181,7 +181,8 @@ export const api = {
             categoria: r.category || 'tech',
             raridade: r.rarity || 'comum'
         }));
-    }
+    },
+
     drawRaffle: async (password: string, id: string) => {
         const res = await fetch(`${API_URL}/raffles/${id}/draw`, {
             method: "POST",
