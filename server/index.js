@@ -114,15 +114,16 @@ const initDB = async () => {
                 title VARCHAR(255) NOT NULL,
                 description TEXT,
                 prize_pool VARCHAR(255),
-                ticket_price INTEGER NOT NULL,
-                max_tickets INTEGER,
-                status VARCHAR(50) DEFAULT 'active', -- active, completed
+                ticket_price DECIMAL(10,2) NOT NULL,
+                max_tickets INTEGER DEFAULT 1000,
                 draw_date TIMESTAMP,
                 image_url TEXT,
-                prize_value INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                status VARCHAR(50) DEFAULT 'active',
+                prize_value DECIMAL(10,2) DEFAULT 0,
                 category VARCHAR(50) DEFAULT 'tech',
                 rarity VARCHAR(50) DEFAULT 'comum',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                winner_id INTEGER REFERENCES users(id)
             );
         `);
 
@@ -401,7 +402,15 @@ app.get('/api/raffles', async (req, res) => {
 app.get('/api/raffles/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        const result = await pool.query('SELECT * FROM raffles WHERE id = $1', [id]);
+        const query = `
+            SELECT r.*, 
+                   u.name as winner_name, 
+                   u.picture as winner_picture 
+            FROM raffles r
+            LEFT JOIN users u ON r.winner_id = u.id
+            WHERE r.id = $1
+        `;
+        const result = await pool.query(query, [id]);
         if (result.rows.length === 0) return res.status(404).json({ message: 'Sorteio não encontrado' });
 
         const raffle = result.rows[0];
@@ -638,8 +647,8 @@ app.post('/api/raffles/:id/draw', async (req, res) => {
         const winningIndex = crypto.randomInt(0, totalTickets);
         const winningTicket = tickets[winningIndex];
 
-        // 3. Update Raffle Status
-        await pool.query('UPDATE raffles SET status = $1, prize_value = prize_value WHERE id = $2', ['encerrado', id]);
+        // 3. Update Raffle Status and Winner
+        await pool.query('UPDATE raffles SET status = $1, prize_value = prize_value, winner_id = $2 WHERE id = $3', ['encerrado', winningTicket.user_id, id]);
 
         // 4. Return Winner Info
         console.log(`Draw for Raffle ${id}: Ticket ${winningIndex}/${totalTickets} won. User: ${winningTicket.name}`);
