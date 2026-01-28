@@ -1,4 +1,7 @@
-export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5050/api";
+// Hardcoded fallback for production debug
+const PROD_URL = "https://mundopix-production.up.railway.app/api";
+export const API_URL = import.meta.env.VITE_API_URL || PROD_URL;
+console.log("API URL configured as:", API_URL);
 
 export const api = {
     login: async (email, password) => {
