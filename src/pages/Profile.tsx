@@ -202,7 +202,8 @@ const Profile = () => {
                                     return (
                                         <div
                                             key={ur.raffle.id}
-                                            className="flex items-center gap-4 p-4 rounded-lg bg-secondary/50 border border-border"
+                                            onClick={() => navigate(`/raffle/${ur.raffle.id}`)}
+                                            className="flex items-center gap-4 p-4 rounded-lg bg-secondary/50 border border-border cursor-pointer hover:bg-secondary/70 transition-colors"
                                         >
                                             <img
                                                 src={ur.raffle.imagem}
