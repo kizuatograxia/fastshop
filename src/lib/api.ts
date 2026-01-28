@@ -182,4 +182,13 @@ export const api = {
             raridade: r.rarity || 'comum'
         }));
     }
+    drawRaffle: async (password: string, id: string) => {
+        const res = await fetch(`${API_URL}/raffles/${id}/draw`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password }),
+        });
+        if (!res.ok) throw new Error("Falha ao realizar sorteio");
+        return res.json();
+    },
 };
