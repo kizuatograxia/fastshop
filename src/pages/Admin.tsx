@@ -289,6 +289,22 @@ const Admin = () => {
                                 />
                             </div>
                         </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>Categoria</Label>
+                            <select
+                                value={formData.category}
+                                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                className="w-full h-10 px-3 rounded-md border border-input bg-background/50 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                                <option value="tech">Tech & Eletrônicos</option>
+                                <option value="giftcard">Gift Cards & Vouchers</option>
+                                <option value="games">Games & Consoles</option>
+                                <option value="viagens">Viagens & Experiências</option>
+                                <option value="outros">Outros</option>
+                            </select>
+                        </div>
                         <div className="space-y-2">
                             <Label>Max Tickets</Label>
                             <Input
