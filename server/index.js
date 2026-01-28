@@ -608,6 +608,59 @@ app.post('/api/raffles/:id/join', async (req, res) => {
     }
 });
 
+// Perform Draw (Unbiased RNG)
+app.post('/api/raffles/:id/draw', async (req, res) => {
+    const { id } = req.params;
+    const { password } = req.body;
+
+    if (password !== ADMIN_PASSWORD) {
+        return res.status(401).json({ message: "Não autorizado" });
+    }
+
+    try {
+        // 1. Get all tickets for this raffle
+        const ticketsResult = await pool.query(`
+            SELECT t.id, t.user_id, u.name, u.picture
+            FROM tickets t
+            JOIN users u ON t.user_id = u.id
+            WHERE t.raffle_id = $1
+            ORDER BY t.id ASC
+        `, [id]);
+
+        const tickets = ticketsResult.rows;
+        const totalTickets = tickets.length;
+
+        if (totalTickets === 0) {
+            return res.status(400).json({ message: "Não há participantes neste sorteio." });
+        }
+
+        // 2. Generate Secure Random Number
+        const winningIndex = crypto.randomInt(0, totalTickets);
+        const winningTicket = tickets[winningIndex];
+
+        // 3. Update Raffle Status
+        await pool.query('UPDATE raffles SET status = $1, prize_value = prize_value WHERE id = $2', ['encerrado', id]);
+
+        // 4. Return Winner Info
+        console.log(`Draw for Raffle ${id}: Ticket ${winningIndex}/${totalTickets} won. User: ${winningTicket.name}`);
+
+        res.json({
+            winner: {
+                id: winningTicket.user_id,
+                name: winningTicket.name,
+                picture: winningTicket.picture,
+                ticketId: winningTicket.id
+            },
+            totalTickets,
+            winningTicketIndex: winningIndex
+        });
+
+    } catch (error) {
+        console.error('Error performing draw:', error);
+        res.status(500).json({ message: 'Erro ao realizar sorteio' });
+    }
+});
+
 // Get User Raffles
 app.get('/api/user/raffles', async (req, res) => {
     const userId = parseInt(req.query.userId);
