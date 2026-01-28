@@ -38,6 +38,11 @@ type ViewMode = 'dashboard' | 'create' | 'participants';
 const Admin = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState("");
+
+    useEffect(() => {
+        console.log("Admin Dashboard v2.0 - Fix Applied");
+    }, []);
+
     const [isLoading, setIsLoading] = useState(false);
     const [view, setView] = useState<ViewMode>('dashboard');
     const [raffles, setRaffles] = useState<Raffle[]>([]);
