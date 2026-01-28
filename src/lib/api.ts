@@ -109,7 +109,15 @@ export const api = {
     getUserRaffles: async (userId: number) => {
         const res = await fetch(`${API_URL}/user/raffles?userId=${userId}`);
         if (!res.ok) throw new Error("Failed to fetch user raffles");
-        return res.json();
+        const data = await res.json();
+        // Ensure IDs are strings to match frontend types
+        return data.map((ur: any) => ({
+            ...ur,
+            raffle: {
+                ...ur.raffle,
+                id: String(ur.raffle.id)
+            }
+        }));
     },
 
     // Admin

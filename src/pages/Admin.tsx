@@ -316,13 +316,29 @@ const Admin = () => {
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label>Data do Sorteio</Label>
-                            <Input
-                                type="date"
-                                value={formData.draw_date}
-                                onChange={(e) => setFormData({ ...formData, draw_date: e.target.value })}
-                                className="bg-background/50"
-                            />
+                            <Label>Data e Hora do Sorteio</Label>
+                            <div className="flex gap-2">
+                                <Input
+                                    type="date"
+                                    value={formData.draw_date ? formData.draw_date.split('T')[0] : ''}
+                                    onChange={(e) => {
+                                        const newDate = e.target.value;
+                                        const currentTime = formData.draw_date ? formData.draw_date.split('T')[1]?.split('.')[0] || '00:00:00' : '00:00:00';
+                                        setFormData({ ...formData, draw_date: `${newDate}T${currentTime}` });
+                                    }}
+                                    className="bg-background/50 flex-1"
+                                />
+                                <Input
+                                    type="time"
+                                    value={formData.draw_date ? formData.draw_date.split('T')[1]?.substring(0, 5) : '00:00'}
+                                    onChange={(e) => {
+                                        const newTime = e.target.value; // HH:mm
+                                        const currentDate = formData.draw_date ? formData.draw_date.split('T')[0] : new Date().toISOString().split('T')[0];
+                                        setFormData({ ...formData, draw_date: `${currentDate}T${newTime}:00.000Z` });
+                                    }}
+                                    className="bg-background/50 w-32"
+                                />
+                            </div>
                         </div>
                         <div className="space-y-2">
                             <Label>Max Tickets</Label>
@@ -410,8 +426,7 @@ const Admin = () => {
                             <TableRow>
                                 <TableHead>Usuário</TableHead>
                                 <TableHead className="text-right">Bilhetes</TableHead>
-                                <TableHead className="text-right">Investimento (NFTs)</TableHead>
-                                <TableHead className="text-right">Investimento Estimado (R$)</TableHead>
+                                <TableHead className="text-right">Valor Estimado (R$)</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -427,12 +442,8 @@ const Admin = () => {
                                     <TableCell className="text-right font-bold text-lg">{user.ticket_count}</TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-1 text-primary font-bold">
-                                            {user.ticket_count * (selectedRaffle?.custoNFT || 0)} 💎
+                                            R$ {(user.ticket_count * (selectedRaffle?.custoNFT || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                         </div>
-                                    </TableCell>
-                                    <TableCell className="text-right text-muted-foreground">
-                                        {/* Assuming roughly 1 NFT = R$10 just for estimation logic if not real price */}
-                                        R$ {(user.ticket_count * (selectedRaffle?.custoNFT || 0) * 10).toLocaleString('pt-BR')} (Est.)
                                     </TableCell>
                                 </TableRow>
                             ))}
