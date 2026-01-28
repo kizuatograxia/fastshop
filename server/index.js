@@ -128,13 +128,25 @@ const initDB = async () => {
         `);
 
         // Migration: Add columns if they don't exist (for existing production DB)
+        // Migration: Add columns if they don't exist
         try {
-            await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS prize_value INTEGER DEFAULT 0;`);
+            await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS prize_value DECIMAL(10,2) DEFAULT 0;`);
             await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS category VARCHAR(50) DEFAULT 'tech';`);
             await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS rarity VARCHAR(50) DEFAULT 'comum';`);
-            console.log('Migration: Checked/Added new raffle columns');
+
+            // Fix for Winner ID - Handle potential FK issues or missing column
+            await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS winner_id INTEGER;`);
+
+            // Try to add constraint separately, ignore if fails (it might fail if users table doesn't exist yet or data mismatch, but column is what matters for 500)
+            try {
+                await pool.query(`ALTER TABLE raffles ADD CONSTRAINT fk_winner FOREIGN KEY (winner_id) REFERENCES users(id);`);
+            } catch (fkErr) {
+                // Constraint might already exist or conflict, safe to ignore for runtime stability
+            }
+
+            console.log('Migration: Checked/Added raffle columns including winner_id');
         } catch (migError) {
-            console.warn('Migration warning:', migError.message);
+            console.error('Migration CRITICAL warning:', migError);
         }
 
         await pool.query(`
