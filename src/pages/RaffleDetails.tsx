@@ -58,7 +58,11 @@ const RaffleDetails: React.FC = () => {
                         participantes: parseInt(data.tickets_sold) || 0,
                         categoria: "geral",
                         raridade: "comum",
-                        emoji: "🎫"
+                        emoji: "🎫",
+                        winner: data.winner_name ? {
+                            name: data.winner_name,
+                            picture: data.winner_picture
+                        } : undefined
                     };
                     setRaffle(mapped);
                 })
@@ -244,6 +248,29 @@ const RaffleDetails: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* LEFT COLUMN: Raffle Info */}
                     <div className="space-y-6">
+
+                        {/* WINNER CARD - Only if ended and has winner */}
+                        {raffle.status === 'encerrado' && raffle.winner && (
+                            <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/50 rounded-2xl p-6 flex items-center gap-6 animate-fade-in shadow-[0_0_30px_rgba(234,179,8,0.2)]">
+                                <div className="relative">
+                                    <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full blur opacity-75 animate-pulse"></div>
+                                    <img
+                                        src={raffle.winner.picture}
+                                        alt={raffle.winner.name}
+                                        className="relative w-20 h-20 rounded-full border-2 border-white object-cover shadow-xl"
+                                    />
+                                    <div className="absolute -bottom-2 -right-2 bg-yellow-500 text-black p-1.5 rounded-full shadow-lg border border-white">
+                                        <Trophy className="w-4 h-4" fill="black" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-yellow-500 font-bold uppercase tracking-wider text-xs mb-1">Grande Vencedor</p>
+                                    <h2 className="text-2xl font-bold text-white mb-1">{raffle.winner.name}</h2>
+                                    <p className="text-sm text-yellow-500/80">Parabéns! Você ganhou este prêmio.</p>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Image & Status */}
                         <div className="space-y-4">
                             <div className="relative aspect-video rounded-2xl overflow-hidden bg-secondary/30 border border-border group">
