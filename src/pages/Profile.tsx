@@ -223,14 +223,23 @@ const Profile = () => {
                                                     </span>
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <Badge
-                                                    variant={isActive ? "default" : "secondary"}
-                                                    className={isActive ? "bg-primary text-primary-foreground" : ""}
-                                                >
-                                                    {isActive ? "Ativo" : "Encerrado"}
-                                                </Badge>
-                                                <p className="text-sm text-muted-foreground mt-1">
+                                            <div className="text-right flex flex-col items-end gap-2">
+                                                <div className="flex gap-2">
+                                                    <Badge
+                                                        variant={isActive ? "default" : "secondary"}
+                                                        className={isActive ? "bg-primary text-primary-foreground" : ""}
+                                                    >
+                                                        {isActive ? "Ativo" : "Encerrado"}
+                                                    </Badge>
+
+                                                    {/* Winner Badge */}
+                                                    {!isActive && ur.raffle.winner_id && String(ur.raffle.winner_id) === String(user.id) && (
+                                                        <Badge className="bg-yellow-500 text-black border-yellow-600 animate-pulse">
+                                                            🏆 Você Ganhou!
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                                <p className="text-sm text-muted-foreground">
                                                     {ur.ticketsComprados} ticket
                                                     {ur.ticketsComprados > 1 ? "s" : ""}
                                                 </p>
