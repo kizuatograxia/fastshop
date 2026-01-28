@@ -141,6 +141,16 @@ export const api = {
         return res.json();
     },
 
+    updateRaffle: async (password: string, id: string, raffle: any) => {
+        const res = await fetch(`${API_URL}/raffles/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password, raffle }),
+        });
+        if (!res.ok) throw new Error("Falha ao atualizar sorteio");
+        return res.json();
+    },
+
     deleteRaffle: async (password: string, id: string) => {
         const res = await fetch(`${API_URL}/raffles/${id}`, {
             method: "DELETE",

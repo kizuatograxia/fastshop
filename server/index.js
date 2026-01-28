@@ -495,6 +495,38 @@ app.post('/api/raffles', async (req, res) => {
     }
 });
 
+// Update Raffle
+app.put('/api/raffles/:id', async (req, res) => {
+    const { id } = req.params;
+    const { password, raffle } = req.body;
+
+    if (password !== ADMIN_PASSWORD) {
+        return res.status(401).json({ message: "Não autorizado" });
+    }
+
+    try {
+        const { title, description, image_url, ticket_price, prize_pool, max_tickets, prize_value, draw_date, category, rarity } = raffle;
+
+        const result = await pool.query(
+            `UPDATE raffles SET 
+                title = $1, description = $2, image_url = $3, ticket_price = $4, 
+                prize_pool = $5, max_tickets = $6, prize_value = $7, draw_date = $8, 
+                category = $9, rarity = $10 
+             WHERE id = $11 RETURNING *`,
+            [title, description, image_url, ticket_price, prize_pool, max_tickets, prize_value, draw_date, category || 'tech', rarity || 'comum', id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Sorteio não encontrado' });
+        }
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error updating raffle:', error);
+        res.status(500).json({ message: 'Erro ao atualizar sorteio' });
+    }
+});
+
 app.delete('/api/raffles/:id', async (req, res) => {
     const { id } = req.params;
     const { password } = req.body; // or query, or header. Keeping body for simplicity
