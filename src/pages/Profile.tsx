@@ -198,7 +198,7 @@ const Profile = () => {
                         ) : (
                             <div className="space-y-4">
                                 {userRaffles.map((ur) => {
-                                    const isActive = new Date(ur.raffle.dataFim) > new Date();
+                                    const isActive = ur.raffle.status === 'ativo';
                                     return (
                                         <div
                                             key={ur.raffle.id}
