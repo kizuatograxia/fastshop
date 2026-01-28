@@ -203,14 +203,51 @@ const Admin = () => {
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label>URL da Imagem</Label>
-                            <Input
-                                value={formData.image_url}
-                                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                                placeholder="https://..."
-                                className="bg-background/50 font-mono text-xs"
-                            />
+                        <div className="space-y-3">
+                            <Label>Imagem do Prêmio</Label>
+
+                            <div className="flex gap-4 items-start">
+                                <div className="flex-1 space-y-2">
+                                    <Input
+                                        value={formData.image_url}
+                                        onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                                        placeholder="https://... ou faça upload"
+                                        className="bg-background/50 font-mono text-xs"
+                                    />
+                                    <p className="text-[10px] text-muted-foreground">Cole uma URL ou envie um arquivo local.</p>
+                                </div>
+
+                                <div className="relative">
+                                    <input
+                                        type="file"
+                                        id="image-upload"
+                                        className="hidden"
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                if (file.size > 5000000) { // 5MB limit
+                                                    toast.error("Imagem muito grande! Máximo 5MB.");
+                                                    return;
+                                                }
+                                                const reader = new FileReader();
+                                                reader.onloadend = () => {
+                                                    setFormData(prev => ({ ...prev, image_url: reader.result as string }));
+                                                    toast.success("Imagem carregada!");
+                                                };
+                                                reader.readAsDataURL(file);
+                                            }
+                                        }}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => document.getElementById('image-upload')?.click()}
+                                    >
+                                        Upload 📸
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
 
                         <div className="space-y-2">
