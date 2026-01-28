@@ -483,12 +483,18 @@ app.get('/api/user/raffles', async (req, res) => {
 });
 
 // Serve React App
-app.use(express.static(path.join(__dirname, '../dist')));
+const DIST_DIR = path.join(process.cwd(), 'dist');
+console.log('Serving static files from:', DIST_DIR);
+
+app.use(express.static(DIST_DIR));
 
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../dist/index.html'));
+    const indexPath = path.join(DIST_DIR, 'index.html');
+    console.log('Rendering SPA:', indexPath, 'Request:', req.url);
+    res.sendFile(indexPath);
 });
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV}`);
 });
