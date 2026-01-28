@@ -580,10 +580,14 @@ app.delete('/api/raffles/:id', async (req, res) => {
 app.get('/api/admin/raffles', async (req, res) => {
     try {
         const query = `
-            SELECT r.*, COUNT(t.id) as tickets_sold
+            SELECT r.*, 
+                   COUNT(t.id) as tickets_sold,
+                   u.name as winner_name,
+                   u.picture as winner_picture
             FROM raffles r
             LEFT JOIN tickets t ON r.id = t.raffle_id
-            GROUP BY r.id
+            LEFT JOIN users u ON r.winner_id = u.id
+            GROUP BY r.id, u.id
             ORDER BY r.created_at DESC
         `;
         const result = await pool.query(query);
