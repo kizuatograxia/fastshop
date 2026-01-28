@@ -8,10 +8,25 @@ import pkg from 'pg';
 
 import crypto from 'crypto';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// DEBUG: List files to diagnose ENOENT
+console.log('CWD:', process.cwd());
+try {
+    console.log('Root contents:', fs.readdirSync(process.cwd()));
+    const distPath = path.join(process.cwd(), 'dist');
+    if (fs.existsSync(distPath)) {
+        console.log('Dist contents:', fs.readdirSync(distPath));
+    } else {
+        console.log('Dist directory DOES NOT EXIST at:', distPath);
+    }
+} catch (e) {
+    console.error('Error listing files:', e);
+}
 
 const { Pool } = pkg;
 
