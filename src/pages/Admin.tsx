@@ -266,7 +266,7 @@ const Admin = () => {
                         <span className="text-xs">Visualização em tempo real</span>
                     </div>
 
-                    <div className="transform transition-all hover:scale-105 duration-500">
+                    <div className="transform transition-all hover:scale-105 duration-500" key={formData.image_url}>
                         <RaffleCard raffle={previewRaffle} index={0} />
                     </div>
 
