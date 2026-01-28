@@ -52,7 +52,7 @@ const RaffleDetails: React.FC = () => {
                             : "https://images.unsplash.com/photo-1635326444826-06c8f8d2e61d?w=800&q=80",
                         status: data.status === 'active' ? 'ativo' : 'encerrado',
                         premio: data.prize_pool,
-                        premioValor: 5000,
+                        premioValor: data.prize_value || 0,
                         dataFim: data.draw_date || "2024-12-31",
                         custoNFT: data.ticket_price,
                         participantes: parseInt(data.tickets_sold) || 0,
