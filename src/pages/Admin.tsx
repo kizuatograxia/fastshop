@@ -1,113 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
-import Roulette from "@/components/Roulette";
-
-// ... inside Admin component ...
-
-const [showRoulette, setShowRoulette] = useState(false);
-const [winnerId, setWinnerId] = useState<number | null>(null);
-
-// ...
-
-const handlePerformDraw = async () => {
-    if (!selectedRaffle) return;
-
-    try {
-        // Start process, open modal
-        // Actual API call happens inside Roulette's onSpinStart logic or here?
-        // Let's do: User clicks 'Girar' in Roulette -> calls API -> animation starts.
-        // So we just pass a handler to Roulette.
-        setShowRoulette(true);
-        setWinnerId(null);
-    } catch (error) {
-        toast.error("Erro ao iniciar sorteio");
-    }
-};
-
-const confirmDraw = async () => {
-    if (!selectedRaffle) return;
-    try {
-        const data = await api.drawRaffle(password, selectedRaffle.id);
-        setWinnerId(data.winner.id);
-        toast.success(`Vencedor sorteado: ${data.winner.name}`);
-    } catch (error) {
-        toast.error("Erro ao realizar sorteio via API");
-        setShowRoulette(false);
-    }
-};
-
-// ... inside renderParticipants ...
-// Add Button Header
-<div className="flex items-center gap-4">
-    <Button variant="ghost" size="icon" onClick={() => setView('dashboard')}>
-        <ArrowLeft className="w-5 h-5" />
-    </Button>
-    <div>
-        <h2 className="text-2xl font-bold">Participantes</h2>
-        <p className="text-muted-foreground">Sorteio: {selectedRaffle?.titulo}</p>
-    </div>
-    {selectedRaffle?.status === 'ativo' && (
-        <Button
-            className="ml-auto bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-black font-bold shadow-lg shadow-orange-500/20"
-            onClick={handlePerformDraw}
-        >
-            <Trophy className="w-5 h-5 mr-2" />
-            Realizar Sorteio
-        </Button>
-    )}
-</div>
-
-// ... inside return ...
-
-{
-    showRoulette && selectedRaffle && (
-        <Roulette
-            candidates={participants.reduce((acc: any[], p: any) => {
-                // Aggregate for visual if needed, but Roulette handles aggregation if passed raw tickets?
-                // Actually my Roulette component expects aggregated candidates: {id, name, ticket_count...}
-                // My 'participants' state from getRaffleParticipants is LIST OF TICKETS (flat).
-                // I need to aggregate it here before passing.
-
-                const existing = acc.find(c => c.id === p.user_id);
-                if (existing) {
-                    existing.ticket_count++;
-                } else {
-                    acc.push({
-                        id: p.user_id,
-                        name: p.name,
-                        picture: p.picture,
-                        ticket_count: 1
-                    });
-                }
-                return acc;
-            }, [])}
-            winnerId={winnerId}
-            onSpinStart={confirmDraw}
-            onFinished={() => {
-                // Refetch to show updated status
-                fetchRaffles();
-            }}
-            onClose={() => {
-                setShowRoulette(false);
-                setView('dashboard');
-            }}
-        />
-    )
-}
-
-{ view === 'dashboard' && renderDashboard() }
-{ view === 'create' && renderCreate() }
-{ view === 'participants' && renderParticipants() }
-        </div >
-    );
-};
-
-export default Admin;
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Lock, Plus, RefreshCw, LayoutDashboard, Trash2, Users, ArrowLeft, Coins } from "lucide-react";
+import { Lock, Plus, RefreshCw, LayoutDashboard, Trash2, Users, ArrowLeft, Coins, Trophy } from "lucide-react";
 import RaffleCard from "@/components/RaffleCard";
 import { Raffle } from "@/types/raffle";
 import {
@@ -119,6 +16,8 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Roulette from "@/components/Roulette";
+import { Button } from "@/components/ui/button";
 
 // Backend expected format
 interface CreateRaffleDTO {
