@@ -131,5 +131,37 @@ export const api = {
         });
         if (!res.ok) throw new Error("Falha ao criar sorteio");
         return res.json();
+    },
+
+    deleteRaffle: async (password: string, id: string) => {
+        const res = await fetch(`${API_URL}/raffles/${id}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password }),
+        });
+        if (!res.ok) throw new Error("Falha ao deletar sorteio");
+        return res.json();
+    },
+
+    getAdminRaffles: async () => {
+        const res = await fetch(`${API_URL}/admin/raffles`);
+        if (!res.ok) throw new Error("Falha ao buscar sorteios");
+        const data = await res.json();
+        // Map fields
+        return data.map((r: any) => ({
+            id: String(r.id),
+            titulo: r.title,
+            descricao: r.description,
+            premio: r.prize_pool,
+            premioValor: r.prize_value || 0,
+            imagem: r.image_url,
+            dataFim: r.draw_date,
+            participantes: parseInt(r.tickets_sold) || 0,
+            maxParticipantes: r.max_tickets,
+            custoNFT: r.ticket_price,
+            status: r.status === 'active' ? 'ativo' : 'encerrado',
+            categoria: r.category || 'tech',
+            raridade: r.rarity || 'comum'
+        }));
     }
 };

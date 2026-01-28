@@ -55,7 +55,9 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(bodyParser.json());
+app.view_file
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 // Logging middleware
 app.use((req, res, next) => {
@@ -123,6 +125,16 @@ const initDB = async () => {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
+
+        // Migration: Add columns if they don't exist (for existing production DB)
+        try {
+            await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS prize_value INTEGER DEFAULT 0;`);
+            await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS category VARCHAR(50) DEFAULT 'tech';`);
+            await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS rarity VARCHAR(50) DEFAULT 'comum';`);
+            console.log('Migration: Checked/Added new raffle columns');
+        } catch (migError) {
+            console.warn('Migration warning:', migError.message);
+        }
 
         await pool.query(`
             CREATE TABLE IF NOT EXISTS tickets (
@@ -480,6 +492,52 @@ app.post('/api/raffles', async (req, res) => {
     } catch (error) {
         console.error('Error creating raffle:', error);
         res.status(500).json({ message: 'Erro ao criar sorteio' });
+    }
+});
+
+app.delete('/api/raffles/:id', async (req, res) => {
+    const { id } = req.params;
+    const { password } = req.body; // or query, or header. Keeping body for simplicity
+
+    if (password !== ADMIN_PASSWORD) {
+        return res.status(401).json({ message: "Não autorizado" });
+    }
+
+    try {
+        // First delete tickets associated with this raffle to avoid FK constraint/orphans
+        await pool.query('DELETE FROM tickets WHERE raffle_id = $1', [id]);
+
+        // Then delete the raffle
+        const result = await pool.query('DELETE FROM raffles WHERE id = $1 RETURNING *', [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Sorteio não encontrado' });
+        }
+
+        console.log('Admin deleted raffle:', id);
+        res.json({ message: 'Sorteio removido com sucesso' });
+
+    } catch (error) {
+        console.error('Error deleting raffle:', error);
+        res.status(500).json({ message: 'Erro ao deletar sorteio' });
+    }
+});
+
+// Admin: Get All Raffles (Active + Completed)
+app.get('/api/admin/raffles', async (req, res) => {
+    try {
+        const query = `
+            SELECT r.*, COUNT(t.id) as tickets_sold
+            FROM raffles r
+            LEFT JOIN tickets t ON r.id = t.raffle_id
+            GROUP BY r.id
+            ORDER BY r.created_at DESC
+        `;
+        const result = await pool.query(query);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching admin raffles:', error);
+        res.status(500).json({ message: 'Erro ao buscar sorteios' });
     }
 });
 
