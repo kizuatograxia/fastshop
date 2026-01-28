@@ -7,6 +7,12 @@ import dotenv from 'dotenv';
 import pkg from 'pg';
 
 import crypto from 'crypto';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const { Pool } = pkg;
 
 dotenv.config({ path: '../.env' });
@@ -476,6 +482,13 @@ app.get('/api/user/raffles', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
+// Serve React App
+app.use(express.static(path.join(__dirname, '../dist')));
+
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
+
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
