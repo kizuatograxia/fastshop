@@ -179,7 +179,12 @@ export const api = {
             custoNFT: r.ticket_price,
             status: r.status === 'active' ? 'ativo' : 'encerrado',
             categoria: r.category || 'tech',
-            raridade: r.rarity || 'comum'
+            raridade: r.rarity || 'comum',
+            winner: r.winner_name ? {
+                id: r.winner_id,
+                name: r.winner_name,
+                picture: r.winner_picture
+            } : undefined
         }));
     },
 

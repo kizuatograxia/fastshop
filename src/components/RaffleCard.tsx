@@ -83,6 +83,25 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index }) => {
                     }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+                {/* Winner Overlay */}
+                {raffle.status === 'encerrado' && raffle.winner && (
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex flex-col items-center justify-center text-center p-4 animate-in fade-in zoom-in duration-300">
+                        <div className="relative mb-2">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full blur opacity-75 animate-pulse"></div>
+                            <img
+                                src={raffle.winner.picture}
+                                alt={raffle.winner.name}
+                                className="relative w-16 h-16 rounded-full border-2 border-white object-cover shadow-lg"
+                            />
+                            <div className="absolute -bottom-1 -right-1 bg-yellow-500 text-black p-1 rounded-full border border-white">
+                                <Users className="w-3 h-3" />
+                            </div>
+                        </div>
+                        <p className="text-yellow-400 font-bold text-xs uppercase tracking-wider mb-0.5">Vencedor</p>
+                        <p className="text-white font-bold text-lg leading-tight">{raffle.winner.name}</p>
+                    </div>
+                )}
             </div>
 
             {/* Content */}
