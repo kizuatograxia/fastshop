@@ -711,8 +711,14 @@ app.get('/api/user/raffles', async (req, res) => {
                 image: row.image_url,
                 price: row.ticket_price,
                 prize: row.prize_pool,
+                prizeValue: row.prize_value || 0,
                 drawDate: row.draw_date,
-                status: row.status
+                status: row.status,
+                category: row.category || 'tech',
+                rarity: row.rarity || 'comum',
+                winner_id: row.winner_id,
+                winner_name: row.winner_name,
+                winner_picture: row.winner_picture // Wait, join query needs update too?
             },
             ticketsComprados: parseInt(row.tickets_comprados),
             totalValueContributed: parseInt(row.tickets_comprados) * row.ticket_price,

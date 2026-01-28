@@ -114,8 +114,19 @@ export const api = {
         return data.map((ur: any) => ({
             ...ur,
             raffle: {
-                ...ur.raffle,
-                id: String(ur.raffle.id)
+                id: String(ur.raffle.id),
+                titulo: ur.raffle.title,
+                descricao: ur.raffle.description,
+                imagem: ur.raffle.image,
+                premio: ur.raffle.prize,
+                premioValor: ur.raffle.prizeValue || 0,
+                dataFim: ur.raffle.drawDate,
+                custoNFT: ur.raffle.price,
+                participantes: 0, // Not provided in user raffle summary usually, or maybe we need to fetch it? Server returns 'status'
+                maxParticipantes: 0,
+                status: ur.raffle.status === 'active' ? 'ativo' : 'encerrado',
+                categoria: "geral",
+                raridade: "comum"
             }
         }));
     },
