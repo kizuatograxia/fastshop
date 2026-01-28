@@ -21,6 +21,7 @@ export interface Raffle {
     custoNFT: number;
     status: "ativo" | "encerrado" | "em_breve";
     categoria: string;
+    raridade: string;
 }
 
 export interface OwnedNFT extends NFT {
