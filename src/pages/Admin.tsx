@@ -43,6 +43,26 @@ const Admin = () => {
     const [raffles, setRaffles] = useState<Raffle[]>([]);
     const [selectedRaffle, setSelectedRaffle] = useState<Raffle | null>(null);
     const [participants, setParticipants] = useState<any[]>([]);
+    const [showRoulette, setShowRoulette] = useState(false);
+    const [winnerId, setWinnerId] = useState<number | null>(null);
+
+    const handlePerformDraw = () => {
+        if (!selectedRaffle) return;
+        setWinnerId(null);
+        setShowRoulette(true);
+    };
+
+    const confirmDraw = async () => {
+        if (!selectedRaffle) return;
+        try {
+            const data = await api.drawRaffle(password, selectedRaffle.id);
+            setWinnerId(data.winner.id);
+            toast.success(`Resultado recebido! Girando...`);
+        } catch (error) {
+            toast.error("Erro ao realizar sorteio");
+            setShowRoulette(false);
+        }
+    };
 
     // Form State for new Raffle
     const [formData, setFormData] = useState<CreateRaffleDTO>({
