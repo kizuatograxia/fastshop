@@ -137,6 +137,18 @@ const initDB = async () => {
             // Fix for Winner ID - Handle potential FK issues or missing column
             await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS winner_id INTEGER;`);
 
+            // Notifications Table
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS notifications (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id),
+                    title VARCHAR(255) NOT NULL,
+                    message TEXT NOT NULL,
+                    read BOOLEAN DEFAULT FALSE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            `);
+
             // Try to add constraint separately, ignore if fails (it might fail if users table doesn't exist yet or data mismatch, but column is what matters for 500)
             try {
                 await pool.query(`ALTER TABLE raffles ADD CONSTRAINT fk_winner FOREIGN KEY (winner_id) REFERENCES users(id);`);
@@ -665,6 +677,17 @@ app.post('/api/raffles/:id/draw', async (req, res) => {
 
         // 3. Update Raffle Status and Winner
         await pool.query('UPDATE raffles SET status = $1, prize_value = prize_value, winner_id = $2 WHERE id = $3', ['encerrado', winningTicket.user_id, id]);
+
+        // 3.1 Create Notification for Winner
+        try {
+            await pool.query(`
+                INSERT INTO notifications (user_id, title, message)
+                VALUES ($1, $2, $3)
+            `, [winningTicket.user_id, 'Você Ganhou! 🎉', `Parabéns! Você foi o vencedor do sorteio #${id}. Entre em contato para resgatar seu prêmio!`]);
+            console.log(`Notification created for user ${winningTicket.user_id}`);
+        } catch (notifErr) {
+            console.error('Error creating notification:', notifErr);
+        }
 
         // 4. Return Winner Info
         console.log(`Draw for Raffle ${id}: Ticket ${winningIndex}/${totalTickets} won. User: ${winningTicket.name}`);
