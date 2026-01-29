@@ -406,7 +406,7 @@ app.get('/api/raffles', async (req, res) => {
         res.json(result.rows);
     } catch (error) {
         console.error('Error fetching raffles:', error);
-        res.status(500).json({ message: 'Erro ao buscar sorteios' });
+        res.status(500).json({ message: `Erro ao buscar sorteios: ${error.message}` });
     }
 });
 
