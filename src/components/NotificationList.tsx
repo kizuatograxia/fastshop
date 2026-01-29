@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
-import { Notification } from '@/types/notification';
+import { Notification as NotificationType } from '@/types/notification';
 import { useAuth } from '@/contexts/AuthContext';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Bell, Check } from 'lucide-react';
@@ -14,7 +14,7 @@ interface NotificationListProps {
 
 const NotificationList: React.FC<NotificationListProps> = ({ onUnreadCountChange }) => {
     const { user } = useAuth();
-    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [notifications, setNotifications] = useState<NotificationType[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -31,12 +31,12 @@ const NotificationList: React.FC<NotificationListProps> = ({ onUnreadCountChange
 
             // Check for new notifications to trigger system alert
             if (notifications.length > 0) {
-                const newUnread = data.filter((n: Notification) =>
+                const newUnread = data.filter((n: NotificationType) =>
                     !n.read && !notifications.some(existing => existing.id === n.id)
                 );
 
                 if (newUnread.length > 0 && 'Notification' in window && Notification.permission === 'granted') {
-                    newUnread.forEach((n: Notification) => {
+                    newUnread.forEach((n: NotificationType) => {
                         new Notification(n.title, {
                             body: n.message,
                             icon: '/favicon.ico' // Assuming favicon exists
@@ -46,7 +46,7 @@ const NotificationList: React.FC<NotificationListProps> = ({ onUnreadCountChange
             }
 
             setNotifications(data);
-            const unread = data.filter((n: Notification) => !n.read).length;
+            const unread = data.filter((n: NotificationType) => !n.read).length;
             if (onUnreadCountChange) onUnreadCountChange(unread);
         } catch (error) {
             console.error(error);
