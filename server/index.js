@@ -512,7 +512,7 @@ app.post('/api/raffles', async (req, res) => {
 
     } catch (error) {
         console.error('Error creating raffle:', error);
-        res.status(500).json({ message: 'Erro ao criar sorteio' });
+        res.status(500).json({ message: `Erro ao criar sorteio: ${error.message}` });
     }
 });
 
