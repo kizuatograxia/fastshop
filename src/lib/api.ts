@@ -199,6 +199,21 @@ export const api = {
         }));
     },
 
+    // Notifications
+    getNotifications: async (userId: number) => {
+        const res = await fetch(`${API_URL}/notifications?userId=${userId}`);
+        if (!res.ok) throw new Error("Failed to fetch notifications");
+        return res.json();
+    },
+
+    markNotificationRead: async (id: number) => {
+        const res = await fetch(`${API_URL}/notifications/${id}/read`, {
+            method: "PUT",
+        });
+        if (!res.ok) throw new Error("Failed to mark notification read");
+        return res.json();
+    },
+
     drawRaffle: async (password: string, id: string) => {
         const res = await fetch(`${API_URL}/raffles/${id}/draw`, {
             method: "POST",
