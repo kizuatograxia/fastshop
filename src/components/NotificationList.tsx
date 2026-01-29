@@ -18,7 +18,7 @@ const NotificationList: React.FC<NotificationListProps> = ({ onUnreadCountChange
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Request browser permission
+        // Request browser permission for system notifications
         if ('Notification' in window && Notification.permission === 'default') {
             Notification.requestPermission();
         }
