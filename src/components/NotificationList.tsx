@@ -17,10 +17,34 @@ const NotificationList: React.FC<NotificationListProps> = ({ onUnreadCountChange
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
 
+    useEffect(() => {
+        // Request browser permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    }, []);
+
     const fetchNotifications = async () => {
         if (!user) return;
         try {
             const data = await api.getNotifications(parseInt(user.id));
+
+            // Check for new notifications to trigger system alert
+            if (notifications.length > 0) {
+                const newUnread = data.filter((n: Notification) =>
+                    !n.read && !notifications.some(existing => existing.id === n.id)
+                );
+
+                if (newUnread.length > 0 && 'Notification' in window && Notification.permission === 'granted') {
+                    newUnread.forEach((n: Notification) => {
+                        new Notification(n.title, {
+                            body: n.message,
+                            icon: '/favicon.ico' // Assuming favicon exists
+                        });
+                    });
+                }
+            }
+
             setNotifications(data);
             const unread = data.filter((n: Notification) => !n.read).length;
             if (onUnreadCountChange) onUnreadCountChange(unread);
@@ -70,8 +94,8 @@ const NotificationList: React.FC<NotificationListProps> = ({ onUnreadCountChange
                     <div
                         key={notification.id}
                         className={`p-3 rounded-lg border transition-colors ${notification.read
-                                ? 'bg-background border-transparent'
-                                : 'bg-secondary/30 border-secondary'
+                            ? 'bg-background border-transparent'
+                            : 'bg-secondary/30 border-secondary'
                             }`}
                     >
                         <div className="flex items-start justify-between gap-2">
