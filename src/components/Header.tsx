@@ -13,6 +13,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+import NotificationList from "@/components/NotificationList";
+import { Bell } from "lucide-react";
+
 interface HeaderProps {
   onMenuClick: () => void;
   onWalletClick: () => void;
@@ -23,6 +26,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const totalNFTs = getTotalNFTs();
+  const [unreadNotifications, setUnreadNotifications] = React.useState(0);
 
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
@@ -67,6 +71,25 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
           </div>
 
           <div className="flex items-center gap-2">
+
+            {/* Notification Bell */}
+            {isAuthenticated && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-primary">
+                    <Bell className="h-5 w-5" />
+                    {unreadNotifications > 0 && (
+                      <span className="absolute top-1 right-2 h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse border border-background"></span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <div className="p-2 font-medium border-b text-sm mb-1">Notificações</div>
+                  <NotificationList onUnreadCountChange={setUnreadNotifications} />
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
             <Button
               variant="icon"
               size="icon"
