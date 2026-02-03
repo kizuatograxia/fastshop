@@ -6,6 +6,7 @@ import { useWallet } from "@/contexts/WalletContext";
 import { useUserRaffles } from "@/contexts/UserRafflesContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { CountdownBadge } from "@/components/CountdownBadge";
 
 interface RaffleCardProps {
     raffle: Raffle;
@@ -47,13 +48,6 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index }) => {
 
     const progressPercent = (raffle.participantes / raffle.maxParticipantes) * 100;
 
-    const daysLeft = () => {
-        const end = new Date(raffle.dataFim);
-        const now = new Date();
-        const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        return diff > 0 ? diff : 0;
-    };
-
     return (
         <article
             className="group relative bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 hover:shadow-elevated hover:border-primary/30 hover:-translate-y-1 animate-fade-in cursor-pointer"
@@ -61,9 +55,8 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index }) => {
             onClick={() => navigate(`/raffle/${raffle.id}`)}
         >
             {/* Status Badge */}
-            <div className="absolute top-4 left-4 z-10 flex items-center gap-1 bg-primary text-primary-foreground px-2 py-1 rounded-lg text-xs font-bold">
-                <Clock className="h-3 w-3" />
-                {daysLeft()} dias
+            <div className="absolute top-4 left-4 z-10">
+                <CountdownBadge targetDate={raffle.dataFim} />
             </div>
 
             {/* Prize Value Badge */}

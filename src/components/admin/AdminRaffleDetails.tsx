@@ -2,22 +2,17 @@ import { Raffle } from "@/types/raffle";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Clock, Users, Trophy, Target, Calendar, DollarSign, Pen } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { CountdownBadge } from "@/components/CountdownBadge";
 
 interface AdminRaffleDetailsProps {
     raffle: Raffle;
     onBack: () => void;
     onEdit: (raffle: Raffle) => void;
     onViewParticipants: () => void;
+    onDraw: () => void;
 }
 
-export function AdminRaffleDetails({ raffle, onBack, onEdit, onViewParticipants }: AdminRaffleDetailsProps) {
-
-    const daysLeft = () => {
-        const end = new Date(raffle.dataFim);
-        const now = new Date();
-        const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        return diff > 0 ? diff : 0;
-    };
+export function AdminRaffleDetails({ raffle, onBack, onEdit, onViewParticipants, onDraw }: AdminRaffleDetailsProps) {
 
     const targetRevenue = (raffle.premioValor || 5000) * 1.5;
     const currentRevenue = (raffle.participantes * (raffle.custoNFT || 0));
@@ -55,8 +50,7 @@ export function AdminRaffleDetails({ raffle, onBack, onEdit, onViewParticipants 
                         />
                         <div className="absolute top-4 left-4 flex gap-2">
                             <span className="px-3 py-1 bg-black/60 backdrop-blur text-white rounded-lg text-sm font-bold border border-white/10 flex items-center gap-2">
-                                <Clock className="h-4 w-4" />
-                                {daysLeft()} dias
+                                <CountdownBadge targetDate={raffle.dataFim} />
                             </span>
                             <span className={`px-3 py-1 rounded-lg text-sm font-bold backdrop-blur border border-white/10 ${raffle.status === "ativo" ? "bg-green-500/80 text-white" : "bg-red-500/80 text-white"}`}>
                                 {raffle.status === 'ativo' ? 'ATIVO' : 'ENCERRADO'}
@@ -67,6 +61,20 @@ export function AdminRaffleDetails({ raffle, onBack, onEdit, onViewParticipants 
                     <div>
                         <h1 className="text-3xl font-bold mb-2">{raffle.titulo}</h1>
                         <p className="text-muted-foreground text-lg leading-relaxed">{raffle.descricao}</p>
+
+                        {/* Action Button for Draw */}
+                        {raffle.status === 'ativo' && (
+                            <div className="mt-6">
+                                <Button
+                                    size="lg"
+                                    className="w-full md:w-auto bg-gradient-to-r from-primary to-accent hover:opacity-90 text-black font-bold shadow-[0_0_20px_rgba(var(--primary),0.4)] animate-pulse"
+                                    onClick={onDraw}
+                                >
+                                    <Trophy className="w-5 h-5 mr-2" />
+                                    Realizar Sorteio Agora
+                                </Button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Winner Section */}
