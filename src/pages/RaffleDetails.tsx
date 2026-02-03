@@ -284,57 +284,55 @@ const RaffleDetails: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Raffle Stats */}
+                        {/* Raffle Stats Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Row 1: Progress (Full Width) */}
                             <div className="col-span-1 md:col-span-2 p-4 bg-card rounded-xl border border-border space-y-3">
                                 <div className="flex justify-between items-center text-sm font-medium">
                                     <div className="flex items-center gap-2 text-muted-foreground">
                                         <Target className="h-4 w-4" />
-                                        <span>Progresso da Arrecadação</span>
+                                        <span>Progresso</span>
                                     </div>
                                     <span className="text-primary">{revenueProgress.toFixed(1)}%</span>
                                 </div>
                                 <Progress value={revenueProgress} className="h-3" />
                                 <div className="flex justify-between text-xs text-muted-foreground">
-                                    <span>Atual: R$ {currentRevenue.toLocaleString()}</span>
+                                    <span className="flex items-center gap-1">
+                                        <Users className="w-3 h-3" />
+                                        {raffle.participantes} bilhetes (R$ {currentRevenue.toLocaleString()})
+                                    </span>
                                     <span>Meta: R$ {targetRevenue.toLocaleString()}</span>
                                 </div>
                             </div>
 
-                            {/* Countdown Card - High Visibility */}
-                            <div className="col-span-1 md:col-span-2 p-4 bg-gradient-to-r from-secondary/50 to-background rounded-xl border border-border flex flex-col items-center justify-center space-y-2">
-                                <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                                    <Clock className="h-4 w-4" />
-                                    Tempo Restante para o Sorteio
-                                </span>
-                                <CountdownBadge
-                                    targetDate={raffle.dataFim}
-                                    className="text-3xl md:text-4xl bg-transparent text-foreground p-0 font-black tracking-widest"
-                                />
-                                <span className="text-xs text-muted-foreground">
-                                    {new Date(raffle.dataFim).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                                </span>
-                            </div>
-
+                            {/* Row 2: Timer (Half) - Replaces Tickets Sold */}
                             <div className="p-4 bg-card rounded-xl border border-border">
                                 <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                                    <Users className="h-4 w-4" />
-                                    <span className="text-sm">Bilhetes Vendidos</span>
+                                    <Clock className="h-4 w-4" />
+                                    <span className="text-sm">Encerra em</span>
                                 </div>
-                                <p className="text-2xl font-bold text-foreground">
-                                    {raffle.participantes}
+                                <div className="text-2xl font-bold text-foreground">
+                                    <CountdownBadge
+                                        targetDate={raffle.dataFim}
+                                        className="text-xl bg-transparent text-foreground p-0 font-bold"
+                                    />
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    {new Date(raffle.dataFim).toLocaleDateString('pt-BR')}
                                 </p>
                             </div>
+
+                            {/* Row 2: Chance (Half) */}
                             <div className="p-4 bg-card rounded-xl border border-border">
                                 <div className="flex items-center gap-2 text-muted-foreground mb-1">
                                     <Target className="h-4 w-4" />
-                                    <span className="text-sm">Sua Chance Atual</span>
+                                    <span className="text-sm">Sua Chance</span>
                                 </div>
                                 <p className="text-2xl font-bold text-primary">
                                     {currentChance.toFixed(4)}%
                                 </p>
-                                <p className="text-xs text-muted-foreground">
-                                    Valor inserido: R$ {userCurrentValue.toFixed(2)}
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Contribuição: R$ {userCurrentValue.toFixed(2)}
                                 </p>
                             </div>
                         </div>
