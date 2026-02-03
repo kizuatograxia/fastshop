@@ -13,20 +13,29 @@ export function CountdownBadge({ targetDate, className }: CountdownBadgeProps) {
     useEffect(() => {
         const normalizeDate = (date: string | Date) => {
             let d;
+
             if (date instanceof Date) {
                 d = new Date(date);
             } else {
-                // If it's a simple ISO string or date string, parse it
-                // If it looks like "YYYY-MM-DD", append T23:59:59
-                if (date.length <= 10 && !date.includes('T') && !date.includes(':')) {
-                    return new Date(`${date}T23:59:59`);
+                // FORCE LOCAL TIME INTERPRETATION for strings
+                let dateStr = date;
+
+                // If the string contains a 'Z' (UTC marker), remove it to treat the time as Local.
+                // This fixes the issue where users enter "05:57" (Local) but the system treats it as "05:57 UTC" (02:57 Local), causing early expiry.
+                if (typeof dateStr === 'string' && dateStr.endsWith('Z')) {
+                    dateStr = dateStr.slice(0, -1);
                 }
-                d = new Date(date);
+
+                // If date-only string (YYYY-MM-DD), default to End of Day
+                if (dateStr.length <= 10 && !dateStr.includes('T') && !dateStr.includes(':')) {
+                    return new Date(`${dateStr}T23:59:59`);
+                }
+
+                d = new Date(dateStr);
             }
 
-            // Heuristic: If the time is exactly 00:00:00 (UTC or Local zeroed out), 
-            // and the user expects "date based" expiry, we should default to 23:59:59
-            // checking for getHours/getMinutes/getSeconds === 0
+            // Heuristic check for "Midnight" -> "End of Day"
+            // If the time is exactly 00:00:00, default to 23:59:59
             if (d.getHours() === 0 && d.getMinutes() === 0 && d.getSeconds() === 0) {
                 d.setHours(23, 59, 59, 999);
             }
