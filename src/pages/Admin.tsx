@@ -154,13 +154,19 @@ const Admin = () => {
         }
     };
 
+    // Triggered by button in Details or Participants
     const handlePerformDraw = () => {
         if (!selectedRaffle) return;
-        if (selectedRaffle.status !== 'ativo' && selectedRaffle.status !== 'active') { // Assuming logic allow draw only if ended or explicit action? Usually draw closes it.
-            // Keep as is from previous code: button only showed if active
-        }
         setWinnerId(null);
-        setShowRoulette(true);
+        // We need participants loaded for the roulette
+        if (participants.length === 0) {
+            // If triggered from details, participants might not be loaded yet
+            handleViewParticipants(selectedRaffle).then(() => {
+                setShowRoulette(true);
+            });
+        } else {
+            setShowRoulette(true);
+        }
     };
 
     const confirmDraw = async () => {
@@ -269,6 +275,7 @@ const Admin = () => {
                     onBack={() => setView('raffles')}
                     onEdit={handleEdit}
                     onViewParticipants={() => handleViewParticipants(selectedRaffle)}
+                    onDraw={handlePerformDraw}
                 />
             )}
 
