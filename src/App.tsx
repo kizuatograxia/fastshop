@@ -7,6 +7,8 @@ import { ThirdwebProvider } from "thirdweb/react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { WalletProvider } from "@/contexts/WalletContext";
 import { UserRafflesProvider } from "@/contexts/UserRafflesContext";
+import { RaffleEventsProvider } from "@/contexts/RaffleEventsContext";
+import { GlobalEventsListener } from "@/components/GlobalEventsListener";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
@@ -27,25 +29,27 @@ const App = () => (
         <AuthProvider>
           <WalletProvider>
             <UserRafflesProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/login" element={<Auth defaultTab="login" />} />
-                    <Route path="/register" element={<Auth defaultTab="register" />} />
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/raffle/:id" element={<RaffleDetails />} />
-                    <Route path="/raffle/:id" element={<RaffleDetails />} />
-                    <Route path="/checkout" element={<Checkout />} />
-                    <Route path="/admin" element={<Admin />} />
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </BrowserRouter>
-              </TooltipProvider>
+              <RaffleEventsProvider>
+                <GlobalEventsListener />
+                <TooltipProvider>
+                  <Toaster />
+                  <Sonner />
+                  <BrowserRouter>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/auth" element={<Auth />} />
+                      <Route path="/login" element={<Auth defaultTab="login" />} />
+                      <Route path="/register" element={<Auth defaultTab="register" />} />
+                      <Route path="/profile" element={<Profile />} />
+                      <Route path="/raffle/:id" element={<RaffleDetails />} />
+                      <Route path="/checkout" element={<Checkout />} />
+                      <Route path="/admin" element={<Admin />} />
+                      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </BrowserRouter>
+                </TooltipProvider>
+              </RaffleEventsProvider>
             </UserRafflesProvider>
           </WalletProvider>
         </AuthProvider>
