@@ -11,8 +11,21 @@ export function CountdownBadge({ targetDate, className }: CountdownBadgeProps) {
     const [timeLeft, setTimeLeft] = useState<{ days: number, hours: number, minutes: number, seconds: number } | null>(null);
 
     useEffect(() => {
+        const normalizeDate = (date: string | Date) => {
+            if (date instanceof Date) return date;
+            // Basic check for YYYY-MM-DD format (no time)
+            if (typeof date === 'string' && date.length <= 10 && !date.includes('T') && !date.includes(':')) {
+                // Return end of day in local time or specific fixed time. 
+                // Appending T23:59:59 forces it to the end of that calendar day.
+                return new Date(`${date}T23:59:59`);
+            }
+            return new Date(date);
+        };
+
+        const target = normalizeDate(targetDate);
+
         const calculateTimeLeft = () => {
-            const difference = +new Date(targetDate) - +new Date();
+            const difference = +target - +new Date();
             if (difference > 0) {
                 return {
                     days: Math.floor(difference / (1000 * 60 * 60 * 24)),
