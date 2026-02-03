@@ -301,6 +301,21 @@ const RaffleDetails: React.FC = () => {
                                 </div>
                             </div>
 
+                            {/* Countdown Card - High Visibility */}
+                            <div className="col-span-1 md:col-span-2 p-4 bg-gradient-to-r from-secondary/50 to-background rounded-xl border border-border flex flex-col items-center justify-center space-y-2">
+                                <span className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                                    <Clock className="h-4 w-4" />
+                                    Tempo Restante para o Sorteio
+                                </span>
+                                <CountdownBadge
+                                    targetDate={raffle.dataFim}
+                                    className="text-3xl md:text-4xl bg-transparent text-foreground p-0 font-black tracking-widest"
+                                />
+                                <span className="text-xs text-muted-foreground">
+                                    {new Date(raffle.dataFim).toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                </span>
+                            </div>
+
                             <div className="p-4 bg-card rounded-xl border border-border">
                                 <div className="flex items-center gap-2 text-muted-foreground mb-1">
                                     <Users className="h-4 w-4" />
