@@ -14,8 +14,9 @@ import { AdminStats } from "@/components/admin/AdminStats";
 import { RaffleList } from "@/components/admin/RaffleList";
 import { RaffleForm, CreateRaffleDTO } from "@/components/admin/RaffleForm";
 import { ParticipantsTable } from "@/components/admin/ParticipantsTable";
+import { AdminRaffleDetails } from "@/components/admin/AdminRaffleDetails";
 
-type ViewMode = 'dashboard' | 'create' | 'participants' | 'raffles' | 'settings';
+type ViewMode = 'dashboard' | 'create' | 'participants' | 'raffles' | 'settings' | 'details';
 
 const Admin = () => {
     // --- AUTH STATE ---
@@ -34,7 +35,24 @@ const Admin = () => {
     const [winnerId, setWinnerId] = useState<number | null>(null);
 
     useEffect(() => {
-        console.log("Admin Dashboard v3.0 - Modular Admin");
+        // Auto-login if session persists
+        const checkAuth = async () => {
+            const storedKey = localStorage.getItem("admin_key");
+            if (storedKey) {
+                try {
+                    await api.verifyAdmin(storedKey);
+                    setPassword(storedKey);
+                    setIsAuthenticated(true);
+                    // Fetch data immediately if auth is valid
+                    const data = await api.getAdminRaffles();
+                    setRaffles(data);
+                } catch (error) {
+                    console.warn("Session expired or invalid credential");
+                    localStorage.removeItem("admin_key");
+                }
+            }
+        };
+        checkAuth();
     }, []);
 
     // --- HANDLERS ---
@@ -44,6 +62,7 @@ const Admin = () => {
         setIsLoading(true);
         try {
             await api.verifyAdmin(password);
+            localStorage.setItem("admin_key", password);
             setIsAuthenticated(true);
             toast.success("Bem-vindo, Administrador!");
             fetchRaffles();
@@ -52,6 +71,13 @@ const Admin = () => {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem("admin_key");
+        setIsAuthenticated(false);
+        setPassword("");
+        toast.info("Sessão encerrada");
     };
 
     const fetchRaffles = async () => {
@@ -98,6 +124,11 @@ const Admin = () => {
         setView('create');
     };
 
+    const handleViewDetails = (raffle: Raffle) => {
+        setSelectedRaffle(raffle);
+        setView('details');
+    };
+
     const handleDelete = async (id: string) => {
         if (!confirm("Tem certeza que deseja DELETAR este sorteio? Isso apagará todos os tickets vendidos.")) return;
         try {
@@ -125,6 +156,9 @@ const Admin = () => {
 
     const handlePerformDraw = () => {
         if (!selectedRaffle) return;
+        if (selectedRaffle.status !== 'ativo' && selectedRaffle.status !== 'active') { // Assuming logic allow draw only if ended or explicit action? Usually draw closes it.
+            // Keep as is from previous code: button only showed if active
+        }
         setWinnerId(null);
         setShowRoulette(true);
     };
@@ -180,10 +214,10 @@ const Admin = () => {
         <AdminLayout
             currentView={view}
             onViewChange={(v) => {
-                if (v === 'create') setSelectedRaffle(null); // Reset selection if explicit create
+                if (v === 'create') setSelectedRaffle(null);
                 setView(v);
             }}
-            onLogout={() => setIsAuthenticated(false)}
+            onLogout={handleLogout}
         >
             {view === 'dashboard' && (
                 <div className="space-y-8">
@@ -196,6 +230,7 @@ const Admin = () => {
                         <RaffleList
                             raffles={raffles.slice(0, 6)}
                             onEdit={handleEdit}
+                            onViewDetails={handleViewDetails}
                             onViewParticipants={handleViewParticipants}
                             onDelete={handleDelete}
                         />
@@ -212,6 +247,7 @@ const Admin = () => {
                     <RaffleList
                         raffles={raffles}
                         onEdit={handleEdit}
+                        onViewDetails={handleViewDetails}
                         onViewParticipants={handleViewParticipants}
                         onDelete={handleDelete}
                     />
@@ -227,11 +263,20 @@ const Admin = () => {
                 />
             )}
 
+            {view === 'details' && selectedRaffle && (
+                <AdminRaffleDetails
+                    raffle={selectedRaffle}
+                    onBack={() => setView('raffles')}
+                    onEdit={handleEdit}
+                    onViewParticipants={() => handleViewParticipants(selectedRaffle)}
+                />
+            )}
+
             {view === 'participants' && (
                 <ParticipantsTable
                     participants={participants}
                     selectedRaffle={selectedRaffle}
-                    onBack={() => setView('dashboard')}
+                    onBack={() => setView(selectedRaffle ? 'details' : 'dashboard')} // Smart back navigation
                     onDrawWinner={handlePerformDraw}
                 />
             )}
@@ -264,7 +309,7 @@ const Admin = () => {
                     onFinished={() => fetchRaffles()}
                     onClose={() => {
                         setShowRoulette(false);
-                        setView('dashboard');
+                        setView('details'); // Return to details
                     }}
                 />
             )}
