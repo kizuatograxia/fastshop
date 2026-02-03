@@ -12,14 +12,25 @@ export function CountdownBadge({ targetDate, className }: CountdownBadgeProps) {
 
     useEffect(() => {
         const normalizeDate = (date: string | Date) => {
-            if (date instanceof Date) return date;
-            // Basic check for YYYY-MM-DD format (no time)
-            if (typeof date === 'string' && date.length <= 10 && !date.includes('T') && !date.includes(':')) {
-                // Return end of day in local time or specific fixed time. 
-                // Appending T23:59:59 forces it to the end of that calendar day.
-                return new Date(`${date}T23:59:59`);
+            let d;
+            if (date instanceof Date) {
+                d = new Date(date);
+            } else {
+                // If it's a simple ISO string or date string, parse it
+                // If it looks like "YYYY-MM-DD", append T23:59:59
+                if (date.length <= 10 && !date.includes('T') && !date.includes(':')) {
+                    return new Date(`${date}T23:59:59`);
+                }
+                d = new Date(date);
             }
-            return new Date(date);
+
+            // Heuristic: If the time is exactly 00:00:00 (UTC or Local zeroed out), 
+            // and the user expects "date based" expiry, we should default to 23:59:59
+            // checking for getHours/getMinutes/getSeconds === 0
+            if (d.getHours() === 0 && d.getMinutes() === 0 && d.getSeconds() === 0) {
+                d.setHours(23, 59, 59, 999);
+            }
+            return d;
         };
 
         const target = normalizeDate(targetDate);
