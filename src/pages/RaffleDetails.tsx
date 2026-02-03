@@ -7,10 +7,9 @@ import { useWallet } from "@/contexts/WalletContext";
 import { useUserRaffles } from "@/contexts/UserRafflesContext";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-// Removed duplicate toast import
 import { OwnedNFT } from "@/types/raffle";
 import { Progress } from "@/components/ui/progress";
-
+import { CountdownBadge } from "@/components/CountdownBadge";
 
 const rarityColors: Record<string, string> = {
     comum: "from-gray-400 to-gray-500",
@@ -33,16 +32,7 @@ const RaffleDetails: React.FC = () => {
         if (id) {
             api.getRaffle(id)
                 .then(data => {
-                    // Map backend data to frontend model if needed
-                    // For now assuming existing mapping or compatible structure
-                    // The api.getRaffle should return mapped data similar to api.getActiveRaffles
-                    // But api.ts getRaffle just does res.json(). 
-                    // We need to ensure we map it correctly.
-
-                    // Actually, let's look at api.ts getRaffle. It returns raw JSON.
-                    // We should probably map it here or in api.ts.
-                    // Let's assume raw data for now and map it locally.
-
+                    // Map backend data to frontend model
                     const mapped = {
                         id: String(data.id),
                         titulo: data.title,
@@ -75,12 +65,6 @@ const RaffleDetails: React.FC = () => {
     }, [id]);
 
     const userCurrentValue = raffle ? getUserValue(raffle.id) : 0;
-
-    // Mock pool value for estimation (since backend is mock)
-    // Assume average participant contributes ~R$ 10.00 worth of NFTs
-    const AVG_CONTRIBUTION = 10;
-    const estimatedPoolValue = (raffle?.participantes || 0) * AVG_CONTRIBUTION;
-
     const availableNFTs = ownedNFTs.filter(nft => nft.quantidade > 0);
 
     const handleQuantityChange = (nftId: string, delta: number, max: number) => {
@@ -121,14 +105,9 @@ const RaffleDetails: React.FC = () => {
     }, [availableNFTs, selectedNFTs]);
 
     const calculateChance = (userVal: number) => {
-        // User requested formula: (Value Contributed / Prize Value) * 75%
-        // Example: 10 real contribution / 100 real prize = 0.1 * 75% = 7.5%
         const prizeValue = raffle?.premioValor || 0;
-
         if (prizeValue === 0) return 0;
-
         const chance = (userVal / prizeValue) * 75;
-        // Cap at 100% just in case
         return Math.min(chance, 100);
     };
 
@@ -161,8 +140,6 @@ const RaffleDetails: React.FC = () => {
     const ticketPrice = raffle.custoNFT;
     const ticketsToReceive = Math.floor(selectedValue / ticketPrice);
 
-    // Calculate progress/revenue
-    // Target: 1.5x Prize Value (e.g. 5000 prize -> 7500 target)
     const targetRevenue = (raffle.premioValor || 5000) * 1.5;
     const currentRevenue = (raffle.participantes * ticketPrice);
     const revenueProgress = Math.min((currentRevenue / targetRevenue) * 100, 100);
@@ -183,24 +160,19 @@ const RaffleDetails: React.FC = () => {
             return;
         }
 
-        // Add to raffle (Use ticketsToReceive, not selectedCount)
         await addUserRaffle(raffle, ticketsToReceive, selectedValue);
 
-        // Update local raffle state instantly
         setRaffle((prev: any) => ({
             ...prev,
             participantes: prev.participantes + ticketsToReceive
         }));
 
-        // Remove from wallet
         for (const [nftId, qty] of Object.entries(selectedNFTs)) {
             await removeNFT(nftId, qty);
         }
 
-        // Reset selection
         setSelectedNFTs({});
 
-        // Force refresh from server to confirm persistence
         try {
             const data = await api.getRaffle(raffle.id);
             if (data && data.tickets_sold) {
@@ -218,24 +190,8 @@ const RaffleDetails: React.FC = () => {
         });
     };
 
-    const daysLeft = () => {
-        const end = new Date(raffle.dataFim);
-        const now = new Date();
-        const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        return diff > 0 ? diff : 0;
-    };
-
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString("pt-BR", {
-            day: "2-digit",
-            month: "long",
-            year: "numeric",
-        });
-    };
-
     return (
         <div className="min-h-screen bg-background pb-24 lg:pb-8">
-            {/* Header */}
             <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
                 <div className="container mx-auto px-4 py-4">
                     <Button
@@ -254,7 +210,7 @@ const RaffleDetails: React.FC = () => {
                     {/* LEFT COLUMN: Raffle Info */}
                     <div className="space-y-6">
 
-                        {/* WINNER CARD - Only if ended and has winner */}
+                        {/* WINNER CARD */}
                         {raffle.status === 'encerrado' && raffle.winner && (
                             <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/50 rounded-2xl p-6 flex items-center gap-6 animate-fade-in shadow-[0_0_30px_rgba(234,179,8,0.2)]">
                                 <div className="relative">
@@ -287,9 +243,8 @@ const RaffleDetails: React.FC = () => {
                                         e.currentTarget.src = "https://images.unsplash.com/photo-1635326444826-06c8f8d2e61d?w=800&q=80";
                                     }}
                                 />
-                                <div className="absolute top-4 left-4 flex items-center gap-1 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg text-sm font-bold shadow-lg">
-                                    <Clock className="h-4 w-4" />
-                                    {daysLeft()} dias restantes
+                                <div className="absolute top-4 left-4">
+                                    <CountdownBadge targetDate={raffle.dataFim} className="text-sm px-3 py-1.5" />
                                 </div>
                             </div>
 
