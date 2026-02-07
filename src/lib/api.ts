@@ -34,13 +34,13 @@ export const api = {
         return res.json();
     },
 
-    getWallet: async (userId: number) => {
+    getWallet: async (userId: string | number) => {
         const res = await fetch(`${API_URL}/wallet?userId=${userId}`);
         if (!res.ok) throw new Error("Failed to fetch wallet");
         return res.json();
     },
 
-    addToWallet: async (userId: number, nft: any) => {
+    addToWallet: async (userId: string | number, nft: any) => {
         const res = await fetch(`${API_URL}/wallet`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -50,7 +50,7 @@ export const api = {
         return res.json();
     },
 
-    removeFromWallet: async (userId: number, nftId: string, quantity: number = 1) => {
+    removeFromWallet: async (userId: string | number, nftId: string, quantity: number = 1) => {
         const res = await fetch(`${API_URL}/wallet/remove`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
