@@ -54,7 +54,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header onMenuClick={() => { }} onCartClick={() => { }} onWalletClick={() => { }} />
+      <Header onMenuClick={() => { }} onWalletClick={() => { }} />
 
       <div className="flex-1 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
