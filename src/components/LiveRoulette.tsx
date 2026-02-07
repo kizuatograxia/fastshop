@@ -1,165 +1,393 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
+import { motion, useAnimation, useMotionValue } from "framer-motion";
 import { triggerConfetti } from "@/lib/confetti";
 import { Raffle } from "@/types/raffle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { api } from "@/lib/api";
-import { Trophy, Sparkles } from "lucide-react";
+import { Trophy, ChevronDown, Sparkles, X } from "lucide-react";
 
 interface LiveRouletteProps {
     raffle: Raffle;
     onClose: () => void;
 }
 
-export function LiveRoulette({ raffle, onClose }: LiveRouletteProps) {
-    const [participants, setParticipants] = useState<any[]>([]);
-    const [status, setStatus] = useState<'loading' | 'spinning' | 'winner'>('loading');
-    const [displayCandidate, setDisplayCandidate] = useState<any>(null);
-    const spinIntervalRef = useRef<NodeJS.Timeout | null>(null);
+interface Participant {
+    user_id: string;
+    name: string;
+    picture?: string;
+}
 
-    // Load participants to simulate the reel
+const CARD_WIDTH = 140; // Width of each participant card
+const VISIBLE_CARDS = 7; // Number of visible cards
+const SPIN_DURATION = 7; // Seconds
+
+// Sound effects (optional - gracefully handles if audio fails)
+const playTickSound = () => {
+    try {
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.value = 800 + Math.random() * 400;
+        oscillator.type = 'sine';
+        
+        gainNode.gain.setValueAtTime(0.03, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.05);
+    } catch (e) {
+        // Audio not supported, continue silently
+    }
+};
+
+const playWinSound = () => {
+    try {
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        
+        notes.forEach((freq, i) => {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = freq;
+            oscillator.type = 'sine';
+            
+            const startTime = audioContext.currentTime + i * 0.15;
+            gainNode.gain.setValueAtTime(0.15, startTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
+            
+            oscillator.start(startTime);
+            oscillator.stop(startTime + 0.4);
+        });
+    } catch (e) {
+        // Audio not supported, continue silently
+    }
+};
+
+export function LiveRoulette({ raffle, onClose }: LiveRouletteProps) {
+    const [participants, setParticipants] = useState<Participant[]>([]);
+    const [status, setStatus] = useState<'loading' | 'ready' | 'spinning' | 'winner'>('loading');
+    const [extendedList, setExtendedList] = useState<Participant[]>([]);
+    const controls = useAnimation();
+    const lastTickPosition = useRef(0);
+    const x = useMotionValue(0);
+
+    // Load participants
     useEffect(() => {
         const load = async () => {
             try {
                 const data = await api.getRaffleParticipants(raffle.id);
-                // Augment mock data if too few participants to make it look cool
-                let candidates = data;
-                if (candidates.length < 10) {
-                    const fillers = Array(10).fill(null).map((_, i) => ({
+                let candidates: Participant[] = data.map((p: any) => ({
+                    user_id: p.user_id,
+                    name: p.name || `Participante ${p.user_id}`,
+                    picture: p.picture
+                }));
+
+                // Add fillers if too few participants
+                if (candidates.length < 15) {
+                    const fillers: Participant[] = Array(20).fill(null).map((_, i) => ({
                         user_id: `filler-${i}`,
-                        name: `Participante ${Math.floor(Math.random() * 1000)}`,
-                        picture: `https://api.dicebear.com/7.x/avataaars/svg?seed=${i}`
+                        name: `Participante ${Math.floor(Math.random() * 9000) + 1000}`,
+                        picture: `https://api.dicebear.com/7.x/avataaars/svg?seed=${Math.random()}`
                     }));
                     candidates = [...candidates, ...fillers];
                 }
+
                 setParticipants(candidates);
-                setStatus('spinning');
+                setStatus('ready');
             } catch (error) {
                 console.error("Error loading participants for roulette", error);
-                // Fallback to simpler animation if fails
-                setStatus('spinning');
+                // Create dummy participants for demo
+                const dummyParticipants: Participant[] = Array(25).fill(null).map((_, i) => ({
+                    user_id: `dummy-${i}`,
+                    name: `Participante ${Math.floor(Math.random() * 9000) + 1000}`,
+                    picture: `https://api.dicebear.com/7.x/avataaars/svg?seed=${i}`
+                }));
+                setParticipants(dummyParticipants);
+                setStatus('ready');
             }
         };
         load();
     }, [raffle.id]);
 
-    // Handle Spinning Logic
+    // Create extended list with winner positioned correctly
     useEffect(() => {
-        if (status === 'spinning' && participants.length > 0) {
-            // Start rapid cycling
-            let speed = 50; // ms
-            let counter = 0;
-            const maxDuration = 6000; // 6 seconds total spin
-            const startTime = Date.now();
+        if (participants.length === 0 || status === 'loading') return;
 
-            const spin = () => {
-                const now = Date.now();
-                const elapsed = now - startTime;
+        const winner = raffle.winner;
+        const winnerParticipant: Participant = winner ? {
+            user_id: String(winner.id || winner.user_id),
+            name: winner.name || 'Vencedor',
+            picture: winner.picture
+        } : participants[Math.floor(Math.random() * participants.length)];
 
-                // Pick random candidate to show
-                const randomIdx = Math.floor(Math.random() * participants.length);
-                setDisplayCandidate(participants[randomIdx]);
-
-                // Slow down logic
-                if (elapsed < maxDuration - 2000) {
-                    // Fast phase
-                    speed = 50;
-                } else if (elapsed < maxDuration - 500) {
-                    // Slowing down
-                    speed += 20;
-                } else if (elapsed >= maxDuration) {
-                    // STOP
-                    setStatus('winner');
-                    return;
-                }
-
-                spinIntervalRef.current = setTimeout(spin, speed);
-            };
-
-            spin();
-            return () => {
-                if (spinIntervalRef.current) clearTimeout(spinIntervalRef.current);
-            };
+        // Create a long shuffled list
+        const shuffled = [...participants].sort(() => Math.random() - 0.5);
+        const repeated: Participant[] = [];
+        
+        // Create enough cards for the animation (about 60+ cards)
+        for (let i = 0; i < 8; i++) {
+            repeated.push(...shuffled.sort(() => Math.random() - 0.5));
         }
-    }, [status, participants]);
 
-    // Handle Winner Reveal
+        // Place winner at a specific position near the end
+        const winnerIndex = repeated.length - Math.floor(VISIBLE_CARDS / 2) - 2;
+        repeated[winnerIndex] = winnerParticipant;
+
+        setExtendedList(repeated);
+    }, [participants, raffle.winner, status]);
+
+    // Track position for tick sounds
     useEffect(() => {
-        if (status === 'winner') {
-            triggerConfetti();
-            // Play sound if possible?
-            // const audio = new Audio('/win.mp3'); audio.play(); 
+        if (status !== 'spinning') return;
+
+        const unsubscribe = x.on("change", (latest) => {
+            const cardsPassed = Math.floor(Math.abs(latest) / CARD_WIDTH);
+            if (cardsPassed !== lastTickPosition.current) {
+                lastTickPosition.current = cardsPassed;
+                playTickSound();
+            }
+        });
+
+        return () => unsubscribe();
+    }, [status, x]);
+
+    // Start spinning animation
+    const startSpin = async () => {
+        if (status !== 'ready' || extendedList.length === 0) return;
+        
+        setStatus('spinning');
+        lastTickPosition.current = 0;
+
+        // Calculate final position to land on winner (positioned near the end)
+        const winnerIndex = extendedList.length - Math.floor(VISIBLE_CARDS / 2) - 2;
+        const centerOffset = (VISIBLE_CARDS * CARD_WIDTH) / 2 - CARD_WIDTH / 2;
+        const finalX = -(winnerIndex * CARD_WIDTH) + centerOffset;
+
+        await controls.start({
+            x: finalX,
+            transition: {
+                duration: SPIN_DURATION,
+                ease: [0.15, 0.85, 0.35, 1], // Custom easing for slot machine feel
+            }
+        });
+
+        // Winner reveal
+        setStatus('winner');
+        playWinSound();
+        triggerConfetti();
+    };
+
+    // Auto-start spin when ready
+    useEffect(() => {
+        if (status === 'ready' && extendedList.length > 0) {
+            const timer = setTimeout(() => {
+                startSpin();
+            }, 1000);
+            return () => clearTimeout(timer);
         }
-    }, [status]);
+    }, [status, extendedList]);
 
-    if (status === 'loading') return null;
-
-    const winner = raffle.winner; // The actual winner from the raffle object
+    const winner = raffle.winner;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md animate-fade-in">
-            <div className="relative w-full max-w-4xl p-8 flex flex-col items-center">
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/95 backdrop-blur-xl animate-fade-in overflow-hidden">
+            {/* Close button */}
+            <button
+                onClick={onClose}
+                className="absolute top-6 right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-50"
+            >
+                <X className="w-6 h-6 text-white/70" />
+            </button>
 
-                {/* Header */}
-                <div className="mb-8 text-center space-y-2 animate-slide-in-top">
-                    <span className="inline-block px-3 py-1 rounded-full bg-primary/20 text-primary border border-primary/50 text-xs font-mono tracking-widest uppercase mb-2">
+            {/* Background Effects */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-yellow-500/10 via-transparent to-transparent rounded-full blur-3xl" />
+                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-900/20 via-transparent to-transparent" />
+            </div>
+
+            {/* Header */}
+            <div className="relative z-10 mb-12 text-center space-y-3 animate-fade-in">
+                <div className="flex items-center justify-center gap-2 mb-4">
+                    <Sparkles className="w-5 h-5 text-yellow-500 animate-pulse" />
+                    <span className="text-xs font-bold tracking-[0.3em] uppercase text-yellow-500/80 border border-yellow-500/30 px-4 py-1 rounded-full bg-yellow-500/10">
                         Sorteio Ao Vivo
                     </span>
-                    <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-400 to-accent drop-shadow-[0_0_15px_rgba(var(--primary),0.5)]">
-                        {status === 'winner' ? 'TEMOS UM VENCEDOR!' : 'SORTEANDO...'}
-                    </h1>
-                    <p className="text-xl text-white/80 font-light">{raffle.titulo}</p>
+                    <Sparkles className="w-5 h-5 text-yellow-500 animate-pulse" />
+                </div>
+                <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight">
+                    {status === 'winner' ? (
+                        <span className="bg-gradient-to-r from-yellow-400 via-amber-300 to-yellow-500 bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(251,191,36,0.5)]">
+                            🎉 TEMOS UM VENCEDOR! 🎉
+                        </span>
+                    ) : (
+                        <span className="text-white/90">GIRANDO A ROLETA...</span>
+                    )}
+                </h1>
+                <p className="text-lg text-white/60">{raffle.titulo}</p>
+            </div>
+
+            {/* Roulette Container */}
+            <div className="relative w-full max-w-5xl mx-auto px-4">
+                {/* Golden frame */}
+                <div className="relative bg-gradient-to-b from-zinc-900 to-black border-2 border-yellow-600/50 rounded-2xl p-1 shadow-[0_0_60px_rgba(251,191,36,0.15)]">
+                    {/* Inner frame with gradient border */}
+                    <div className="relative bg-black rounded-xl overflow-hidden border border-yellow-500/20">
+                        {/* Edge shadows */}
+                        <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-black via-black/80 to-transparent z-20 pointer-events-none" />
+                        <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-black via-black/80 to-transparent z-20 pointer-events-none" />
+
+                        {/* Center pointer - Top */}
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 z-30">
+                            <div className="relative">
+                                <ChevronDown className="w-10 h-10 text-yellow-500 drop-shadow-[0_0_10px_rgba(251,191,36,0.8)]" />
+                                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-8 bg-yellow-500/30 blur-xl rounded-full" />
+                            </div>
+                        </div>
+
+                        {/* Center line */}
+                        <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[3px] bg-gradient-to-b from-yellow-500 via-yellow-400 to-yellow-500 z-20 shadow-[0_0_20px_rgba(251,191,36,0.8)]" />
+
+                        {/* The scrolling strip */}
+                        <div 
+                            className="relative h-48 flex items-center overflow-hidden"
+                            style={{ width: `${VISIBLE_CARDS * CARD_WIDTH}px`, margin: '0 auto' }}
+                        >
+                            <motion.div
+                                className="flex gap-0 absolute"
+                                animate={controls}
+                                style={{ x }}
+                            >
+                                {extendedList.map((participant, index) => {
+                                    const isWinner = status === 'winner' && 
+                                        index === extendedList.length - Math.floor(VISIBLE_CARDS / 2) - 2;
+
+                                    return (
+                                        <motion.div
+                                            key={`${participant.user_id}-${index}`}
+                                            className={`
+                                                flex-shrink-0 flex flex-col items-center justify-center p-3 mx-1
+                                                rounded-xl border-2 transition-all duration-300
+                                                ${isWinner 
+                                                    ? 'border-yellow-500 bg-gradient-to-b from-yellow-500/30 to-yellow-600/10 shadow-[0_0_40px_rgba(251,191,36,0.5)]' 
+                                                    : 'border-white/10 bg-white/5 hover:bg-white/10'
+                                                }
+                                            `}
+                                            style={{ width: CARD_WIDTH - 8, height: 160 }}
+                                            animate={isWinner ? {
+                                                scale: [1, 1.05, 1],
+                                                boxShadow: [
+                                                    '0 0 20px rgba(251,191,36,0.3)',
+                                                    '0 0 60px rgba(251,191,36,0.6)',
+                                                    '0 0 20px rgba(251,191,36,0.3)'
+                                                ]
+                                            } : {}}
+                                            transition={{ duration: 1.5, repeat: isWinner ? Infinity : 0 }}
+                                        >
+                                            <div className="relative">
+                                                <Avatar className={`
+                                                    w-16 h-16 border-2 shadow-lg
+                                                    ${isWinner ? 'border-yellow-500 ring-4 ring-yellow-500/30' : 'border-white/20'}
+                                                `}>
+                                                    <AvatarImage 
+                                                        src={participant.picture} 
+                                                        className="object-cover"
+                                                    />
+                                                    <AvatarFallback className="bg-gradient-to-br from-zinc-700 to-zinc-900 text-white text-lg font-bold">
+                                                        {participant.name?.[0]?.toUpperCase() || '?'}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                {isWinner && (
+                                                    <motion.div 
+                                                        className="absolute -top-2 -right-2 bg-yellow-500 rounded-full p-1.5 shadow-lg"
+                                                        animate={{ 
+                                                            scale: [1, 1.2, 1],
+                                                            rotate: [0, 10, -10, 0]
+                                                        }}
+                                                        transition={{ duration: 0.5, repeat: Infinity }}
+                                                    >
+                                                        <Trophy className="w-4 h-4 text-black" fill="black" />
+                                                    </motion.div>
+                                                )}
+                                            </div>
+                                            <p className={`
+                                                mt-2 text-sm font-semibold text-center truncate w-full px-1
+                                                ${isWinner ? 'text-yellow-400' : 'text-white/80'}
+                                            `}>
+                                                {participant.name}
+                                            </p>
+                                            {isWinner && (
+                                                <span className="text-xs text-yellow-500/80 font-medium mt-1">
+                                                    VENCEDOR!
+                                                </span>
+                                            )}
+                                        </motion.div>
+                                    );
+                                })}
+                            </motion.div>
+                        </div>
+                    </div>
                 </div>
 
-                {/* The Reel / Winner Card */}
-                <div className="relative w-full max-w-md aspect-square bg-gradient-to-b from-white/5 to-white/0 rounded-full border-[3px] border-primary/30 shadow-[0_0_50px_rgba(var(--primary),0.2)] flex items-center justify-center p-1 overflow-hidden">
+                {/* Decorative elements */}
+                <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-8 h-32 bg-gradient-to-r from-yellow-500/20 to-transparent rounded-full blur-xl" />
+                <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-8 h-32 bg-gradient-to-l from-yellow-500/20 to-transparent rounded-full blur-xl" />
+            </div>
 
-                    {/* Glowing Ring */}
-                    <div className={`absolute inset-0 rounded-full border-t-4 border-primary/80 animate-spin-slow ${status === 'winner' ? 'opacity-0' : 'opacity-100'}`}></div>
-
-                    {/* Central Display */}
-                    <div className="relative z-10 flex flex-col items-center justify-center text-center p-6 transition-all duration-300 transform">
-                        <div className="relative mb-6">
-                            {/* Avatar Ring */}
-                            <div className={`absolute -inset-4 rounded-full border-2 border-dashed border-white/20 ${status === 'spinning' ? 'animate-spin' : ''}`}></div>
-
-                            <Avatar className={`w-32 h-32 md:w-48 md:h-48 border-4 border-white shadow-2xl transition-all duration-500 ${status === 'winner' ? 'scale-110 ring-8 ring-yellow-500/50' : 'scale-100'}`}>
-                                <AvatarImage src={status === 'winner' ? winner?.picture : displayCandidate?.picture} className="object-cover" />
-                                <AvatarFallback className="text-4xl bg-primary text-primary-foreground font-bold">
-                                    {(status === 'winner' ? winner?.name : displayCandidate?.name)?.[0]}
+            {/* Winner Details */}
+            {status === 'winner' && winner && (
+                <motion.div 
+                    className="mt-12 text-center space-y-6"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5, duration: 0.5 }}
+                >
+                    <div className="flex items-center justify-center gap-4">
+                        <div className="relative">
+                            <div className="absolute inset-0 bg-yellow-500/30 blur-xl rounded-full animate-pulse" />
+                            <Avatar className="w-20 h-20 border-4 border-yellow-500 shadow-2xl relative">
+                                <AvatarImage src={winner.picture} className="object-cover" />
+                                <AvatarFallback className="bg-yellow-500 text-black text-2xl font-bold">
+                                    {winner.name?.[0]?.toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>
-
-                            {status === 'winner' && (
-                                <div className="absolute -bottom-2 -right-2 bg-yellow-500 text-black p-3 rounded-full shadow-lg border-2 border-white animate-bounce">
-                                    <Trophy className="w-8 h-8" fill="black" />
-                                </div>
-                            )}
+                            <div className="absolute -bottom-1 -right-1 bg-yellow-500 rounded-full p-2 shadow-lg">
+                                <Trophy className="w-5 h-5 text-black" fill="black" />
+                            </div>
                         </div>
-
-                        <div className="space-y-1">
-                            <h2 className="text-3xl md:text-4xl font-bold text-white transition-all">
-                                {status === 'winner' ? winner?.name : displayCandidate?.name}
-                            </h2>
-                            {status === 'winner' && (
-                                <p className="text-yellow-400 font-medium animate-pulse">Parabéns! Você ganhou o prêmio.</p>
-                            )}
+                        <div className="text-left">
+                            <p className="text-sm text-yellow-500/80 font-medium uppercase tracking-wider">
+                                Vencedor
+                            </p>
+                            <h2 className="text-3xl font-black text-white">{winner.name}</h2>
+                            <p className="text-white/60">Parabéns! 🎉</p>
                         </div>
                     </div>
+
+                    <motion.button
+                        onClick={onClose}
+                        className="px-10 py-4 bg-gradient-to-r from-yellow-500 to-amber-600 text-black font-bold rounded-full shadow-[0_0_30px_rgba(251,191,36,0.4)] hover:shadow-[0_0_50px_rgba(251,191,36,0.6)] transition-all"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                    >
+                        Fechar e Ver Detalhes
+                    </motion.button>
+                </motion.div>
+            )}
+
+            {/* Loading state */}
+            {status === 'loading' && (
+                <div className="flex items-center justify-center h-48">
+                    <div className="w-12 h-12 border-4 border-yellow-500/30 border-t-yellow-500 rounded-full animate-spin" />
                 </div>
-
-                {/* Footer / Close */}
-                {status === 'winner' && (
-                    <div className="mt-12 animate-fade-in-up delay-500">
-                        <button
-                            onClick={onClose}
-                            className="px-8 py-3 bg-white text-black font-bold rounded-full hover:scale-105 transition-transform shadow-xl"
-                        >
-                            Fechar e Ver Detalhes
-                        </button>
-                    </div>
-                )}
-
-            </div>
+            )}
         </div>
     );
 }
