@@ -200,6 +200,12 @@ export const api = {
     },
 
     // Notifications
+    getWinners: async () => {
+        const res = await fetch(`${API_URL}/winners`);
+        if (!res.ok) throw new Error("Failed to fetch winners");
+        return res.json(); // Returns simple mapped objects directly suitable for feed
+    },
+
     getNotifications: async (userId: number | string) => {
         const res = await fetch(`${API_URL}/notifications?userId=${userId}`);
         if (!res.ok) throw new Error("Failed to fetch notifications");

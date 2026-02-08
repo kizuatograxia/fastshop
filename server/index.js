@@ -589,6 +589,37 @@ app.delete('/api/raffles/:id', async (req, res) => {
     }
 });
 
+// Public Winners Feed
+app.get('/api/winners', async (req, res) => {
+    try {
+        const query = `
+            SELECT r.id, r.title, r.image_url, r.prize_pool, r.draw_date, r.prize_value,
+                   u.name as winner_name, 
+                   u.picture as winner_picture,
+                   u.address as winner_location -- optional if available
+            FROM raffles r
+            JOIN users u ON r.winner_id = u.id
+            WHERE r.status IN ('encerrado', 'ended')
+            ORDER BY r.draw_date DESC
+            LIMIT 10
+        `;
+        const result = await pool.query(query);
+        const winners = result.rows.map(row => ({
+            id: row.id,
+            name: row.winner_name || 'Anônimo',
+            picture: row.winner_picture,
+            prize: row.prize_pool || row.title,
+            image: row.image_url,
+            date: row.draw_date,
+            ticketNumber: Math.floor(Math.random() * 10000).toString().padStart(4, '0') // Mock ticket for now as we don't store winning ticket explicitly yet
+        }));
+        res.json(winners);
+    } catch (error) {
+        console.error('Error fetching winners:', error);
+        res.status(500).json({ message: 'Erro ao buscar ganhadores' });
+    }
+});
+
 // Admin: Get All Raffles (Active + Completed)
 app.get('/api/admin/raffles', async (req, res) => {
     try {
