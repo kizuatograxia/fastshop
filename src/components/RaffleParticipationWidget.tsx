@@ -17,6 +17,10 @@ export const RaffleParticipationWidget = () => {
         return status === 'ativo' || status === 'active';
     });
 
+    console.log('[Widget Debug] User:', user?.email);
+    console.log('[Widget Debug] All Raffles:', userRaffles.length);
+    console.log('[Widget Debug] Active Raffles:', activeRaffles.length);
+
     // Don't render if user is not logged in or has no active raffles
     if (!user || activeRaffles.length === 0) return null;
 
