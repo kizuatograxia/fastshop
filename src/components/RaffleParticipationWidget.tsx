@@ -32,7 +32,7 @@ export const RaffleParticipationWidget = () => {
     });
 
     return (
-        <div className="fixed bottom-4 left-4 z-50 flex flex-col items-start">
+        <div className="fixed bottom-4 left-4 z-[9999] flex flex-col items-start pointer-events-auto">
             {/* Expanded List */}
             <AnimatePresence>
                 {isOpen && (
