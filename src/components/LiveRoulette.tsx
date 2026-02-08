@@ -23,7 +23,8 @@ const SPIN_DURATION = 7; // Seconds
 
 export function LiveRoulette({ raffle, onClose }: LiveRouletteProps) {
     const [participants, setParticipants] = useState<Participant[]>([]);
-    const [status, setStatus] = useState<'loading' | 'ready' | 'spinning' | 'winner'>('loading');
+    const [status, setStatus] = useState<'ready' | 'spinning' | 'winner'>('ready');
+    const [isLoading, setIsLoading] = useState(true);
     const [extendedList, setExtendedList] = useState<Participant[]>([]);
 
     // Framer motion controls
@@ -104,7 +105,7 @@ export function LiveRoulette({ raffle, onClose }: LiveRouletteProps) {
                 }
 
                 setParticipants(candidates);
-                setStatus('ready');
+                setIsLoading(false);
             } catch (error) {
                 console.error("Error loading participants for roulette", error);
 
@@ -115,7 +116,7 @@ export function LiveRoulette({ raffle, onClose }: LiveRouletteProps) {
                     picture: `https://api.dicebear.com/7.x/avataaars/svg?seed=${i}`
                 }));
                 setParticipants(dummyParticipants);
-                setStatus('ready');
+                setIsLoading(false);
             }
         };
         load();
@@ -123,7 +124,7 @@ export function LiveRoulette({ raffle, onClose }: LiveRouletteProps) {
 
     // Prepare the "Extended List" for the animation (Winner at fixed position)
     useEffect(() => {
-        if (participants.length === 0 || status === 'loading') return;
+        if (participants.length === 0 || isLoading) return;
 
         const winner = raffle.winner;
         const winnerParticipant: Participant = winner ? {
@@ -149,7 +150,7 @@ export function LiveRoulette({ raffle, onClose }: LiveRouletteProps) {
         repeated[winnerIndex] = winnerParticipant;
 
         setExtendedList(repeated);
-    }, [participants, raffle.winner, status]);
+    }, [participants, raffle.winner, isLoading]);
 
     // Handle Ticking Sound based on motion value
     useEffect(() => {
@@ -215,7 +216,7 @@ export function LiveRoulette({ raffle, onClose }: LiveRouletteProps) {
         }
     }, [status, extendedList]);
 
-    if (status === 'loading') return null;
+    if (isLoading) return null;
 
     const winner = raffle.winner;
 
@@ -411,9 +412,9 @@ export function LiveRoulette({ raffle, onClose }: LiveRouletteProps) {
             )}
 
             {/* Loading Indicator */}
-            {status === 'loading' && (
+            {isLoading && (
                 <div className="flex items-center justify-center mt-12">
-                    <div className="w-12 h-12 border-4 border-yellow-500/30 border-t-yellow-500 rounded-full animate-spin" />
+                    <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
                 </div>
             )}
         </div>
