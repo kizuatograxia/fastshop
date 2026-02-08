@@ -32,7 +32,6 @@ export const RaffleParticipationWidget = () => {
     });
 
     return (
-    return (
         <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end pointer-events-auto">
             {/* Expanded List */}
             <AnimatePresence>
