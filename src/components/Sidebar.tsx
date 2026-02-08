@@ -68,6 +68,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => {
                   onCategoryChange(category.id);
                   onClose();
+                  if (window.location.pathname !== "/") {
+                    window.location.href = "/";
+                  }
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all border-l-4 ${activeCategory === category.id
                   ? "bg-secondary border-primary text-primary"
@@ -119,7 +122,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   <Ticket className="h-5 w-5 text-muted-foreground" />
                   <span className="font-medium">Meus Sorteios</span>
                 </button>
-                <Link to="/ganhadores" onClick={onClose} className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent">
+                <Link to="/#ganhadores" onClick={onClose} className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent">
                   <Trophy className="h-5 w-5 text-muted-foreground" />
                   <span className="font-medium">Mural dos Ganhadores</span>
                 </Link>
@@ -132,10 +135,10 @@ const Sidebar: React.FC<SidebarProps> = ({
 
             <div className="my-4 mx-4 border-t border-border" />
 
-            <button className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent">
+            <Link to="/#como-funciona" onClick={onClose} className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent">
               <HelpCircle className="h-5 w-5 text-muted-foreground" />
               <span className="font-medium">Como Funciona</span>
-            </button>
+            </Link>
           </nav>
         </div>
       </aside>
