@@ -32,7 +32,8 @@ export const RaffleParticipationWidget = () => {
     });
 
     return (
-        <div className="fixed bottom-4 left-4 z-[9999] flex flex-col items-start pointer-events-auto">
+    return (
+        <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end pointer-events-auto">
             {/* Expanded List */}
             <AnimatePresence>
                 {isOpen && (
@@ -41,16 +42,16 @@ export const RaffleParticipationWidget = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 20, scale: 0.95 }}
                         transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="mb-3 w-80 max-h-[70vh] overflow-hidden rounded-2xl border border-white/10 bg-black/60 backdrop-blur-xl shadow-2xl shadow-primary/10"
+                        className="mb-4 w-80 max-h-[70vh] overflow-hidden rounded-2xl border border-border/50 bg-black/80 backdrop-blur-xl shadow-2xl shadow-black/50"
                     >
                         {/* Header */}
-                        <div className="flex items-center justify-between p-4 border-b border-white/10">
+                        <div className="flex items-center justify-between p-4 border-b border-white/5">
                             <div className="flex items-center gap-2">
-                                <div className="p-1.5 rounded-lg bg-gradient-to-br from-primary to-purple-600">
-                                    <Ticket className="w-4 h-4 text-white" />
+                                <div className="p-1.5 rounded-lg bg-primary/10 ring-1 ring-primary/20">
+                                    <Ticket className="w-4 h-4 text-primary" />
                                 </div>
-                                <span className="font-semibold text-foreground">
-                                    Participando de {activeRaffles.length}
+                                <span className="font-semibold text-foreground text-sm">
+                                    Participando de <span className="text-primary">{activeRaffles.length}</span>
                                 </span>
                             </div>
                             <button
@@ -61,8 +62,8 @@ export const RaffleParticipationWidget = () => {
                             </button>
                         </div>
 
-                        {/* Raffle List */}
-                        <div className="max-h-80 overflow-y-auto p-2 space-y-2 scrollbar-thin scrollbar-thumb-white/10">
+                        {/* Raffle List - Simplified scrollbar */}
+                        <div className="max-h-80 overflow-y-auto p-2 space-y-2">
                             {activeRaffles.map((ur) => (
                                 <Link
                                     key={ur.raffle.id}
@@ -70,32 +71,28 @@ export const RaffleParticipationWidget = () => {
                                     onClick={() => setIsOpen(false)}
                                 >
                                     <motion.div
-                                        whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.05)" }}
-                                        className="flex items-center gap-3 p-3 rounded-xl border border-white/5 transition-colors cursor-pointer"
+                                        whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.03)" }}
+                                        className="flex items-center gap-3 p-3 rounded-xl border border-white/5 transition-colors cursor-pointer group"
                                     >
                                         {/* Thumbnail */}
-                                        <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
+                                        <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border border-white/10 group-hover:border-primary/30 transition-colors">
                                             <img
                                                 src={ur.raffle.imagem || "https://images.unsplash.com/photo-1614680376593-902f74cf0d41?w=100"}
                                                 alt={ur.raffle.titulo}
                                                 className="w-full h-full object-cover"
                                             />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                                         </div>
 
                                         {/* Info */}
                                         <div className="flex-1 min-w-0">
-                                            <h4 className="font-medium text-sm text-foreground truncate">
+                                            <h4 className="font-medium text-sm text-foreground truncate group-hover:text-primary transition-colors">
                                                 {ur.raffle.titulo}
                                             </h4>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <CountdownBadge
                                                     targetDate={ur.raffle.dataFim}
-                                                    className="text-[10px] px-1.5 py-0.5"
+                                                    className="text-[10px] px-1.5 py-0.5 bg-secondary/50"
                                                 />
-                                                <span className="text-xs text-muted-foreground">
-                                                    • {ur.ticketsComprados} ticket{ur.ticketsComprados !== 1 ? 's' : ''}
-                                                </span>
                                             </div>
                                         </div>
                                     </motion.div>
@@ -104,11 +101,11 @@ export const RaffleParticipationWidget = () => {
                         </div>
 
                         {/* Footer */}
-                        <div className="p-3 border-t border-white/10 bg-white/5">
+                        <div className="p-3 border-t border-white/5 bg-white/5">
                             <Link
                                 to="/profile"
                                 onClick={() => setIsOpen(false)}
-                                className="block w-full text-center text-sm text-primary hover:text-primary/80 transition-colors font-medium"
+                                className="block w-full text-center text-xs text-muted-foreground hover:text-primary transition-colors"
                             >
                                 Ver todos meus sorteios →
                             </Link>
@@ -123,31 +120,26 @@ export const RaffleParticipationWidget = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsOpen(!isOpen)}
                 className={`
-                    relative flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all
-                    border border-white/10
+                    relative flex items-center justify-center w-14 h-14 rounded-full shadow-2xl transition-all duration-300
+                    border
                     ${isOpen
-                        ? 'bg-background/90 text-foreground'
-                        : 'bg-gradient-to-br from-primary to-purple-600 text-white shadow-primary/30'
+                        ? 'bg-background border-border text-foreground'
+                        : 'bg-black/60 backdrop-blur-md border-white/10 text-white hover:border-primary/50 hover:bg-black/80'
                     }
-                    ${hasUrgent && !isOpen ? 'animate-pulse' : ''}
+                    ${hasUrgent && !isOpen ? 'ring-2 ring-destructive/50 animate-pulse' : ''}
                 `}
             >
                 {isOpen ? (
-                    <ChevronDown className="w-5 h-5" />
+                    <ChevronDown className="w-6 h-6" />
                 ) : (
-                    <Ticket className="w-5 h-5" />
+                    <Ticket className={`w-6 h-6 ${hasUrgent ? 'text-destructive' : 'text-primary'}`} />
                 )}
 
                 {/* Badge Counter */}
                 {!isOpen && (
-                    <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full bg-destructive text-destructive-foreground shadow-lg">
+                    <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full bg-primary text-primary-foreground shadow-lg border border-black">
                         {activeRaffles.length}
                     </span>
-                )}
-
-                {/* Urgent Glow Ring */}
-                {hasUrgent && !isOpen && (
-                    <span className="absolute inset-0 rounded-full border-2 border-destructive/50 animate-ping" />
                 )}
             </motion.button>
         </div>
