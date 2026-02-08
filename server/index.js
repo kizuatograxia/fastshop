@@ -3,6 +3,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import { OAuth2Client } from 'google-auth-library';
 import dotenv from 'dotenv';
+import cron from 'node-cron';
 
 import pkg from 'pg';
 
@@ -645,14 +646,9 @@ app.post('/api/raffles/:id/join', async (req, res) => {
     }
 });
 
-// Perform Draw (Unbiased RNG)
-app.post('/api/raffles/:id/draw', async (req, res) => {
-    const { id } = req.params;
-    const { password } = req.body;
-
-    if (password !== ADMIN_PASSWORD) {
-        return res.status(401).json({ message: "Não autorizado" });
-    }
+// Helper: Perform Raffle Draw
+const performRaffleDraw = async (raffleId) => {
+    if (!pool) throw new Error('Database pool not ready');
 
     try {
         // 1. Get all tickets for this raffle
@@ -662,13 +658,16 @@ app.post('/api/raffles/:id/draw', async (req, res) => {
             JOIN users u ON t.user_id = u.id
             WHERE t.raffle_id = $1
             ORDER BY t.id ASC
-        `, [id]);
+        `, [raffleId]);
 
         const tickets = ticketsResult.rows;
         const totalTickets = tickets.length;
 
         if (totalTickets === 0) {
-            return res.status(400).json({ message: "Não há participantes neste sorteio." });
+            console.log(`Raffle ${raffleId} has no tickets. Closing as cancelled.`);
+            // Mark as 'cancelled' or strict 'encerrado' without winner
+            await pool.query('UPDATE raffles SET status = $1 WHERE id = $2', ['encerrado', raffleId]);
+            return { status: 'cancelled', message: "Não há participantes." };
         }
 
         // 2. Generate Secure Random Number
@@ -676,23 +675,23 @@ app.post('/api/raffles/:id/draw', async (req, res) => {
         const winningTicket = tickets[winningIndex];
 
         // 3. Update Raffle Status and Winner
-        await pool.query('UPDATE raffles SET status = $1, prize_value = prize_value, winner_id = $2 WHERE id = $3', ['encerrado', winningTicket.user_id, id]);
+        await pool.query('UPDATE raffles SET status = $1, prize_value = prize_value, winner_id = $2 WHERE id = $3', ['encerrado', winningTicket.user_id, raffleId]);
 
         // 3.1 Create Notification for Winner
         try {
             await pool.query(`
                 INSERT INTO notifications (user_id, title, message)
                 VALUES ($1, $2, $3)
-            `, [winningTicket.user_id, 'Você Ganhou! 🎉', `Parabéns! Você foi o vencedor do sorteio #${id}. Entre em contato para resgatar seu prêmio!`]);
+            `, [winningTicket.user_id, 'Você Ganhou! 🎉', `Parabéns! Você foi o vencedor do sorteio #${raffleId}. Entre em contato para resgatar seu prêmio!`]);
             console.log(`Notification created for user ${winningTicket.user_id}`);
         } catch (notifErr) {
             console.error('Error creating notification:', notifErr);
         }
 
-        // 4. Return Winner Info
-        console.log(`Draw for Raffle ${id}: Ticket ${winningIndex}/${totalTickets} won. User: ${winningTicket.name}`);
+        console.log(`Draw executed for Raffle ${raffleId}: User ${winningTicket.name} wins!`);
 
-        res.json({
+        return {
+            status: 'completed',
             winner: {
                 id: winningTicket.user_id,
                 name: winningTicket.name,
@@ -701,7 +700,50 @@ app.post('/api/raffles/:id/draw', async (req, res) => {
             },
             totalTickets,
             winningTicketIndex: winningIndex
-        });
+        };
+
+    } catch (error) {
+        console.error(`Error performing draw logic for raffle ${raffleId}:`, error);
+        throw error;
+    }
+};
+
+// CRON JOB: Check every minute for active raffles that are past their draw date
+cron.schedule('* * * * *', async () => {
+    if (!pool) return;
+    try {
+        const result = await pool.query(`SELECT id, title FROM raffles WHERE status = 'active' AND draw_date <= NOW()`);
+        const expiredRaffles = result.rows;
+
+        if (expiredRaffles.length > 0) {
+            console.log(`Cron: Found ${expiredRaffles.length} expired raffles. Processing...`);
+            for (const raffle of expiredRaffles) {
+                console.log(`Cron: Automaically drawing raffle "${raffle.title}" (ID: ${raffle.id})`);
+                await performRaffleDraw(raffle.id);
+            }
+        }
+    } catch (error) {
+        console.error('Error in cron job:', error);
+    }
+});
+
+// Perform Draw (Route - Manual Trigger via Admin)
+app.post('/api/raffles/:id/draw', async (req, res) => {
+    const { id } = req.params;
+    const { password } = req.body;
+
+    if (password !== ADMIN_PASSWORD) {
+        return res.status(401).json({ message: "Não autorizado" });
+    }
+
+    try {
+        const result = await performRaffleDraw(id);
+
+        if (result.status === 'cancelled') {
+            return res.status(400).json(result);
+        }
+
+        res.json(result);
 
     } catch (error) {
         console.error('Error performing draw:', error);
