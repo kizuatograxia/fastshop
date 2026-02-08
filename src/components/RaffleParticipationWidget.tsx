@@ -90,7 +90,7 @@ export const RaffleParticipationWidget = () => {
                                             <div className="flex items-center gap-2 mt-1">
                                                 <CountdownBadge
                                                     targetDate={ur.raffle.dataFim}
-                                                    className="text-[10px] px-1.5 py-0.5 bg-secondary/50"
+                                                    className="text-[10px] px-1.5 py-0.5 bg-secondary/50 text-white"
                                                 />
                                             </div>
                                         </div>
