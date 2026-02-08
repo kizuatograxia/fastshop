@@ -19,10 +19,18 @@ export interface Raffle {
     participantes: number;
     maxParticipantes: number;
     custoNFT: number;
-    status: "ativo" | "encerrado" | "em_breve";
+    status: "ativo" | "encerrado" | "em_breve" | "active";
     categoria: string;
-    raridade: string;
+    raridade?: string;
     winner_id?: number;
+    winner?: RaffleWinner;
+}
+
+export interface RaffleWinner {
+    id?: string | number;
+    user_id?: string | number;
+    name: string;
+    picture?: string;
 }
 
 export interface OwnedNFT extends NFT {

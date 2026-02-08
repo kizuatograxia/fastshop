@@ -29,7 +29,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Load wallet from backend when user changes
     useEffect(() => {
         if (user) {
-            api.getWallet(user.id)
+            api.getWallet(Number(user.id))
                 .then((data) => setOwnedNFTs(data))
                 .catch((err) => console.error("Failed to load wallet", err));
         } else {
@@ -111,12 +111,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             });
 
             // API call
-            await api.addToWallet(user.id, nft);
+            await api.addToWallet(Number(user.id), nft);
         } catch (error) {
             console.error("Failed to add NFT", error);
             toast.error("Erro ao comprar NFT");
             // Revert optimistic update? For simplicity, we'll reload
-            api.getWallet(user.id).then(setOwnedNFTs);
+            api.getWallet(Number(user.id)).then(setOwnedNFTs);
         }
     }, [user]);
 
@@ -141,11 +141,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             });
 
             // API call
-            await api.removeFromWallet(user.id, nftId, quantidade);
+            await api.removeFromWallet(Number(user.id), nftId, quantidade);
         } catch (error) {
             console.error("Failed to remove NFT", error);
             toast.error("Erro ao usar NFT");
-            api.getWallet(user.id).then(setOwnedNFTs);
+            api.getWallet(Number(user.id)).then(setOwnedNFTs);
         }
     }, [user]);
 

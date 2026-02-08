@@ -34,13 +34,13 @@ export const api = {
         return res.json();
     },
 
-    getWallet: async (userId: number) => {
+    getWallet: async (userId: number | string) => {
         const res = await fetch(`${API_URL}/wallet?userId=${userId}`);
         if (!res.ok) throw new Error("Failed to fetch wallet");
         return res.json();
     },
 
-    addToWallet: async (userId: number, nft: any) => {
+    addToWallet: async (userId: number | string, nft: any) => {
         const res = await fetch(`${API_URL}/wallet`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -50,7 +50,7 @@ export const api = {
         return res.json();
     },
 
-    removeFromWallet: async (userId: number, nftId: string, quantity: number = 1) => {
+    removeFromWallet: async (userId: number | string, nftId: string, quantity: number = 1) => {
         const res = await fetch(`${API_URL}/wallet/remove`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -96,7 +96,7 @@ export const api = {
         return res.json();
     },
 
-    joinRaffle: async (raffleId: number, userId: number, ticketCount: number, txHash?: string) => {
+    joinRaffle: async (raffleId: number | string, userId: number | string, ticketCount: number, txHash?: string) => {
         const res = await fetch(`${API_URL}/raffles/${raffleId}/join`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -106,7 +106,7 @@ export const api = {
         return res.json();
     },
 
-    getUserRaffles: async (userId: number) => {
+    getUserRaffles: async (userId: number | string) => {
         const res = await fetch(`${API_URL}/user/raffles?userId=${userId}`);
         if (!res.ok) throw new Error("Failed to fetch user raffles");
         const data = await res.json();
@@ -200,7 +200,7 @@ export const api = {
     },
 
     // Notifications
-    getNotifications: async (userId: number) => {
+    getNotifications: async (userId: number | string) => {
         const res = await fetch(`${API_URL}/notifications?userId=${userId}`);
         if (!res.ok) throw new Error("Failed to fetch notifications");
         return res.json();
