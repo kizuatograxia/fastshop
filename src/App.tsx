@@ -9,6 +9,7 @@ import { WalletProvider } from "@/contexts/WalletContext";
 import { UserRafflesProvider } from "@/contexts/UserRafflesContext";
 import { RaffleEventsProvider } from "@/contexts/RaffleEventsContext";
 import { GlobalEventsListener } from "@/components/GlobalEventsListener";
+import { RaffleParticipationWidget } from "@/components/RaffleParticipationWidget";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
@@ -47,6 +48,7 @@ const App = () => (
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>
+                    <RaffleParticipationWidget />
                   </BrowserRouter>
                 </TooltipProvider>
               </RaffleEventsProvider>
