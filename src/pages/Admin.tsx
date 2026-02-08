@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Lock } from "lucide-react";
 import { Raffle } from "@/types/raffle";
-import Roulette from "@/components/Roulette";
+import { LiveRoulette } from "@/components/LiveRoulette";
 
 // Components
 import { AdminLayout } from "@/components/admin/AdminLayout";
@@ -155,29 +155,29 @@ const Admin = () => {
     };
 
     // Triggered by button in Details or Participants
-    const handlePerformDraw = () => {
+    const handlePerformDraw = async () => {
         if (!selectedRaffle) return;
-        setWinnerId(null);
-        // We need participants loaded for the roulette
-        if (participants.length === 0) {
-            // If triggered from details, participants might not be loaded yet
-            handleViewParticipants(selectedRaffle).then(() => {
-                setShowRoulette(true);
-            });
-        } else {
-            setShowRoulette(true);
-        }
-    };
 
-    const confirmDraw = async () => {
-        if (!selectedRaffle) return;
+        // Confirm before action
+        if (!confirm("Isso irá realizar o sorteio e definir um vencedor permanentemente. Continuar?")) return;
+
+        setIsLoading(true);
         try {
-            const data = await api.drawRaffle(password, selectedRaffle.id);
-            setWinnerId(data.winner.id);
-            toast.success(`Resultado recebido! Girando...`);
+            // 1. Perform the draw on the backend first
+            const data = await api.drawRaffle(localStorage.getItem("admin_key") || "", selectedRaffle.id);
+
+            // 2. Update the raffle with the winner info locally
+            const updatedRaffle = { ...selectedRaffle, winner: data.winner, status: 'encerrado' };
+            setSelectedRaffle(updatedRaffle as Raffle);
+
+            // 3. Show the new Premium Roulette with the winner already set
+            setShowRoulette(true);
+            toast.success("Resultado obtido! Iniciando animação...");
         } catch (error) {
-            toast.error("Erro ao realizar sorteio");
-            setShowRoulette(false);
+            toast.error("Erro ao realizar sorteio. Tente novamente.");
+            console.error(error);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -294,29 +294,14 @@ const Admin = () => {
                 </div>
             )}
 
-            {/* ROULETTE OVERLAY */}
+            {/* LIVE ROULETTE OVERLAY */}
             {showRoulette && selectedRaffle && (
-                <Roulette
-                    candidates={participants.reduce((acc: any[], p: any) => {
-                        const existing = acc.find(c => c.id === p.user_id);
-                        if (existing) {
-                            existing.ticket_count++;
-                        } else {
-                            acc.push({
-                                id: p.user_id,
-                                name: p.name,
-                                picture: p.picture,
-                                ticket_count: 1
-                            });
-                        }
-                        return acc;
-                    }, [])}
-                    winnerId={winnerId}
-                    onSpinStart={confirmDraw}
-                    onFinished={() => fetchRaffles()}
+                <LiveRoulette
+                    raffle={selectedRaffle}
                     onClose={() => {
                         setShowRoulette(false);
-                        setView('details'); // Return to details
+                        fetchRaffles(); // Refresh data to show winner in list
+                        setView('details');
                     }}
                 />
             )}
