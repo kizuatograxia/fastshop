@@ -61,6 +61,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
               <a href="#sorteios" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                 Sorteios
               </a>
+              <Link to="/ganhadores" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                Ganhadores
+              </Link>
               <a href="#nfts" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                 Comprar NFTs
               </a>
@@ -148,7 +151,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
           </div>
         </div>
       </div>
-    </header>
+    </header >
   );
 };
 

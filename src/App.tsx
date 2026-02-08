@@ -16,6 +16,7 @@ import Profile from "./pages/Profile";
 import RaffleDetails from "./pages/RaffleDetails";
 import Checkout from "./pages/Checkout";
 import Admin from "./pages/Admin";
+import WinnersFeed from "./pages/WinnersFeed";
 import NotFound from "./pages/NotFound";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
@@ -45,6 +46,7 @@ const App = () => (
                       <Route path="/raffle/:id" element={<RaffleDetails />} />
                       <Route path="/checkout" element={<Checkout />} />
                       <Route path="/admin" element={<Admin />} />
+                      <Route path="/ganhadores" element={<WinnersFeed />} />
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>

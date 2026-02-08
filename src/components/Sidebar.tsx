@@ -119,6 +119,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                   <Ticket className="h-5 w-5 text-muted-foreground" />
                   <span className="font-medium">Meus Sorteios</span>
                 </button>
+                <Link to="/ganhadores" onClick={onClose} className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent">
+                  <Trophy className="h-5 w-5 text-muted-foreground" />
+                  <span className="font-medium">Mural dos Ganhadores</span>
+                </Link>
                 <button className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent">
                   <Trophy className="h-5 w-5 text-muted-foreground" />
                   <span className="font-medium">Meus Prêmios</span>

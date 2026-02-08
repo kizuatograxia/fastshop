@@ -1,0 +1,243 @@
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Star, Camera, Send, X } from "lucide-react";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
+
+interface SubmitTestimonialModalProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+}
+
+const recentRaffles = [
+    { id: "1", name: "iPhone 15 Pro Max" },
+    { id: "2", name: "PlayStation 5" },
+    { id: "3", name: "R$ 5.000 em Pix" },
+    { id: "4", name: "MacBook Pro M3" },
+    { id: "5", name: "AirPods Pro 2" },
+];
+
+export const SubmitTestimonialModal = ({
+    open,
+    onOpenChange,
+}: SubmitTestimonialModalProps) => {
+    const [selectedPrize, setSelectedPrize] = useState("");
+    const [testimonial, setTestimonial] = useState("");
+    const [rating, setRating] = useState(0);
+    const [hoveredRating, setHoveredRating] = useState(0);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleSubmit = async () => {
+        if (!selectedPrize || !testimonial || rating === 0) {
+            toast.error("Preencha todos os campos obrigatórios!");
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        // Simulate API call
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
+        toast.success("Depoimento enviado com sucesso!", {
+            description: "Seu feedback será analisado e publicado em breve.",
+        });
+
+        // Reset form
+        setSelectedPrize("");
+        setTestimonial("");
+        setRating(0);
+        setImagePreview(null);
+        setIsSubmitting(false);
+        onOpenChange(false);
+    };
+
+    const handleClose = () => {
+        onOpenChange(false);
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-lg bg-card border-border/50 backdrop-blur-xl">
+                <DialogHeader>
+                    <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                        🎉 Compartilhe sua Conquista!
+                    </DialogTitle>
+                    <DialogDescription className="text-muted-foreground">
+                        Conte para todos como foi ganhar na MundoPix
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-6 py-4">
+                    {/* Prize Select */}
+                    <div className="space-y-2">
+                        <Label htmlFor="prize">Prêmio Ganho *</Label>
+                        <Select value={selectedPrize} onValueChange={setSelectedPrize}>
+                            <SelectTrigger className="bg-background/50 border-border/50">
+                                <SelectValue placeholder="Selecione o prêmio que você ganhou" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {recentRaffles.map((raffle) => (
+                                    <SelectItem key={raffle.id} value={raffle.id}>
+                                        {raffle.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    {/* Star Rating */}
+                    <div className="space-y-2">
+                        <Label>Sua Avaliação *</Label>
+                        <div className="flex items-center gap-2">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                                <motion.button
+                                    key={star}
+                                    type="button"
+                                    whileHover={{ scale: 1.2 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onMouseEnter={() => setHoveredRating(star)}
+                                    onMouseLeave={() => setHoveredRating(0)}
+                                    onClick={() => setRating(star)}
+                                    className="focus:outline-none"
+                                >
+                                    <Star
+                                        className={`w-8 h-8 transition-colors ${star <= (hoveredRating || rating)
+                                                ? "text-yellow-400 fill-yellow-400"
+                                                : "text-muted-foreground/30"
+                                            }`}
+                                    />
+                                </motion.button>
+                            ))}
+                            {rating > 0 && (
+                                <span className="text-sm text-muted-foreground ml-2">
+                                    {rating === 5
+                                        ? "Excelente!"
+                                        : rating === 4
+                                            ? "Muito bom!"
+                                            : rating === 3
+                                                ? "Bom"
+                                                : rating === 2
+                                                    ? "Regular"
+                                                    : "Ruim"}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Testimonial Text */}
+                    <div className="space-y-2">
+                        <Label htmlFor="testimonial">Sua Experiência *</Label>
+                        <Textarea
+                            id="testimonial"
+                            placeholder="Conte como foi receber seu prêmio, a velocidade da entrega, sua experiência com a MundoPix..."
+                            value={testimonial}
+                            onChange={(e) => setTestimonial(e.target.value)}
+                            className="min-h-[120px] bg-background/50 border-border/50 resize-none"
+                            maxLength={500}
+                        />
+                        <p className="text-xs text-muted-foreground text-right">
+                            {testimonial.length}/500 caracteres
+                        </p>
+                    </div>
+
+                    {/* Image Upload */}
+                    <div className="space-y-2">
+                        <Label>Foto (Opcional)</Label>
+                        <div className="relative">
+                            {imagePreview ? (
+                                <div className="relative rounded-xl overflow-hidden aspect-video">
+                                    <img
+                                        src={imagePreview}
+                                        alt="Preview"
+                                        className="w-full h-full object-cover"
+                                    />
+                                    <Button
+                                        variant="destructive"
+                                        size="icon"
+                                        className="absolute top-2 right-2"
+                                        onClick={() => setImagePreview(null)}
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            ) : (
+                                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border/50 rounded-xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors">
+                                    <Camera className="w-8 h-8 text-muted-foreground mb-2" />
+                                    <span className="text-sm text-muted-foreground">
+                                        Clique ou arraste uma foto
+                                    </span>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={handleImageUpload}
+                                    />
+                                </label>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Submit Button */}
+                <div className="flex gap-3">
+                    <Button
+                        variant="outline"
+                        onClick={handleClose}
+                        className="flex-1"
+                    >
+                        Cancelar
+                    </Button>
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={isSubmitting}
+                        className="flex-1 gap-2"
+                    >
+                        {isSubmitting ? (
+                            <>
+                                <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                    className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full"
+                                />
+                                Enviando...
+                            </>
+                        ) : (
+                            <>
+                                <Send className="w-4 h-4" />
+                                Publicar Depoimento
+                            </>
+                        )}
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+};
