@@ -143,7 +143,13 @@ export const api = {
                 maxParticipantes: 0,
                 status: ur.raffle.status === 'active' ? 'ativo' : 'encerrado',
                 categoria: "geral",
-                raridade: "comum"
+                raridade: "comum",
+                winner_id: ur.raffle.winner_id,
+                winner: ur.raffle.winner ? {
+                    id: ur.raffle.winner.id,
+                    name: ur.raffle.winner.name,
+                    picture: ur.raffle.winner.picture
+                } : undefined
             }
         }));
     },
