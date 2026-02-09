@@ -60,6 +60,23 @@ export const api = {
         return res.json();
     },
 
+    // Marketplace
+    getNFTCatalog: async () => {
+        const res = await fetch(`${API_URL}/nfts`);
+        if (!res.ok) throw new Error("Failed to fetch NFT catalog");
+        const data = await res.json();
+        return data.map((item: any) => ({
+            id: String(item.id),
+            name: item.name,
+            emoji: item.emoji,
+            price: Number(item.price),
+            rarity: item.rarity,
+            description: item.description,
+            gradient: item.gradient || "from-primary/20 to-accent/20",
+            stock: item.stock
+        }));
+    },
+
     // Raffles
     getActiveRaffles: async () => {
         const res = await fetch(`${API_URL}/raffles`);

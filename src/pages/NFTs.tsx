@@ -50,7 +50,8 @@ const rarityConfig = {
   },
 };
 
-const featuredNFTs: NFTItem[] = [
+// Fallbacks defined outside component
+const fallbackFeaturedNFTs: NFTItem[] = [
   {
     id: "f1",
     name: "Dragão Celestial",
@@ -80,7 +81,7 @@ const featuredNFTs: NFTItem[] = [
   },
 ];
 
-const allNFTs: NFTItem[] = [
+const fallbackNFTs: NFTItem[] = [
   { id: "1", name: "Gatinho Fofo", emoji: "🐱", price: 25, rarity: "comum", description: "Miau! Super fofo e acessível.", gradient: "from-primary/20 to-accent/20", stock: 150 },
   { id: "2", name: "Cachorrinho", emoji: "🐶", price: 25, rarity: "comum", description: "Au au! Seu melhor amigo digital.", gradient: "from-amber-500/20 to-yellow-500/20", stock: 200 },
   { id: "3", name: "Leão Dourado", emoji: "🦁", price: 75, rarity: "raro", description: "Rei da selva digital!", gradient: "from-yellow-500/20 to-orange-500/20", stock: 50 },
@@ -95,9 +96,34 @@ const allNFTs: NFTItem[] = [
   { id: "12", name: "Urso Polar", emoji: "🐻‍❄️", price: 55, rarity: "raro", description: "Fresco e poderoso.", gradient: "from-cyan-500/20 to-blue-500/20", stock: 65 },
 ];
 
+import { api } from "@/lib/api";
+
 const NFTs: React.FC = () => {
   const [featuredIndex, setFeaturedIndex] = useState(0);
   const { addToCart } = useWallet();
+  const [nfts, setNfts] = useState<NFTItem[]>(fallbackNFTs);
+  const [featured, setFeatured] = useState<NFTItem[]>(fallbackFeaturedNFTs);
+  const [loading, setLoading] = useState(true);
+
+  React.useEffect(() => {
+    const fetchCatalog = async () => {
+      try {
+        setLoading(true);
+        const catalog = await api.getNFTCatalog();
+        // Assuming catalog mixes everything, we might filter 'featured' if the API supports it.
+        // For now, we'll keep fallback featured and replace the main grid with catalog if active.
+        // If the catalog is just a list, we use it for the main grid.
+        if (catalog && catalog.length > 0) {
+          setNfts(catalog);
+        }
+      } catch (error) {
+        console.error("Using fallback NFT data", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCatalog();
+  }, []);
 
   const handleBuy = (nft: NFTItem) => {
     addToCart({
@@ -105,7 +131,7 @@ const NFTs: React.FC = () => {
       nome: nft.name,
       emoji: nft.emoji,
       preco: nft.price,
-      raridade: nft.rarity,
+      rarity: nft.rarity,
       descricao: nft.description,
       cor: nft.gradient,
     });
@@ -115,14 +141,14 @@ const NFTs: React.FC = () => {
   };
 
   const nextFeatured = () => {
-    setFeaturedIndex((prev) => (prev + 1) % featuredNFTs.length);
+    setFeaturedIndex((prev) => (prev + 1) % featured.length);
   };
 
   const prevFeatured = () => {
-    setFeaturedIndex((prev) => (prev - 1 + featuredNFTs.length) % featuredNFTs.length);
+    setFeaturedIndex((prev) => (prev - 1 + featured.length) % featured.length);
   };
 
-  const currentFeatured = featuredNFTs[featuredIndex];
+  const currentFeatured = featured[featuredIndex];
 
   return (
     <div className="min-h-screen bg-background">
@@ -222,8 +248,8 @@ const NFTs: React.FC = () => {
                     key={idx}
                     onClick={() => setFeaturedIndex(idx)}
                     className={`w-2 h-2 rounded-full transition-all ${idx === featuredIndex
-                        ? "bg-primary w-6"
-                        : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                      ? "bg-primary w-6"
+                      : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
                       }`}
                   />
                 ))}
