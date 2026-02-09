@@ -17,6 +17,10 @@ import RaffleDetails from "./pages/RaffleDetails";
 import Checkout from "./pages/Checkout";
 import Admin from "./pages/Admin";
 import WinnersFeed from "./pages/WinnersFeed";
+import Feed from "./pages/Feed";
+import Sorteios from "./pages/Sorteios";
+import NFTs from "./pages/NFTs";
+import ComoFunciona from "./pages/ComoFunciona";
 import NotFound from "./pages/NotFound";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
@@ -47,6 +51,10 @@ const App = () => (
                       <Route path="/checkout" element={<Checkout />} />
                       <Route path="/admin" element={<Admin />} />
                       <Route path="/winners" element={<WinnersFeed />} />
+                      <Route path="/feed" element={<Feed />} />
+                      <Route path="/sorteios" element={<Sorteios />} />
+                      <Route path="/nfts" element={<NFTs />} />
+                      <Route path="/como-funciona" element={<ComoFunciona />} />
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>
