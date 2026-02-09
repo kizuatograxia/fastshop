@@ -253,67 +253,94 @@ export const api = {
         return res.json();
     },
 
-    // Reviews (Admin)
-    getPendingReviews: async (password: string) => {
-        // Mock implementation for now, or fetch from backend if available
-        // In a real scenario: await fetch(\`\${API_URL}/admin/reviews/pending\`, ...)
+    // ------------------------------------------------------------------
+    // RESTORED / ADDED: Testimonials / Reviews (LocalStorage Implementation)
+    // ------------------------------------------------------------------
 
-        // Simulating network delay
+    // Public submission
+    submitTestimonial: async (testimonial: any) => {
+        // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 800));
 
-        // Mock data
-        const mockReviews = [
-            {
-                id: "101",
-                userId: "42",
-                userName: "Carlos Silva",
-                userAvatar: "",
-                raffleName: "iPhone 15 Pro Max",
-                prizeName: "iPhone 15 Pro Max 256GB",
-                rating: 5,
-                comment: "Incrível! Chegou em 2 dias, lacrado. Muito obrigado equipe MundoPix!",
-                photoUrl: "https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=150&q=80",
-                createdAt: new Date(Date.now() - 3600000 * 2).toISOString(), // 2 hours ago
-                status: 'pending' as const
-            },
-            {
-                id: "102",
-                userId: "88",
-                userName: "Ana Julia",
-                userAvatar: "",
-                raffleName: "Sorteio de R$ 5.000",
-                prizeName: "Pix de R$ 5k",
-                rating: 5,
-                comment: "Caiu na conta na hora! Salvou meu mês. Recomendo demais.",
-                createdAt: new Date(Date.now() - 3600000 * 24).toISOString(), // 1 day ago
-                status: 'pending' as const
-            },
-            {
-                id: "103",
-                userId: "15",
-                userName: "Marcos Paulo",
-                userAvatar: "",
-                raffleName: "PlayStation 5",
-                prizeName: "Console PS5 Digital",
-                rating: 4,
-                comment: "Demorou um pouquinho mais que o esperado, mas chegou tudo certinho.",
-                createdAt: new Date(Date.now() - 3600000 * 48).toISOString(), // 2 days ago
-                status: 'pending' as const
-            }
-        ];
+        const storedReviews = JSON.parse(localStorage.getItem("admin_reviews") || "[]");
+        const newReview = {
+            ...testimonial,
+            id: String(Date.now()),
+            createdAt: new Date().toISOString(),
+            status: 'pending'
+        };
 
-        return mockReviews;
+        localStorage.setItem("admin_reviews", JSON.stringify([...storedReviews, newReview]));
+        console.log("Testimonial saved to localStorage:", newReview);
+        return { success: true };
+    },
+
+    // Admin: Get Pending
+    getPendingReviews: async (password: string) => {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        const storedReviews = JSON.parse(localStorage.getItem("admin_reviews") || "[]");
+
+        // Initial Mock Data (only if empty to avoid empty state on first load)
+        if (storedReviews.length === 0) {
+            const mockReviews = [
+                {
+                    id: "101",
+                    userId: "42",
+                    userName: "Carlos Silva",
+                    userAvatar: "",
+                    raffleName: "iPhone 15 Pro Max",
+                    prizeName: "iPhone 15 Pro Max 256GB",
+                    rating: 5,
+                    comment: "Incrível! Chegou em 2 dias, lacrado. Muito obrigado equipe MundoPix!",
+                    photoUrl: "https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=150&q=80",
+                    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(), // 2 hours ago
+                    status: 'pending'
+                },
+                {
+                    id: "102",
+                    userId: "88",
+                    userName: "Ana Julia",
+                    userAvatar: "",
+                    raffleName: "Sorteio de R$ 5.000",
+                    prizeName: "Pix de R$ 5k",
+                    rating: 5,
+                    comment: "Caiu na conta na hora! Salvou meu mês. Recomendo demais.",
+                    createdAt: new Date(Date.now() - 3600000 * 24).toISOString(), // 1 day ago
+                    status: 'pending'
+                }
+            ];
+            // Save mock data so it persists and user sees *something*
+            localStorage.setItem("admin_reviews", JSON.stringify(mockReviews));
+            return mockReviews;
+        }
+
+        return storedReviews.filter((r: any) => r.status === 'pending');
+    },
+
+    // Public: Get Approved (for landing page)
+    getApprovedReviews: async () => {
+        const storedReviews = JSON.parse(localStorage.getItem("admin_reviews") || "[]");
+        return storedReviews.filter((r: any) => r.status === 'approved');
     },
 
     approveReview: async (password: string, id: string) => {
-        // await fetch(\`\${API_URL}/admin/reviews/\${id}/approve\`, ...)
         await new Promise(resolve => setTimeout(resolve, 500));
+        const storedReviews = JSON.parse(localStorage.getItem("admin_reviews") || "[]");
+        const updatedReviews = storedReviews.map((r: any) =>
+            r.id === id ? { ...r, status: 'approved' } : r
+        );
+        localStorage.setItem("admin_reviews", JSON.stringify(updatedReviews));
         return { success: true };
     },
 
     rejectReview: async (password: string, id: string) => {
-        // await fetch(\`\${API_URL}/admin/reviews/\${id}/reject\`, ...)
         await new Promise(resolve => setTimeout(resolve, 500));
+        const storedReviews = JSON.parse(localStorage.getItem("admin_reviews") || "[]");
+        // Remove from list
+        const updatedReviews = storedReviews.filter((r: any) => r.id !== id);
+        localStorage.setItem("admin_reviews", JSON.stringify(updatedReviews));
         return { success: true };
     },
 };

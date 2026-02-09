@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useUserRaffles } from "@/contexts/UserRafflesContext";
+import { api } from "@/lib/api";
 
 interface SubmitTestimonialModalProps {
   open: boolean;
@@ -65,11 +66,40 @@ export const SubmitTestimonialModal = ({
     setIsSubmitting(true);
 
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    // await new Promise((resolve) => setTimeout(resolve, 1500));
 
-    toast.success("Depoimento enviado com sucesso!", {
-      description: "Seu feedback será analisado e publicado em breve.",
-    });
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const raffle = wonRaffles.find(r => String(r.raffle.id) === selectedPrize)?.raffle;
+
+      await api.submitTestimonial({
+        userId: user.id || "0",
+        userName: user.name || "Usuario",
+        userAvatar: user.avatar || "",
+        raffleName: raffle?.titulo || "Sorteio",
+        prizeName: raffle?.premio || "Prêmio",
+        rating,
+        comment: testimonial,
+        photoUrl: imagePreview
+      });
+
+      toast.success("Depoimento enviado com sucesso!", {
+        description: "Seu feedback será analisado e publicado em breve.",
+      });
+
+      // Reset form
+      setSelectedPrize("");
+      setTestimonial("");
+      setRating(0);
+      setImagePreview(null);
+      setIsSubmitting(false);
+      onOpenChange(false);
+
+    } catch (error) {
+      console.error("Falha ao enviar depoimento:", error);
+      toast.error("Erro ao enviar depoimento. Tente novamente.");
+      setIsSubmitting(false);
+    }
 
     // Reset form
     setSelectedPrize("");
@@ -147,8 +177,8 @@ export const SubmitTestimonialModal = ({
                     >
                       <Star
                         className={`w-8 h-8 transition-colors ${star <= (hoveredRating || rating)
-                            ? "text-yellow-400 fill-yellow-400"
-                            : "text-muted-foreground/30"
+                          ? "text-yellow-400 fill-yellow-400"
+                          : "text-muted-foreground/30"
                           }`}
                       />
                     </motion.button>
