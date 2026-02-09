@@ -50,17 +50,20 @@ export const RaffleEventsProvider = ({ children }: { children: ReactNode }) => {
                 checkCountdown(raffle);
 
                 // 2. Check for WINNER DRAWN event
-                // Trigger if:
-                // a) Status is 'encerrado' (ended)
-                // b) Has a winner
-                // c) Has NOT been notified in this session yet
-                // d) Draw time was recent (e.g. within last 1 hour) to avoid replaying old history
                 const isRecent = new Date().getTime() - new Date(raffle.dataFim).getTime() < 3600000; // 1 hour
+                const notificationKey = `winner-${raffle.id}`;
 
-                if (newStatus === 'encerrado' && raffle.winner && !notifiedRaffles.current.has(`winner-${raffle.id}`) && isRecent) {
+                // Get local storage history
+                const seenNotifications = JSON.parse(localStorage.getItem('seen_notifications') || '[]');
+
+                if (newStatus === 'encerrado' && raffle.winner && !seenNotifications.includes(notificationKey) && isRecent) {
                     console.log(`[RaffleEvent] Triggering WIN for ${raffle.titulo}! Winner: ${raffle.winner.name}`);
                     setTriggeringRaffle(raffle);
-                    notifiedRaffles.current.add(`winner-${raffle.id}`);
+
+                    // Mark as seen immediately to avoid double trigger
+                    const updatedSeen = [...seenNotifications, notificationKey];
+                    localStorage.setItem('seen_notifications', JSON.stringify(updatedSeen));
+                    notifiedRaffles.current.add(notificationKey);
                 }
 
                 // Update known status
