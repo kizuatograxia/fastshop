@@ -6,22 +6,11 @@ import { WinnerCard } from "@/components/winners/WinnerCard";
 import { SubmitTestimonialModal } from "@/components/winners/SubmitTestimonialModal";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-
-// Define the interface based on standard winner data or what WinnerCard expects
-// If WinnerCard exports its props interface, we should import it, but for now we'll define a compatible one or use any.
-interface Winner {
-  id: string;
-  name: string;
-  prize: string;
-  image: string;
-  date: string;
-  testimonial?: string;
-  location?: string;
-}
+import { WinnerTestimonial } from "@/types/winner";
 
 const WinnersFeed = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [winners, setWinners] = useState<Winner[]>([]);
+  const [winners, setWinners] = useState<WinnerTestimonial[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,10 +18,24 @@ const WinnersFeed = () => {
       try {
         setLoading(true);
         const data = await api.getWinners();
-        // Ensure data matches the expected structure. 
-        // API might return different field names, so we might need mapping if the component doesn't match API 1:1.
-        // Assuming api.getWinners returns array of objects compatible or we map them.
-        setWinners(data);
+
+        // Map API data to WinnerTestimonial if necessary
+        // Assuming API returns { id, name, prize, image, date } and we need to add the rest
+        const mappedWinners: WinnerTestimonial[] = data.map((w: any) => ({
+          id: w.id || Math.random().toString(),
+          name: w.name || "Ganhador",
+          prize: w.prize || "Prêmio Incrível",
+          image: w.image || "/placeholder.svg", // API image of the prize?
+          avatar: w.avatar || "/placeholder.svg", // User avatar
+          date: w.date || new Date().toISOString(),
+          testimonial: w.testimonial || "Estou muito feliz com meu prêmio! A entrega foi super rápida.",
+          rating: w.rating || 5,
+          verified: true,
+          likes: w.likes || 0,
+          prizeImage: w.image || "/placeholder.svg" // Use prize image if available
+        }));
+
+        setWinners(mappedWinners);
       } catch (error) {
         console.error("Failed to fetch winners:", error);
         toast.error("Não foi possível carregar os ganhadores.");
