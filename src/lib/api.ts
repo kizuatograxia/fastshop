@@ -60,23 +60,6 @@ export const api = {
         return res.json();
     },
 
-    // Payment - Pagar.me
-    createPixPayment: async (amount: number, items: any[], customer: any) => {
-        const res = await fetch(`${API_URL}/pagarme/create-pix`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ amount, items, customer }),
-        });
-        if (!res.ok) throw new Error("Falha ao gerar PIX");
-        return res.json();
-    },
-
-    checkPaymentStatus: async (transactionId: string) => {
-        const res = await fetch(`${API_URL}/pagarme/status/${transactionId}`);
-        if (!res.ok) throw new Error("Falha ao verificar status");
-        return res.json();
-    },
-
     // Marketplace
     getNFTCatalog: async () => {
         const res = await fetch(`${API_URL}/nfts`);

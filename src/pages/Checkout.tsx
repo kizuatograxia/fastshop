@@ -45,57 +45,29 @@ const Checkout: React.FC = () => {
     const handlePayWithPix = async () => {
         setIsLoading(true);
 
-        try {
-            const response = await api.createPixPayment(
-                Math.round(totalPriceInBRL * 100),
-                cartItems.map(nft => ({
-                    id: nft.id,
-                    title: nft.nome,
-                    quantity: nft.quantidade,
-                    unit_price: Math.round(nft.preco * 100),
-                    tangible: false
-                })),
-                {
-                    name: user?.name || "Cliente Anônimo",
-                    email: user?.email || "cliente@exemplo.com",
-                    // Pagar.me requires more info usually (CPF, Phone), but for now we send basic or mock
-                }
-            );
-
+        // Simulação de resposta (MOCK para Sicoob futuro)
+        setTimeout(async () => {
             setPixData({
-                qrCode: response.qr_code_url,
-                qrCodeBase64: response.qr_code,
-                copyPasteCode: response.qr_code,
-                expiresAt: response.expires_at,
-                transactionId: response.id,
+                qrCode: "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=00020126580014br.gov.bcb.pix0136exemplo-pix-luckynft5204000053039865802BR5913LUCKYNFT6008SAOPAULO62070503***6304ABCD",
+                qrCodeBase64: "",
+                copyPasteCode: "00020126580014br.gov.bcb.pix0136exemplo-pix-luckynft5204000053039865802BR5913LUCKYNFT6008SAOPAULO62070503***6304ABCD",
+                expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+                transactionId: `txn_${Date.now()}`,
             });
-
-            // Start polling for status
-            const interval = setInterval(async () => {
-                try {
-                    const statusRes = await api.checkPaymentStatus(response.id);
-                    if (statusRes.status === 'paid') {
-                        clearInterval(interval);
-                        await confirmPurchase(); // Execute purchase logic
-                    }
-                } catch (e) {
-                    console.error("Error checking status", e);
-                }
-            }, 5000);
-
-        } catch (error) {
-            console.error(error);
-            toast({
-                title: "Erro ao gerar PIX",
-                description: "Tente novamente mais tarde.",
-                variant: "destructive"
-            });
-        } finally {
             setIsLoading(false);
-        }
+
+            // Simular aprovação automática para teste
+            toast({
+                title: "Aguardando Pagamento",
+                description: "Realize o pagamento do PIX para liberar seus NFTs.",
+            });
+
+            // Aqui poderíamos ter um botão "Simular Pagamento Confirmado" na UI para testes
+        }, 1500);
     };
 
-    const confirmPurchase = async () => {
+    // Função de teste para simular o callback de sucesso
+    const simulateSuccessfulPayment = async () => {
         for (const item of cartItems) {
             for (let i = 0; i < item.quantidade; i++) {
                 await addNFT(item);
@@ -106,7 +78,7 @@ const Checkout: React.FC = () => {
             title: "Compra realizada com sucesso!",
             description: "Seus NFTs foram adicionados à sua carteira.",
         });
-        navigate("/profile"); // Redirect to profile/wallet
+        navigate("/profile");
     };
 
     const handleCopyPixCode = () => {
@@ -242,20 +214,17 @@ const Checkout: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Código Copia e Cola */}
                             <div className="space-y-2">
-                                <Label>Código Copia e Cola</Label>
+                                <label className="text-sm font-medium text-muted-foreground">
+                                    Copia e Cola
+                                </label>
                                 <div className="flex gap-2">
                                     <Input
                                         value={pixData.copyPasteCode}
                                         readOnly
-                                        className="font-mono text-xs"
+                                        className="bg-secondary/50 font-mono text-xs"
                                     />
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={handleCopyPixCode}
-                                    >
+                                    <Button size="icon" variant="outline" onClick={handleCopyPixCode}>
                                         {copied ? (
                                             <Check className="h-4 w-4 text-green-500" />
                                         ) : (
