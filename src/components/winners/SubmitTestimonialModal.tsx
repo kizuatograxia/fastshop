@@ -74,13 +74,13 @@ export const SubmitTestimonialModal = ({
 
       await api.submitTestimonial({
         userId: user.id || "0",
-        userName: user.name || "Usuario",
-        userAvatar: user.avatar || "",
+        userName: user.name || "Ganhador da MundoPix",
+        userAvatar: user.picture || user.avatar || "", // Fix: use user.picture as primary source
         raffleName: raffle?.titulo || "Sorteio",
         prizeName: raffle?.premio || "Prêmio",
         rating,
         comment: testimonial,
-        photoUrl: imagePreview || user.picture // Use uploaded photo OR user avatar
+        photoUrl: imagePreview || user.picture || "" // Use uploaded photo OR user avatar
       });
 
       toast.success("Depoimento enviado com sucesso!", {
