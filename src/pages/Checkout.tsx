@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useWallet } from "@/contexts/WalletContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
 
 const rarityColors: Record<string, string> = {
     comum: "from-gray-400 to-gray-500",
@@ -38,75 +40,73 @@ const Checkout: React.FC = () => {
     const totalPrice = cartItems.reduce((sum, nft) => sum + nft.preco * nft.quantidade, 0);
     const totalPriceInBRL = totalPrice; // Valor já está em BRL
 
+    const { user } = useAuth(); // We need user info for the payment
+
     const handlePayWithPix = async () => {
         setIsLoading(true);
 
-        // TODO: Integrar com API do Pagar.me
-        // const response = await fetch('/api/pagarme/create-pix', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({
-        //     amount: Math.round(totalPriceInBRL * 100),
-        //     items: cartItems.map(nft => ({
-        //       id: nft.id,
-        //       title: nft.nome,
-        //       quantity: nft.quantidade,
-        //       unit_price: Math.round(nft.preco * 100),
-        //     })),
-        //   }),
-        // });
-
-        // Simulação de resposta
-        setTimeout(async () => {
-            setPixData({
-                qrCode: "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=00020126580014br.gov.bcb.pix0136exemplo-pix-luckynft5204000053039865802BR5913LUCKYNFT6008SAOPAULO62070503***6304ABCD",
-                qrCodeBase64: "",
-                copyPasteCode: "00020126580014br.gov.bcb.pix0136exemplo-pix-luckynft5204000053039865802BR5913LUCKYNFT6008SAOPAULO62070503***6304ABCD",
-                expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-                transactionId: `txn_${Date.now()}`,
-            });
-            setIsLoading(false);
-
-            // Processar a compra (adcionar ao backend)
-            // Na vida real isso seria feito via webhook após confirmação do pagamento
-            // Aqui simulamos a confirmação imediata
-            for (const item of cartItems) {
-                // Adcionamos item por item ou criamos endpoint de checkou em massa
-                // Para simplificar, vou iterar e chamar addNFT, mas idealmente seria um bulk insert
-                // Como addNFT adiciona +1, preciso chamar N vezes ou ajustar addNFT.
-                // Vou ajustar para chamar uma vez e assumir que o backend soma a quantidade ou chamar num loop se necessário.
-                // O addNFT original adiciona 1 unidade.
-                // Mas o contexto de 'comprar' do carrinho pode ser mover o item.
-                // Vou assumir addNFT lida com 1.
-                // Se cartItems tem quantidade > 1, preciso chamar varias vezes ou atualizar a API.
-
-                // Simulando apenas adicionar 1 de cada por enquanto ou loop
-                for (let i = 0; i < item.quantidade; i++) {
-                    await addNFT(item);
+        try {
+            const response = await api.createPixPayment(
+                Math.round(totalPriceInBRL * 100),
+                cartItems.map(nft => ({
+                    id: nft.id,
+                    title: nft.nome,
+                    quantity: nft.quantidade,
+                    unit_price: Math.round(nft.preco * 100),
+                    tangible: false
+                })),
+                {
+                    name: user?.name || "Cliente Anônimo",
+                    email: user?.email || "cliente@exemplo.com",
+                    // Pagar.me requires more info usually (CPF, Phone), but for now we send basic or mock
                 }
-            }
+            );
 
-            clearCart();
-
-            toast({
-                title: "Compra realizada com sucesso!",
-                description: "Seus NFTs foram adicionados à sua carteira.",
+            setPixData({
+                qrCode: response.qr_code_url,
+                qrCodeBase64: response.qr_code,
+                copyPasteCode: response.qr_code,
+                expiresAt: response.expires_at,
+                transactionId: response.id,
             });
 
-            // Redirecionar ou manter na tela?
-            // Se manter, mostrar sucesso. O código abaixo mostra o PIX.
-            // Se pagou, deveria ir para uma tela de sucesso ou limpar o estado de PIX e mostrar sucesso?
-            // A logica original mostrava o PIX gerado.
-            // Se eu limpar o carrinho agora, o usuario perde a referencia do que comprou na tela se eu nao guardar?
-            // O render original usa ownedNFTs para mostrar o resumo. Se eu mudar pra cartItems e limpar, some.
+            // Start polling for status
+            const interval = setInterval(async () => {
+                try {
+                    const statusRes = await api.checkPaymentStatus(response.id);
+                    if (statusRes.status === 'paid') {
+                        clearInterval(interval);
+                        await confirmPurchase(); // Execute purchase logic
+                    }
+                } catch (e) {
+                    console.error("Error checking status", e);
+                }
+            }, 5000);
 
-            // Melhor: Gerar o PIX não limpa o carrinho. O pagamento CONFIRMADO limpa.
-            // Como não tenho confirmação de verdade, vou simular que ao "Gerar PIX" o processo iniciou.
-            // Mas o cliente pediu "apenas depois de ocorrer a autenticação ele pode liberar".
-            // Vou manter o PIX gerado. Onde simulo o "Pagamento Confirmado"?
-            // Vou adicionar um botão de "Simular Pagamento" no estado de PIX gerado para fechar o ciclo.
+        } catch (error) {
+            console.error(error);
+            toast({
+                title: "Erro ao gerar PIX",
+                description: "Tente novamente mais tarde.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-        }, 1500);
+    const confirmPurchase = async () => {
+        for (const item of cartItems) {
+            for (let i = 0; i < item.quantidade; i++) {
+                await addNFT(item);
+            }
+        }
+        clearCart();
+        toast({
+            title: "Compra realizada com sucesso!",
+            description: "Seus NFTs foram adicionados à sua carteira.",
+        });
+        navigate("/profile"); // Redirect to profile/wallet
     };
 
     const handleCopyPixCode = () => {
