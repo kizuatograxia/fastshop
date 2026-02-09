@@ -19,23 +19,25 @@ const WinnersFeed = () => {
     const fetchWinners = async (isPolling = false) => {
       try {
         if (!isPolling) setLoading(true);
-        const data = await api.getWinners();
 
-        const mappedWinners: WinnerTestimonial[] = data.map((w: any) => ({
-          id: w.id || Math.random().toString(),
-          name: w.name || "Ganhador",
-          prize: w.prize || "Prêmio Incrível",
-          image: w.image || "/placeholder.svg",
-          avatar: w.avatar || "/placeholder.svg",
-          date: w.date || new Date().toISOString(),
-          testimonial: w.testimonial || "Estou muito feliz com meu prêmio!",
-          rating: w.rating || 5,
-          verified: true,
-          likes: w.likes || 0,
-          prizeImage: w.image || "/placeholder.svg"
+        // Fetch approved reviews from localStorage (connected to Admin)
+        const approvedReviews = await api.getApprovedReviews();
+
+        const mappedWinners: WinnerTestimonial[] = approvedReviews.map((r: any) => ({
+          id: r.id,
+          name: r.userName || "Usuário",
+          prize: r.prizeName || r.raffleName || "Prêmio",
+          image: r.photoUrl || "/placeholder.svg",
+          avatar: r.userAvatar || "/placeholder.svg",
+          date: r.createdAt || new Date().toISOString(),
+          testimonial: r.comment || "",
+          rating: r.rating || 5,
+          verified: true, // Approved by admin = verified
+          likes: 0,
+          prizeImage: r.photoUrl || "/placeholder.svg" // Show user's photo as the main card image
         }));
 
-        setWinners(mappedWinners);
+        setWinners(mappedWinners.reverse()); // Show newest first
       } catch (error) {
         console.error("Failed to fetch winners:", error);
         if (!isPolling) toast.error("Não foi possível carregar os ganhadores.");
