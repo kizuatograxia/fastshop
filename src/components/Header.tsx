@@ -43,7 +43,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
               <Menu className="h-5 w-5" />
             </Button>
 
-            <div className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2">
               <div className="relative">
                 <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-primary animate-glow-pulse" />
               </div>
@@ -53,7 +53,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
               <span className="hidden sm:inline text-xs font-medium text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
                 BETA
               </span>
-            </div>
+            </Link>
           </div>
 
           <div className="hidden md:flex items-center gap-6">
