@@ -14,37 +14,40 @@ const WinnersFeed = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchWinners = async () => {
+    let interval: NodeJS.Timeout;
+
+    const fetchWinners = async (isPolling = false) => {
       try {
-        setLoading(true);
+        if (!isPolling) setLoading(true);
         const data = await api.getWinners();
 
-        // Map API data to WinnerTestimonial if necessary
-        // Assuming API returns { id, name, prize, image, date } and we need to add the rest
         const mappedWinners: WinnerTestimonial[] = data.map((w: any) => ({
           id: w.id || Math.random().toString(),
           name: w.name || "Ganhador",
           prize: w.prize || "Prêmio Incrível",
-          image: w.image || "/placeholder.svg", // API image of the prize?
-          avatar: w.avatar || "/placeholder.svg", // User avatar
+          image: w.image || "/placeholder.svg",
+          avatar: w.avatar || "/placeholder.svg",
           date: w.date || new Date().toISOString(),
-          testimonial: w.testimonial || "Estou muito feliz com meu prêmio! A entrega foi super rápida.",
+          testimonial: w.testimonial || "Estou muito feliz com meu prêmio!",
           rating: w.rating || 5,
           verified: true,
           likes: w.likes || 0,
-          prizeImage: w.image || "/placeholder.svg" // Use prize image if available
+          prizeImage: w.image || "/placeholder.svg"
         }));
 
         setWinners(mappedWinners);
       } catch (error) {
         console.error("Failed to fetch winners:", error);
-        toast.error("Não foi possível carregar os ganhadores.");
+        if (!isPolling) toast.error("Não foi possível carregar os ganhadores.");
       } finally {
-        setLoading(false);
+        if (!isPolling) setLoading(false);
       }
     };
 
     fetchWinners();
+    interval = setInterval(() => fetchWinners(true), 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return (
