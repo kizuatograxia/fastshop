@@ -1,5 +1,6 @@
+```javascript
 import React from "react";
-import { X, User, Trophy, Ticket, HelpCircle, Gift } from "lucide-react";
+import { X, User, Ticket, Gift, HelpCircle, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { categories } from "@/data/raffles";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,15 +30,17 @@ const Sidebar: React.FC<SidebarProps> = ({
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
+        className={`fixed inset - 0 bg - background / 80 backdrop - blur - sm z - [100] transition - opacity duration - 300 ${
+  isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+} `}
         onClick={onClose}
       />
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-full max-w-xs bg-card border-r border-border z-[110] transition-transform duration-300 ease-out ${isOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+        className={`fixed top - 0 left - 0 h - full w - full max - w - xs bg - card border - r border - border z - [110] transition - transform duration - 300 ease - out ${
+  isOpen ? "translate-x-0" : "-translate-x-full"
+} `}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
@@ -69,10 +72,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                   onCategoryChange(category.id);
                   onClose();
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-all border-l-4 ${activeCategory === category.id
-                  ? "bg-secondary border-primary text-primary"
-                  : "border-transparent text-foreground hover:bg-secondary/50 hover:border-primary/50"
-                  }`}
+                className={`w - full flex items - center gap - 3 px - 4 py - 3 text - left transition - all border - l - 4 ${
+  activeCategory === category.id
+  ? "bg-secondary border-primary text-primary"
+  : "border-transparent text-foreground hover:bg-secondary/50 hover:border-primary/50"
+} `}
               >
                 <span className="text-xl">{category.emoji}</span>
                 <span className="font-medium">{category.nome}</span>
@@ -101,6 +105,15 @@ const Sidebar: React.FC<SidebarProps> = ({
             >
               <Gift className="h-5 w-5 text-muted-foreground" />
               <span className="font-medium">Marketplace NFTs</span>
+            </Link>
+
+            <Link
+              to="/winners"
+              onClick={onClose}
+              className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent"
+            >
+              <Trophy className="h-5 w-5 text-muted-foreground" />
+              <span className="font-medium">Ganhadores</span>
             </Link>
 
             <Link

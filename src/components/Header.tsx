@@ -58,15 +58,18 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
 
           <div className="hidden md:flex items-center gap-6">
             <nav className="flex items-center gap-4">
-              <a href="#sorteios" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+              <Link to="/sorteios" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                 Sorteios
-              </a>
-              <a href="#nfts" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                Comprar NFTs
-              </a>
-              <a href="#como-funciona" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+              </Link>
+              <Link to="/nfts" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                Marketplace NFTs
+              </Link>
+              <Link to="/winners" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                Ganhadores
+              </Link>
+              <Link to="/como-funciona" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                 Como Funciona
-              </a>
+              </Link>
             </nav>
           </div>
 
