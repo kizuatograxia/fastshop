@@ -1,13 +1,48 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Trophy, Sparkles, MessageSquarePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WinnerCard } from "@/components/winners/WinnerCard";
 import { SubmitTestimonialModal } from "@/components/winners/SubmitTestimonialModal";
-import { mockWinners } from "@/data/winnersData";
+import { api } from "@/lib/api";
+import { toast } from "sonner";
+
+// Define the interface based on standard winner data or what WinnerCard expects
+// If WinnerCard exports its props interface, we should import it, but for now we'll define a compatible one or use any.
+interface Winner {
+  id: string;
+  name: string;
+  prize: string;
+  image: string;
+  date: string;
+  testimonial?: string;
+  location?: string;
+}
 
 const WinnersFeed = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [winners, setWinners] = useState<Winner[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchWinners = async () => {
+      try {
+        setLoading(true);
+        const data = await api.getWinners();
+        // Ensure data matches the expected structure. 
+        // API might return different field names, so we might need mapping if the component doesn't match API 1:1.
+        // Assuming api.getWinners returns array of objects compatible or we map them.
+        setWinners(data);
+      } catch (error) {
+        console.error("Failed to fetch winners:", error);
+        toast.error("Não foi possível carregar os ganhadores.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWinners();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -95,11 +130,26 @@ const WinnersFeed = () => {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockWinners.map((winner, index) => (
-              <WinnerCard key={winner.id} winner={winner} index={index} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <>
+              {winners.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {winners.map((winner, index) => (
+                    <WinnerCard key={winner.id} winner={winner} index={index} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  Nenhum ganhador recente encontrado.
+                </div>
+              )}
+            </>
+          )}
+
         </section>
 
         {/* Bottom CTA */}
