@@ -1,19 +1,16 @@
 import React, { useState } from "react";
-import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
 import Hero from "@/components/Hero";
 import CategoryNav from "@/components/CategoryNav";
 import RaffleGrid from "@/components/RaffleGrid";
 import NFTGrid from "@/components/NFTGrid";
 import HowItWorks from "@/components/HowItWorks";
-import WalletDrawer from "@/components/WalletDrawer";
 import { raffles as localRaffles, nfts } from "@/data/raffles";
 import { api } from "@/lib/api";
 import { Raffle } from "@/types/raffle";
 
 const Index: React.FC = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [walletOpen, setWalletOpen] = useState(false);
+  // const [sidebarOpen, setSidebarOpen] = useState(false); // Unused
+  // const [walletOpen, setWalletOpen] = useState(false); // Unused
   const [activeCategory, setActiveCategory] = useState("todos");
   const [raffles, setRaffles] = useState<Raffle[]>([]);
 
@@ -33,19 +30,7 @@ const Index: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header
-        onMenuClick={() => setSidebarOpen(true)}
-        onWalletClick={() => setWalletOpen(true)}
-      />
-
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        activeCategory={activeCategory}
-        onCategoryChange={setActiveCategory}
-      />
-
-      <WalletDrawer isOpen={walletOpen} onClose={() => setWalletOpen(false)} />
+      {/* Layout components handled by MainLayout */}
 
       <CategoryNav
         activeCategory={activeCategory}
