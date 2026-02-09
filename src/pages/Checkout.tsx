@@ -251,6 +251,16 @@ const Checkout: React.FC = () => {
                                 <p>Aguardando confirmação do pagamento...</p>
                                 <Loader2 className="h-5 w-5 animate-spin mx-auto mt-2 text-primary" />
                             </div>
+
+                            <Separator />
+
+                            <Button
+                                variant="outline"
+                                className="w-full border-dashed"
+                                onClick={simulateSuccessfulPayment}
+                            >
+                                Simular Pagamento Confirmado (Teste)
+                            </Button>
                         </CardContent>
                     </Card>
                 )}
