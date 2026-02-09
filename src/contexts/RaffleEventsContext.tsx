@@ -57,7 +57,7 @@ export const RaffleEventsProvider = ({ children }: { children: ReactNode }) => {
                 // d) Draw time was recent (e.g. within last 1 hour) to avoid replaying old history
                 const isRecent = new Date().getTime() - new Date(raffle.dataFim).getTime() < 3600000; // 1 hour
 
-                if ((newStatus === 'encerrado' || newStatus === 'ended') && raffle.winner && !notifiedRaffles.current.has(`winner-${raffle.id}`) && isRecent) {
+                if (newStatus === 'encerrado' && raffle.winner && !notifiedRaffles.current.has(`winner-${raffle.id}`) && isRecent) {
                     console.log(`[RaffleEvent] Triggering WIN for ${raffle.titulo}! Winner: ${raffle.winner.name}`);
                     setTriggeringRaffle(raffle);
                     notifiedRaffles.current.add(`winner-${raffle.id}`);
