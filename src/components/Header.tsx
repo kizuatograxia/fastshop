@@ -43,11 +43,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
               <Menu className="h-5 w-5" />
             </Button>
 
-<<<<<<< HEAD
             <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-=======
-            <Link to="/" className="flex items-center gap-2">
->>>>>>> 4293a3d32e5ce779da54bd85efd1798c1d982925
               <div className="relative">
                 <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-primary animate-glow-pulse" />
               </div>
