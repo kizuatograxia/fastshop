@@ -1,16 +1,15 @@
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { 
-  Search, 
-  Filter, 
-  Clock, 
-  Users, 
+import {
+  Search,
+  Filter,
+  Clock,
+  Users,
   Trophy,
   Sparkles,
   ArrowUpDown,
   Ticket
 } from "lucide-react";
-import Header from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -134,7 +133,7 @@ const Sorteios: React.FC = () => {
 
     // Filter by search
     if (searchQuery) {
-      result = result.filter(r => 
+      result = result.filter(r =>
         r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         r.prize.toLowerCase().includes(searchQuery.toLowerCase())
       );
@@ -163,8 +162,7 @@ const Sorteios: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header onMenuClick={() => {}} onWalletClick={() => {}} />
-      
+
       <main className="container mx-auto px-4 py-8">
         {/* Header */}
         <motion.div
@@ -232,11 +230,10 @@ const Sorteios: React.FC = () => {
                 variant={activeCategory === cat.id ? "default" : "outline"}
                 size="sm"
                 onClick={() => setActiveCategory(cat.id)}
-                className={`flex-shrink-0 gap-2 ${
-                  activeCategory === cat.id 
-                    ? "bg-primary text-primary-foreground" 
+                className={`flex-shrink-0 gap-2 ${activeCategory === cat.id
+                    ? "bg-primary text-primary-foreground"
                     : "bg-card border-border hover:border-primary/50"
-                }`}
+                  }`}
               >
                 {cat.icon && <cat.icon className="h-4 w-4" />}
                 {cat.label}
@@ -264,7 +261,7 @@ const Sorteios: React.FC = () => {
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
-                    
+
                     {/* Badges */}
                     <div className="absolute top-3 left-3 flex gap-2">
                       {raffle.isHot && (
@@ -304,8 +301,8 @@ const Sorteios: React.FC = () => {
                           {raffle.ticketsSold}/{raffle.maxTickets}
                         </span>
                       </div>
-                      <Progress 
-                        value={(raffle.ticketsSold / raffle.maxTickets) * 100} 
+                      <Progress
+                        value={(raffle.ticketsSold / raffle.maxTickets) * 100}
                         className="h-2 bg-secondary"
                       />
                     </div>

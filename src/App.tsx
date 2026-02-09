@@ -10,6 +10,7 @@ import { UserRafflesProvider } from "@/contexts/UserRafflesContext";
 import { RaffleEventsProvider } from "@/contexts/RaffleEventsContext";
 import { GlobalEventsListener } from "@/components/GlobalEventsListener";
 import { RaffleParticipationWidget } from "@/components/RaffleParticipationWidget";
+import MainLayout from "@/components/MainLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
@@ -42,19 +43,25 @@ const App = () => (
                   <Sonner />
                   <BrowserRouter>
                     <Routes>
-                      <Route path="/" element={<Index />} />
+                      {/* Main Layout Routes */}
+                      <Route element={<MainLayout />}>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/feed" element={<WinnersFeed />} />
+                        <Route path="/sorteios" element={<Sorteios />} />
+                        <Route path="/nfts" element={<NFTs />} />
+                        <Route path="/como-funciona" element={<ComoFunciona />} />
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="/raffle/:id" element={<RaffleDetails />} />
+                        <Route path="/checkout" element={<Checkout />} />
+                        <Route path="/winners" element={<WinnersFeed />} />
+                      </Route>
+
+                      {/* Standalone Routes */}
                       <Route path="/auth" element={<Auth />} />
                       <Route path="/login" element={<Auth defaultTab="login" />} />
                       <Route path="/register" element={<Auth defaultTab="register" />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/raffle/:id" element={<RaffleDetails />} />
-                      <Route path="/checkout" element={<Checkout />} />
                       <Route path="/admin" element={<Admin />} />
-                      <Route path="/winners" element={<WinnersFeed />} />
-                      <Route path="/feed" element={<Feed />} />
-                      <Route path="/sorteios" element={<Sorteios />} />
-                      <Route path="/nfts" element={<NFTs />} />
-                      <Route path="/como-funciona" element={<ComoFunciona />} />
+
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>

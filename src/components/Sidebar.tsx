@@ -111,27 +111,43 @@ const Sidebar: React.FC<SidebarProps> = ({
 
             {user && (
               <>
-                <button className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent">
+                <Link
+                  to="/nfts"
+                  onClick={onClose}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent"
+                >
                   <Gift className="h-5 w-5 text-muted-foreground" />
                   <span className="font-medium">Meus NFTs</span>
-                </button>
-                <button className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent">
+                </Link>
+                <Link
+                  to="/sorteios"
+                  onClick={onClose}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent"
+                >
                   <Ticket className="h-5 w-5 text-muted-foreground" />
                   <span className="font-medium">Meus Sorteios</span>
-                </button>
-                <button className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent">
+                </Link>
+                <Link
+                  to="/profile"
+                  onClick={onClose}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent"
+                >
                   <Trophy className="h-5 w-5 text-muted-foreground" />
                   <span className="font-medium">Meus Prêmios</span>
-                </button>
+                </Link>
               </>
             )}
 
             <div className="my-4 mx-4 border-t border-border" />
 
-            <button className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent">
+            <Link
+              to="/como-funciona"
+              onClick={onClose}
+              className="w-full flex items-center gap-3 px-4 py-3 text-left text-foreground hover:bg-secondary/50 hover:border-l-4 hover:border-primary/50 transition-all border-l-4 border-transparent"
+            >
               <HelpCircle className="h-5 w-5 text-muted-foreground" />
               <span className="font-medium">Como Funciona</span>
-            </button>
+            </Link>
           </nav>
         </div>
       </aside>

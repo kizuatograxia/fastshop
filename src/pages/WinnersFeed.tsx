@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Trophy, Sparkles, MessageSquarePlus } from "lucide-react";
-import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { WinnerCard } from "@/components/winners/WinnerCard";
 import { SubmitTestimonialModal } from "@/components/winners/SubmitTestimonialModal";
@@ -10,13 +9,8 @@ import { mockWinners } from "@/data/winnersData";
 const WinnersFeed = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Handlers vazios para o Header nesta página standalone
-  const handleMenuClick = () => {};
-  const handleWalletClick = () => {};
-
   return (
     <div className="min-h-screen bg-background">
-      <Header onMenuClick={handleMenuClick} onWalletClick={handleWalletClick} />
 
       <main className="container mx-auto px-4 py-8">
         {/* Hero Section */}

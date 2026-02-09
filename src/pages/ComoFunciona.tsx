@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { 
-  Gift, 
-  Ticket, 
-  Trophy, 
+import {
+  Gift,
+  Ticket,
+  Trophy,
   Sparkles,
   ChevronDown,
   ArrowRight,
@@ -14,7 +14,6 @@ import {
   HelpCircle,
   Rocket
 } from "lucide-react";
-import Header from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -113,8 +112,7 @@ const faqs = [
 const ComoFunciona: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
-      <Header onMenuClick={() => {}} onWalletClick={() => {}} />
-      
+
       <main className="container mx-auto px-4 py-8">
         {/* Hero Section */}
         <motion.div
@@ -138,7 +136,7 @@ const ComoFunciona: React.FC = () => {
         <div className="relative mb-20">
           {/* Connection Line */}
           <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-primary via-purple-500 via-yellow-500 to-emerald-500 -translate-y-1/2 opacity-20" />
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-4">
             {steps.map((step, index) => (
               <motion.div
@@ -151,7 +149,7 @@ const ComoFunciona: React.FC = () => {
                 <Card className="relative bg-card border-border overflow-hidden hover:border-primary/30 transition-all duration-300 hover:shadow-glow group h-full">
                   {/* Gradient Background */}
                   <div className={`absolute inset-0 bg-gradient-to-br ${step.color} opacity-5 group-hover:opacity-10 transition-opacity`} />
-                  
+
                   {/* Step Number */}
                   <div className={`absolute -top-4 -left-4 w-16 h-16 bg-gradient-to-br ${step.color} rounded-2xl flex items-center justify-center shadow-lg`}>
                     <span className="text-2xl font-black text-white">{step.number}</span>
@@ -204,7 +202,7 @@ const ComoFunciona: React.FC = () => {
           <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-8">
             Por que escolher o <span className="text-gradient">MundoPix</span>?
           </h2>
-          
+
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {features.map((feature, index) => (
               <motion.div

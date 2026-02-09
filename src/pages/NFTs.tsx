@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { 
-  Sparkles, 
-  ShoppingCart, 
+import {
+  Sparkles,
+  ShoppingCart,
   TrendingUp,
   Star,
   ChevronLeft,
@@ -10,7 +10,6 @@ import {
   Gem,
   Zap
 } from "lucide-react";
-import Header from "@/components/Header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -127,8 +126,7 @@ const NFTs: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header onMenuClick={() => {}} onWalletClick={() => {}} />
-      
+
       <main className="container mx-auto px-4 py-8">
         {/* Header */}
         <motion.div
@@ -163,7 +161,7 @@ const NFTs: React.FC = () => {
 
           <Card className={`relative overflow-hidden bg-gradient-to-br ${currentFeatured.gradient} border-primary/30`}>
             <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/50 to-transparent" />
-            
+
             <CardContent className="relative p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
               {/* Navigation */}
               <Button
@@ -223,11 +221,10 @@ const NFTs: React.FC = () => {
                   <button
                     key={idx}
                     onClick={() => setFeaturedIndex(idx)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      idx === featuredIndex 
-                        ? "bg-primary w-6" 
+                    className={`w-2 h-2 rounded-full transition-all ${idx === featuredIndex
+                        ? "bg-primary w-6"
                         : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
-                    }`}
+                      }`}
                   />
                 ))}
               </div>
