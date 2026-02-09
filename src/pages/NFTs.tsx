@@ -131,7 +131,7 @@ const NFTs: React.FC = () => {
       nome: nft.name,
       emoji: nft.emoji,
       preco: nft.price,
-      rarity: nft.rarity,
+      raridade: nft.rarity,
       descricao: nft.description,
       cor: nft.gradient,
     });
@@ -243,7 +243,7 @@ const NFTs: React.FC = () => {
 
               {/* Dots */}
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                {featuredNFTs.map((_, idx) => (
+                {featured.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setFeaturedIndex(idx)}
@@ -265,12 +265,12 @@ const NFTs: React.FC = () => {
             <h2 className="text-xl font-bold text-foreground">Todos os NFTs</h2>
           </div>
           <Badge variant="outline" className="text-muted-foreground">
-            {allNFTs.length} disponíveis
+            {nfts.length} disponíveis
           </Badge>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-          {allNFTs.map((nft, index) => (
+          {nfts.map((nft, index) => (
             <motion.div
               key={nft.id}
               initial={{ opacity: 0, y: 20 }}
