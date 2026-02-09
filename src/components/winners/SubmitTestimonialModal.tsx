@@ -80,7 +80,7 @@ export const SubmitTestimonialModal = ({
         prizeName: raffle?.premio || "Prêmio",
         rating,
         comment: testimonial,
-        photoUrl: imagePreview
+        photoUrl: imagePreview || user.picture // Use uploaded photo OR user avatar
       });
 
       toast.success("Depoimento enviado com sucesso!", {

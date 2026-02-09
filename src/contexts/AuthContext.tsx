@@ -52,10 +52,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const sessionUser: User = {
                     id: String(response.user.id),
                     email: response.user.email,
+                    name: response.user.name,
+                    picture: response.user.picture,
                     walletAddress: response.user.walletAddress
                 };
                 setUser(sessionUser);
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser));
+                // Also save to "user" key for consistency with other parts of the app
+                localStorage.setItem("user", JSON.stringify(sessionUser));
+
                 return { success: true };
             }
             return { success: false, error: "Invalid response from server" };
@@ -82,6 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 };
                 setUser(sessionUser);
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser));
+                localStorage.setItem("user", JSON.stringify(sessionUser));
                 toast.success("Login com Google realizado!");
                 return { success: true };
             }
@@ -121,6 +127,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const logout = useCallback(() => {
         setUser(null);
         localStorage.removeItem(SESSION_STORAGE_KEY);
+        localStorage.removeItem("user");
     }, []);
 
     const setWalletAddress = useCallback((address: string) => {

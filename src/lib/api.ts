@@ -11,7 +11,15 @@ export const api = {
             body: JSON.stringify({ email, password }),
         });
         if (!res.ok) throw new Error((await res.json()).message);
-        return res.json();
+        const data = await res.json();
+
+        // Mock name for standard login if backend doesn't return it
+        if (data.user && !data.user.name) {
+            data.user.name = email.split('@')[0]; // Use part of email as name
+            data.user.picture = `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.user.username || email}`;
+        }
+
+        return data;
     },
 
     googleLogin: async (credential: string) => {
