@@ -10,13 +10,14 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { 
-    LayoutDashboard, 
-    Ticket, 
-    Users, 
-    Settings, 
+import {
+    LayoutDashboard,
+    Ticket,
+    Users,
+    Settings,
     LogOut,
-    PlusCircle
+    PlusCircle,
+    MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -40,8 +41,8 @@ export function AdminSidebar({ currentView, onViewChange, onLogout }: AdminSideb
                     <SidebarGroupContent>
                         <SidebarMenu>
                             <SidebarMenuItem>
-                                <SidebarMenuButton 
-                                    isActive={currentView === 'dashboard'} 
+                                <SidebarMenuButton
+                                    isActive={currentView === 'dashboard'}
                                     onClick={() => onViewChange('dashboard')}
                                     tooltip="Dashboard"
                                 >
@@ -50,8 +51,8 @@ export function AdminSidebar({ currentView, onViewChange, onLogout }: AdminSideb
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                             <SidebarMenuItem>
-                                <SidebarMenuButton 
-                                    isActive={currentView === 'create'} 
+                                <SidebarMenuButton
+                                    isActive={currentView === 'create'}
                                     onClick={() => onViewChange('create')}
                                     tooltip="Criar Sorteio"
                                 >
@@ -60,8 +61,8 @@ export function AdminSidebar({ currentView, onViewChange, onLogout }: AdminSideb
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                             <SidebarMenuItem>
-                                <SidebarMenuButton 
-                                    isActive={currentView === 'raffles'} 
+                                <SidebarMenuButton
+                                    isActive={currentView === 'raffles'}
                                     onClick={() => onViewChange('raffles')}
                                     tooltip="Meus Sorteios"
                                 >
@@ -72,14 +73,14 @@ export function AdminSidebar({ currentView, onViewChange, onLogout }: AdminSideb
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
-                
+
                 <SidebarGroup>
                     <SidebarGroupLabel>Gerenciamento</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                             <SidebarMenuItem>
-                                <SidebarMenuButton 
-                                    isActive={currentView === 'participants'} 
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    isActive={currentView === 'participants'}
                                     onClick={() => onViewChange('participants')}
                                     tooltip="Participantes"
                                 >
@@ -88,13 +89,23 @@ export function AdminSidebar({ currentView, onViewChange, onLogout }: AdminSideb
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                             <SidebarMenuItem>
-                                <SidebarMenuButton 
-                                    isActive={currentView === 'settings'} 
+                                <SidebarMenuButton
+                                    isActive={currentView === 'settings'}
                                     onClick={() => onViewChange('settings')}
                                     tooltip="Configurações"
                                 >
                                     <Settings />
                                     <span>Configurações</span>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    isActive={currentView === 'reviews'}
+                                    onClick={() => onViewChange('reviews')}
+                                    tooltip="Depoimentos"
+                                >
+                                    <MessageSquare />
+                                    <span>Depoimentos</span>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                         </SidebarMenu>
