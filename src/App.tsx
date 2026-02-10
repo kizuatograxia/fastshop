@@ -18,7 +18,6 @@ import RaffleDetails from "./pages/RaffleDetails";
 import Checkout from "./pages/Checkout";
 import Admin from "./pages/Admin";
 import WinnersFeed from "./pages/WinnersFeed";
-import Feed from "./pages/Feed";
 import Sorteios from "./pages/Sorteios";
 import NFTs from "./pages/NFTs";
 import ComoFunciona from "./pages/ComoFunciona";
