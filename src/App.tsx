@@ -22,6 +22,7 @@ import Sorteios from "./pages/Sorteios";
 import NFTs from "./pages/NFTs";
 import ComoFunciona from "./pages/ComoFunciona";
 import NotFound from "./pages/NotFound";
+import RegisterPage from "./pages/Register";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const queryClient = new QueryClient();
@@ -58,7 +59,7 @@ const App = () => (
                       {/* Standalone Routes */}
                       <Route path="/auth" element={<Auth />} />
                       <Route path="/login" element={<Auth defaultTab="login" />} />
-                      <Route path="/register" element={<Auth defaultTab="register" />} />
+                      <Route path="/register" element={<RegisterPage />} />
                       <Route path="/admin" element={<Admin />} />
 
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
