@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useWallet } from "@/contexts/WalletContext";
 import { toast } from "sonner";
+import { nfts as basicNftsData } from "@/data/raffles";
 
 interface NFTItem {
   id: string;
@@ -85,11 +86,11 @@ const fallbackNFTs: NFTItem[] = [
   { id: "1", name: "Gatinho Fofo", emoji: "🐱", price: 25, rarity: "comum", description: "Miau! Super fofo e acessível.", gradient: "from-primary/20 to-accent/20", stock: 150 },
   { id: "2", name: "Cachorrinho", emoji: "🐶", price: 25, rarity: "comum", description: "Au au! Seu melhor amigo digital.", gradient: "from-amber-500/20 to-yellow-500/20", stock: 200 },
   { id: "3", name: "Leão Dourado", emoji: "🦁", price: 75, rarity: "raro", description: "Rei da selva digital!", gradient: "from-yellow-500/20 to-orange-500/20", stock: 50 },
-  { id: "4", name: "Panda Zen", emoji: "🐼", price: 50, rarity: "raro", description: "Paz e bambu para todos.", gradient: "from-emerald-500/20 to-teal-500/20", stock: 75 },
+  { id: "4", name: "Panda Zen", emoji: "🐼", price: 55, rarity: "raro", description: "Paz e bambu para todos.", gradient: "from-emerald-500/20 to-teal-500/20", stock: 75 },
   { id: "5", name: "Raposa Astuta", emoji: "🦊", price: 60, rarity: "raro", description: "Esperta e misteriosa.", gradient: "from-orange-500/20 to-red-500/20", stock: 60 },
   { id: "6", name: "Coruja Sábia", emoji: "🦉", price: 45, rarity: "raro", description: "Sabedoria ancestral.", gradient: "from-indigo-500/20 to-purple-500/20", stock: 80 },
   { id: "7", name: "Tigre de Fogo", emoji: "🐯", price: 120, rarity: "epico", description: "Força e poder em chamas!", gradient: "from-red-500/20 to-orange-500/20", stock: 25 },
-  { id: "8", name: "Lobo Lunar", emoji: "🐺", price: 100, rarity: "epico", description: "Uiva para a lua!", gradient: "from-slate-500/20 to-blue-500/20", stock: 30 },
+  { id: "8", name: "Lobo Lunar", emoji: "🌕", price: 110, rarity: "epico", description: "Uiva para a lua!", gradient: "from-slate-500/20 to-blue-500/20", stock: 30 },
   { id: "9", name: "Borboleta Cósmica", emoji: "🦋", price: 80, rarity: "epico", description: "Transformação eterna.", gradient: "from-violet-500/20 to-fuchsia-500/20", stock: 40 },
   { id: "10", name: "Águia Imperial", emoji: "🦅", price: 90, rarity: "epico", description: "Voe alto!", gradient: "from-amber-500/20 to-yellow-500/20", stock: 35 },
   { id: "11", name: "Coelho da Sorte", emoji: "🐰", price: 30, rarity: "comum", description: "Traz boa sorte!", gradient: "from-pink-500/20 to-rose-500/20", stock: 180 },
@@ -257,6 +258,76 @@ const NFTs: React.FC = () => {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* Basic NFTs Section */}
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Gem className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-bold text-foreground">NFTs Básicos (Coleção Real)</h2>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-12">
+          {basicNftsData.map((nftData, index) => {
+            const nft: NFTItem = {
+              id: nftData.id,
+              name: nftData.nome,
+              emoji: nftData.emoji,
+              price: nftData.preco,
+              rarity: nftData.raridade,
+              description: nftData.descricao,
+              gradient: nftData.cor,
+            };
+
+            return (
+              <motion.div
+                key={nft.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + index * 0.03 }}
+              >
+                <Card className="group bg-card border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-glow hover:-translate-y-1">
+                  {/* Rarity Badge */}
+                  <div className="absolute top-2 left-2 z-10">
+                    <Badge className={`${rarityConfig[nft.rarity].badge} text-xs`}>
+                      {rarityConfig[nft.rarity].label}
+                    </Badge>
+                  </div>
+
+                  {/* NFT Display */}
+                  <div className={`relative aspect-square bg-gradient-to-br ${nft.gradient} flex items-center justify-center overflow-hidden`}>
+                    <span className="text-5xl md:text-6xl transition-transform duration-300 group-hover:scale-125 drop-shadow-lg">
+                      {nft.emoji}
+                    </span>
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
+                  </div>
+
+                  <CardContent className="p-3 space-y-2">
+                    <h3 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors truncate">
+                      {nft.name}
+                    </h3>
+                    <p className="text-xs text-muted-foreground line-clamp-1">
+                      {nft.description}
+                    </p>
+                    <div className="flex items-center justify-between pt-1">
+                      <p className="font-bold text-gradient">
+                        R$ {nft.price.toFixed(2).replace(".", ",")}
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0 hover:bg-primary/20"
+                        onClick={() => handleBuy(nft)}
+                      >
+                        <ShoppingCart className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )
+          })}
+        </div>
 
         {/* NFT Grid */}
         <div className="mb-6 flex items-center justify-between">
