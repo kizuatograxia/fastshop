@@ -64,16 +64,16 @@ const Stepper: React.FC<{ current: number }> = ({ current }) => (
                     <div className="flex flex-col items-center gap-1.5">
                         <div className={`
               w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 border-2
-              ${done ? "bg-[#2D8C58] border-[#2D8C58] text-white" : active ? "bg-[#F26A21] border-[#F26A21] text-white shadow-[0_0_20px_rgba(242,106,33,0.4)]" : "bg-gray-200 border-gray-300 text-gray-500"}
+              ${done ? "bg-primary border-primary text-primary-foreground" : active ? "bg-primary border-primary text-primary-foreground shadow-glow" : "bg-muted border-border text-muted-foreground"}
             `}>
                             {done ? <Check className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
                         </div>
-                        <span className={`text-[10px] font-semibold ${active ? "text-[#F26A21]" : done ? "text-[#2D8C58]" : "text-gray-400"}`}>
+                        <span className={`text-[10px] font-semibold ${active ? "text-primary" : done ? "text-primary" : "text-muted-foreground"}`}>
                             {s.label}
                         </span>
                     </div>
                     {i < steps.length - 1 && (
-                        <div className={`w-12 h-0.5 mt-[-18px] rounded-full transition-all ${done ? "bg-[#2D8C58]" : "bg-gray-300"}`} />
+                        <div className={`w-12 h-0.5 mt-[-18px] rounded-full transition-all ${done ? "bg-primary" : "bg-border"}`} />
                     )}
                 </React.Fragment>
             );
@@ -162,13 +162,13 @@ const Register: React.FC = () => {
         value: string; onChange: (v: string) => void; type?: string; rightIcon?: React.ReactNode;
     }> = ({ icon, label, id, placeholder, value, onChange, type = "text", rightIcon }) => (
         <div className="space-y-1.5">
-            <Label htmlFor={id} className="text-gray-600 font-semibold text-xs uppercase tracking-wider">{label}</Label>
+            <Label htmlFor={id} className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">{label}</Label>
             <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{icon}</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{icon}</span>
                 <input
                     id={id} type={type} placeholder={placeholder} value={value}
                     onChange={e => onChange(e.target.value)}
-                    className="w-full h-12 pl-11 pr-4 rounded-xl border-2 border-gray-200 bg-white text-gray-800 placeholder:text-gray-400 focus:border-[#F26A21] focus:ring-2 focus:ring-[#F26A21]/20 outline-none transition-all text-sm font-medium"
+                    className="w-full h-12 pl-11 pr-4 rounded-xl border border-input bg-background/50 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm font-medium"
                 />
                 {rightIcon && <span className="absolute right-3 top-1/2 -translate-y-1/2">{rightIcon}</span>}
             </div>
@@ -187,8 +187,8 @@ const Register: React.FC = () => {
             return (
                 <motion.div key="social" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="space-y-5">
                     <div className="text-center space-y-2">
-                        <h2 className="text-2xl font-extrabold text-gray-800">Cadastre-se agora!</h2>
-                        <p className="text-gray-500 text-sm">Escolha como deseja se cadastrar</p>
+                        <h2 className="text-2xl font-extrabold text-foreground">Cadastre-se agora!</h2>
+                        <p className="text-muted-foreground text-sm">Escolha como deseja se cadastrar</p>
                     </div>
 
                     {/* Social buttons */}
@@ -199,33 +199,35 @@ const Register: React.FC = () => {
                                 onError={() => toast.error("Erro no Google")}
                                 width={340}
                                 text="signup_with"
+                                theme="filled_black"
+                                shape="pill"
                             />
                         </div>
 
-                        <button className="w-full h-12 rounded-xl border-2 border-[#1877F2] bg-[#1877F2] text-white font-bold flex items-center justify-center gap-3 hover:bg-[#1565C0] transition-colors">
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.954 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                        <button className="w-full h-12 rounded-xl border border-input bg-card hover:bg-accent/10 text-foreground font-bold flex items-center justify-center gap-3 transition-colors">
+                            <svg className="w-5 h-5 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
                             Cadastrar com Facebook
                         </button>
                     </div>
 
                     <div className="relative">
-                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
+                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
                         <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-white px-3 text-gray-400 font-semibold">ou cadastre com e-mail</span>
+                            <span className="bg-background px-3 text-muted-foreground font-semibold">ou cadastre com e-mail</span>
                         </div>
                     </div>
 
                     <button
                         onClick={() => setStep(0)}
-                        className="w-full h-12 rounded-xl border-2 border-gray-200 bg-white text-gray-700 font-bold flex items-center justify-center gap-3 hover:border-[#F26A21] hover:text-[#F26A21] transition-all"
+                        className="w-full h-12 rounded-xl border border-primary/50 text-primary font-bold flex items-center justify-center gap-3 hover:bg-primary/10 transition-all"
                     >
                         <Mail className="w-5 h-5" />
                         Cadastrar com E-mail
                     </button>
 
-                    <p className="text-center text-xs text-gray-400">
+                    <p className="text-center text-xs text-muted-foreground">
                         Já tem conta?{" "}
-                        <Link to="/auth" className="text-[#F26A21] font-bold hover:underline">Faça login</Link>
+                        <Link to="/auth" className="text-primary font-bold hover:underline">Faça login</Link>
                     </p>
                 </motion.div>
             );
@@ -235,20 +237,20 @@ const Register: React.FC = () => {
             return (
                 <motion.div key="step0" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="space-y-4">
                     <div className="space-y-1">
-                        <h2 className="text-xl font-extrabold text-gray-800">Vamos começar! 🎯</h2>
-                        <p className="text-gray-500 text-xs">Insira seus dados para garantir sua segurança.</p>
+                        <h2 className="text-xl font-extrabold text-foreground">Vamos começar! 🎯</h2>
+                        <p className="text-muted-foreground text-xs">Insira seus dados para garantir sua segurança.</p>
                     </div>
                     <Field icon={<Mail className="w-4 h-4" />} label="E-mail" id="email" placeholder="seu@email.com" value={form.email} onChange={v => set("email", v)} type="email" />
                     <Field icon={<Mail className="w-4 h-4" />} label="Confirmar E-mail" id="confirmEmail" placeholder="seu@email.com" value={form.confirmEmail} onChange={v => set("confirmEmail", v)} type="email" />
                     <Field icon={<Calendar className="w-4 h-4" />} label="Data de Nascimento" id="birthDate" placeholder="DD/MM/AAAA" value={form.birthDate} onChange={v => set("birthDate", maskDate(v))} />
                     <Field icon={<CreditCard className="w-4 h-4" />} label="CPF" id="cpf" placeholder="000.000.000-00" value={form.cpf} onChange={v => set("cpf", maskCPF(v))} />
                     <div className="space-y-1.5">
-                        <Label className="text-gray-600 font-semibold text-xs uppercase tracking-wider">Gênero</Label>
+                        <Label className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">Gênero</Label>
                         <Select value={form.gender} onValueChange={v => set("gender", v)}>
-                            <SelectTrigger className="h-12 rounded-xl border-2 border-gray-200 bg-white text-gray-800 focus:border-[#F26A21]">
+                            <SelectTrigger className="h-12 rounded-xl border border-input bg-background/50 text-foreground focus:ring-1 focus:ring-primary focus:border-primary">
                                 <SelectValue placeholder="Selecione..." />
                             </SelectTrigger>
-                            <SelectContent className="bg-white border-gray-200">
+                            <SelectContent className="bg-card border-border text-foreground">
                                 <SelectItem value="masculino">Masculino</SelectItem>
                                 <SelectItem value="feminino">Feminino</SelectItem>
                                 <SelectItem value="outro">Outro</SelectItem>
@@ -263,19 +265,19 @@ const Register: React.FC = () => {
             return (
                 <motion.div key="step1" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="space-y-4">
                     <div className="space-y-1">
-                        <h2 className="text-xl font-extrabold text-gray-800">Quase lá! 📍</h2>
-                        <p className="text-gray-500 text-xs">Onde a sorte te encontra?</p>
+                        <h2 className="text-xl font-extrabold text-foreground">Quase lá! 📍</h2>
+                        <p className="text-muted-foreground text-xs">Onde a sorte te encontra?</p>
                     </div>
                     <Field icon={<MapPin className="w-4 h-4" />} label="Endereço" id="address" placeholder="Rua da Sorte, 777" value={form.address} onChange={v => set("address", v)} />
                     <Field icon={<MapPin className="w-4 h-4" />} label="Cidade" id="city" placeholder="Sua cidade" value={form.city} onChange={v => set("city", v)} />
                     <Field icon={<MapPin className="w-4 h-4" />} label="CEP" id="cep" placeholder="00000-000" value={form.cep} onChange={v => set("cep", maskCEP(v))} />
                     <div className="space-y-1.5">
-                        <Label className="text-gray-600 font-semibold text-xs uppercase tracking-wider">País</Label>
+                        <Label className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">País</Label>
                         <Select value={form.country} onValueChange={v => set("country", v)}>
-                            <SelectTrigger className="h-12 rounded-xl border-2 border-gray-200 bg-white text-gray-800 focus:border-[#F26A21]">
+                            <SelectTrigger className="h-12 rounded-xl border border-input bg-background/50 text-foreground focus:ring-1 focus:ring-primary focus:border-primary">
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-white border-gray-200">
+                            <SelectContent className="bg-card border-border text-foreground">
                                 <SelectItem value="brasil">🇧🇷 Brasil</SelectItem>
                                 <SelectItem value="portugal">🇵🇹 Portugal</SelectItem>
                                 <SelectItem value="outro">Outro</SelectItem>
@@ -290,8 +292,8 @@ const Register: React.FC = () => {
         return (
             <motion.div key="step2" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="space-y-4">
                 <div className="space-y-1">
-                    <h2 className="text-xl font-extrabold text-gray-800">Defina seu acesso 🏆</h2>
-                    <p className="text-gray-500 text-xs">Crie seu login e comece a ganhar!</p>
+                    <h2 className="text-xl font-extrabold text-foreground">Defina seu acesso 🏆</h2>
+                    <p className="text-muted-foreground text-xs">Crie seu login e comece a ganhar!</p>
                 </div>
                 <Field icon={<User className="w-4 h-4" />} label="Nome de Usuário" id="username" placeholder="ReiDoBicho2024" value={form.username} onChange={v => set("username", v)} />
                 <Field
@@ -299,7 +301,7 @@ const Register: React.FC = () => {
                     value={form.password} onChange={v => set("password", v)}
                     type={showPassword ? "text" : "password"}
                     rightIcon={
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-gray-400 hover:text-gray-600">
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-muted-foreground hover:text-foreground">
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                     }
@@ -311,20 +313,20 @@ const Register: React.FC = () => {
                         <Checkbox
                             checked={form.acceptTerms}
                             onCheckedChange={v => set("acceptTerms", !!v)}
-                            className="mt-0.5 border-gray-300 data-[state=checked]:bg-[#F26A21] data-[state=checked]:border-[#F26A21]"
+                            className="mt-0.5 border-input data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
-                        <span className="text-xs text-gray-600 leading-relaxed">
-                            Li e aceito os <a href="#" className="text-[#F26A21] font-semibold hover:underline">Termos e Condições</a> e a{" "}
-                            <a href="#" className="text-[#F26A21] font-semibold hover:underline">Política de Privacidade</a>.
+                        <span className="text-xs text-muted-foreground leading-relaxed">
+                            Li e aceito os <a href="#" className="text-primary font-semibold hover:underline">Termos e Condições</a> e a{" "}
+                            <a href="#" className="text-primary font-semibold hover:underline">Política de Privacidade</a>.
                         </span>
                     </label>
                     <label className="flex items-start gap-3 cursor-pointer">
                         <Checkbox
                             checked={form.acceptBonus}
                             onCheckedChange={v => set("acceptBonus", !!v)}
-                            className="mt-0.5 border-gray-300 data-[state=checked]:bg-[#2D8C58] data-[state=checked]:border-[#2D8C58]"
+                            className="mt-0.5 border-input data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                         />
-                        <span className="text-xs text-gray-600 leading-relaxed">
+                        <span className="text-xs text-muted-foreground leading-relaxed">
                             Quero receber bônus, promoções e novidades por e-mail. 🎁
                         </span>
                     </label>
@@ -334,13 +336,13 @@ const Register: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <div className="min-h-screen flex items-center justify-center bg-background p-4 font-sans">
             <div className="w-full max-w-md">
                 {/* Stepper (only for wizard steps) */}
                 {step >= 0 && <Stepper current={step} />}
 
                 {/* Form area */}
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 sm:p-8">
+                <div className="bg-card/50 backdrop-blur-sm rounded-2xl shadow-lg border border-border p-6 sm:p-8">
                     <AnimatePresence mode="wait">
                         {renderStep()}
                     </AnimatePresence>
@@ -351,12 +353,12 @@ const Register: React.FC = () => {
                             <>
                                 <button
                                     onClick={next}
-                                    className="w-full h-13 rounded-xl bg-[#F26A21] text-white font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#E05A11] active:scale-[0.98] transition-all shadow-[0_4px_20px_rgba(242,106,33,0.3)] py-3.5"
+                                    className="w-full h-13 rounded-xl bg-primary text-primary-foreground font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-[0.98] transition-all shadow-glow py-3.5"
                                 >
                                     Próxima <ChevronRight className="w-5 h-5" />
                                 </button>
                                 {step > 0 && (
-                                    <button onClick={prev} className="w-full text-center text-sm text-gray-400 hover:text-gray-600 font-medium py-2">
+                                    <button onClick={prev} className="w-full text-center text-sm text-muted-foreground hover:text-foreground font-medium py-2">
                                         <ChevronLeft className="w-4 h-4 inline mr-1" /> Voltar
                                     </button>
                                 )}
@@ -366,11 +368,11 @@ const Register: React.FC = () => {
                                 <button
                                     onClick={handleSubmit}
                                     disabled={isSubmitting}
-                                    className="w-full h-13 rounded-xl bg-[#2D8C58] text-white font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#257A4C] active:scale-[0.98] transition-all shadow-[0_4px_20px_rgba(45,140,88,0.3)] disabled:opacity-50 py-3.5"
+                                    className="w-full h-13 rounded-xl bg-primary text-primary-foreground font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-[0.98] transition-all shadow-glow disabled:opacity-50 py-3.5"
                                 >
                                     {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>CRIAR CONTA E APOSTAR 🎲</>}
                                 </button>
-                                <button onClick={prev} className="w-full text-center text-sm text-gray-400 hover:text-gray-600 font-medium py-2">
+                                <button onClick={prev} className="w-full text-center text-sm text-muted-foreground hover:text-foreground font-medium py-2">
                                     <ChevronLeft className="w-4 h-4 inline mr-1" /> Voltar
                                 </button>
                             </>
@@ -379,7 +381,7 @@ const Register: React.FC = () => {
                 </div>
 
                 {/* Footer */}
-                <p className="text-center text-[10px] text-gray-400 mt-6 leading-relaxed">
+                <p className="text-center text-[10px] text-muted-foreground mt-6 leading-relaxed">
                     Ao se cadastrar, você confirma que tem 18+ anos.<br />
                     Jogue com responsabilidade. 🔞
                 </p>
