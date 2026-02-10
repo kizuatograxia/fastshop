@@ -143,7 +143,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
               <Button
                 variant="default"
                 size="sm"
-                onClick={() => navigate("/auth")}
+                onClick={() => navigate("/register")}
               >
                 Entrar
               </Button>

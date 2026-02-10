@@ -384,8 +384,14 @@ const Register: React.FC = () => {
                     </div>
                 </div>
 
+                <div className="text-center mt-6">
+                    <p className="text-sm text-muted-foreground">
+                        Já tem conta? <Link to="/auth" className="text-primary hover:underline font-bold">Faça login</Link>
+                    </p>
+                </div>
+
                 {/* Footer */}
-                <p className="text-center text-[10px] text-muted-foreground mt-6 leading-relaxed">
+                <p className="text-center text-[10px] text-muted-foreground mt-4 leading-relaxed">
                     Ao se cadastrar, você confirma que tem 18+ anos.<br />
                     Jogue com responsabilidade. 🔞
                 </p>
