@@ -2,9 +2,9 @@ import React, { useState, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Mail, Lock, Eye, EyeOff, User, Phone, MapPin, Calendar,
-  CreditCard, ChevronRight, ChevronLeft, Check, Gift, Loader2,
-  Smartphone, Globe
+    Mail, Lock, Eye, EyeOff, User, Phone, MapPin, Calendar,
+    CreditCard, ChevronRight, ChevronLeft, Check, Gift, Loader2,
+    Smartphone, Globe
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,27 +18,27 @@ import mascotZe from "@/assets/mascot-ze.png";
 
 // ─── Types ──────────────────────────────────────────────
 interface FormData {
-  email: string;
-  confirmEmail: string;
-  birthDate: string;
-  cpf: string;
-  gender: string;
-  address: string;
-  city: string;
-  cep: string;
-  country: string;
-  phone: string;
-  username: string;
-  password: string;
-  promoCode: string;
-  acceptTerms: boolean;
-  acceptBonus: boolean;
+    email: string;
+    confirmEmail: string;
+    birthDate: string;
+    cpf: string;
+    gender: string;
+    address: string;
+    city: string;
+    cep: string;
+    country: string;
+    phone: string;
+    username: string;
+    password: string;
+    promoCode: string;
+    acceptTerms: boolean;
+    acceptBonus: boolean;
 }
 
 const INITIAL_FORM: FormData = {
-  email: "", confirmEmail: "", birthDate: "", cpf: "", gender: "",
-  address: "", city: "", cep: "", country: "brasil", phone: "",
-  username: "", password: "", promoCode: "", acceptTerms: false, acceptBonus: true,
+    email: "", confirmEmail: "", birthDate: "", cpf: "", gender: "",
+    address: "", city: "", cep: "", country: "brasil", phone: "",
+    username: "", password: "", promoCode: "", acceptTerms: false, acceptBonus: true,
 };
 
 // ─── Masks ──────────────────────────────────────────────
@@ -49,405 +49,343 @@ const maskDate = (v: string) => v.replace(/\D/g, "").replace(/(\d{2})(\d)/, "$1/
 
 // ─── Stepper ────────────────────────────────────────────
 const steps = [
-  { label: "Identificação", icon: User },
-  { label: "Endereço", icon: MapPin },
-  { label: "Conta", icon: Gift },
+    { label: "Identificação", icon: User },
+    { label: "Endereço", icon: MapPin },
+    { label: "Conta", icon: Gift },
 ];
 
 const Stepper: React.FC<{ current: number }> = ({ current }) => (
-  <div className="flex items-center justify-center gap-1 mb-8">
-    {steps.map((s, i) => {
-      const done = i < current;
-      const active = i === current;
-      return (
-        <React.Fragment key={i}>
-          <div className="flex flex-col items-center gap-1.5">
-            <div className={`
+    <div className="flex items-center justify-center gap-1 mb-8">
+        {steps.map((s, i) => {
+            const done = i < current;
+            const active = i === current;
+            return (
+                <React.Fragment key={i}>
+                    <div className="flex flex-col items-center gap-1.5">
+                        <div className={`
               w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 border-2
               ${done ? "bg-[#2D8C58] border-[#2D8C58] text-white" : active ? "bg-[#F26A21] border-[#F26A21] text-white shadow-[0_0_20px_rgba(242,106,33,0.4)]" : "bg-gray-200 border-gray-300 text-gray-500"}
             `}>
-              {done ? <Check className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
-            </div>
-            <span className={`text-[10px] font-semibold ${active ? "text-[#F26A21]" : done ? "text-[#2D8C58]" : "text-gray-400"}`}>
-              {s.label}
-            </span>
-          </div>
-          {i < steps.length - 1 && (
-            <div className={`w-12 h-0.5 mt-[-18px] rounded-full transition-all ${done ? "bg-[#2D8C58]" : "bg-gray-300"}`} />
-          )}
-        </React.Fragment>
-      );
-    })}
-  </div>
+                            {done ? <Check className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
+                        </div>
+                        <span className={`text-[10px] font-semibold ${active ? "text-[#F26A21]" : done ? "text-[#2D8C58]" : "text-gray-400"}`}>
+                            {s.label}
+                        </span>
+                    </div>
+                    {i < steps.length - 1 && (
+                        <div className={`w-12 h-0.5 mt-[-18px] rounded-full transition-all ${done ? "bg-[#2D8C58]" : "bg-gray-300"}`} />
+                    )}
+                </React.Fragment>
+            );
+        })}
+    </div>
 );
 
 // ─── Page ───────────────────────────────────────────────
 const Register: React.FC = () => {
-  const navigate = useNavigate();
-  const { register: registerUser, googleLogin } = useAuth();
-  const [step, setStep] = useState<-1 | 0 | 1 | 2>(-1); // -1 = social/email choice
-  const [form, setForm] = useState<FormData>(INITIAL_FORM);
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+    const navigate = useNavigate();
+    const { register: registerUser, googleLogin } = useAuth();
+    const [step, setStep] = useState<-1 | 0 | 1 | 2>(-1); // -1 = social/email choice
+    const [form, setForm] = useState<FormData>(INITIAL_FORM);
+    const [showPassword, setShowPassword] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const set = useCallback((field: keyof FormData, value: string | boolean) => {
-    setForm(prev => ({ ...prev, [field]: value }));
-  }, []);
+    const set = useCallback((field: keyof FormData, value: string | boolean) => {
+        setForm(prev => ({ ...prev, [field]: value }));
+    }, []);
 
-  // Validation per step
-  const validateStep = (s: number): boolean => {
-    if (s === 0) {
-      if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { toast.error("Email inválido"); return false; }
-      if (form.email !== form.confirmEmail) { toast.error("Emails não coincidem"); return false; }
-      if (!form.birthDate || form.birthDate.length < 10) { toast.error("Data de nascimento inválida"); return false; }
-      if (!form.cpf || form.cpf.replace(/\D/g, "").length < 11) { toast.error("CPF inválido"); return false; }
-      // Check 18+
-      const parts = form.birthDate.split("/");
-      if (parts.length === 3) {
-        const birth = new Date(+parts[2], +parts[1] - 1, +parts[0]);
-        const age = (Date.now() - birth.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-        if (age < 18) { toast.error("Você precisa ter 18+ anos"); return false; }
-      }
-      return true;
-    }
-    if (s === 1) {
-      if (!form.address) { toast.error("Informe seu endereço"); return false; }
-      if (!form.city) { toast.error("Informe sua cidade"); return false; }
-      if (!form.phone || form.phone.replace(/\D/g, "").length < 10) { toast.error("Celular inválido"); return false; }
-      return true;
-    }
-    if (s === 2) {
-      if (!form.username || form.username.length < 3) { toast.error("Nome de usuário muito curto"); return false; }
-      if (!form.password || form.password.length < 6) { toast.error("Senha deve ter 6+ caracteres"); return false; }
-      if (!form.acceptTerms) { toast.error("Aceite os termos para continuar"); return false; }
-      return true;
-    }
-    return true;
-  };
-
-  const next = () => {
-    if (step >= 0 && !validateStep(step)) return;
-    setStep(prev => Math.min(prev + 1, 2) as any);
-  };
-  const prev = () => setStep(prev => Math.max(prev - 1, -1) as any);
-
-  const handleSubmit = async () => {
-    if (!validateStep(2)) return;
-    setIsSubmitting(true);
-    try {
-      const result = await registerUser(form.email, form.password);
-      if (result.success) {
-        toast.success("Conta criada com sucesso! 🎉");
-        navigate("/");
-      } else {
-        toast.error(result.error || "Erro ao criar conta");
-      }
-    } catch {
-      toast.error("Erro inesperado");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleGoogleSuccess = async (cred: any) => {
-    try {
-      const r = await googleLogin(cred.credential!);
-      if (r.success) { toast.success("Login com Google realizado!"); navigate("/"); }
-    } catch { toast.error("Falha no login com Google"); }
-  };
-
-  // ─── Input component helper ───────────────────────────
-  const Field: React.FC<{
-    icon: React.ReactNode; label: string; id: string; placeholder: string;
-    value: string; onChange: (v: string) => void; type?: string; rightIcon?: React.ReactNode;
-  }> = ({ icon, label, id, placeholder, value, onChange, type = "text", rightIcon }) => (
-    <div className="space-y-1.5">
-      <Label htmlFor={id} className="text-gray-600 font-semibold text-xs uppercase tracking-wider">{label}</Label>
-      <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{icon}</span>
-        <input
-          id={id} type={type} placeholder={placeholder} value={value}
-          onChange={e => onChange(e.target.value)}
-          className="w-full h-12 pl-11 pr-4 rounded-xl border-2 border-gray-200 bg-white text-gray-800 placeholder:text-gray-400 focus:border-[#F26A21] focus:ring-2 focus:ring-[#F26A21]/20 outline-none transition-all text-sm font-medium"
-        />
-        {rightIcon && <span className="absolute right-3 top-1/2 -translate-y-1/2">{rightIcon}</span>}
-      </div>
-    </div>
-  );
-
-  // ─── Step Content ─────────────────────────────────────
-  const renderStep = () => {
-    const variants = {
-      enter: { opacity: 0, x: 40 },
-      center: { opacity: 1, x: 0 },
-      exit: { opacity: 0, x: -40 },
+    // Validation per step
+    const validateStep = (s: number): boolean => {
+        if (s === 0) {
+            if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { toast.error("Email inválido"); return false; }
+            if (form.email !== form.confirmEmail) { toast.error("Emails não coincidem"); return false; }
+            if (!form.birthDate || form.birthDate.length < 10) { toast.error("Data de nascimento inválida"); return false; }
+            if (!form.cpf || form.cpf.replace(/\D/g, "").length < 11) { toast.error("CPF inválido"); return false; }
+            // Check 18+
+            const parts = form.birthDate.split("/");
+            if (parts.length === 3) {
+                const birth = new Date(+parts[2], +parts[1] - 1, +parts[0]);
+                const age = (Date.now() - birth.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+                if (age < 18) { toast.error("Você precisa ter 18+ anos"); return false; }
+            }
+            return true;
+        }
+        if (s === 1) {
+            if (!form.address) { toast.error("Informe seu endereço"); return false; }
+            if (!form.city) { toast.error("Informe sua cidade"); return false; }
+            if (!form.phone || form.phone.replace(/\D/g, "").length < 10) { toast.error("Celular inválido"); return false; }
+            return true;
+        }
+        if (s === 2) {
+            if (!form.username || form.username.length < 3) { toast.error("Nome de usuário muito curto"); return false; }
+            if (!form.password || form.password.length < 6) { toast.error("Senha deve ter 6+ caracteres"); return false; }
+            if (!form.acceptTerms) { toast.error("Aceite os termos para continuar"); return false; }
+            return true;
+        }
+        return true;
     };
 
-    if (step === -1) {
-      return (
-        <motion.div key="social" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="space-y-5">
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-extrabold text-gray-800">Cadastre-se agora!</h2>
-            <p className="text-gray-500 text-sm">Escolha como deseja se cadastrar</p>
-          </div>
+    const next = () => {
+        if (step >= 0 && !validateStep(step)) return;
+        setStep(prev => Math.min(prev + 1, 2) as any);
+    };
+    const prev = () => setStep(prev => Math.max(prev - 1, -1) as any);
 
-          {/* Social buttons */}
-          <div className="space-y-3">
-            <div className="flex justify-center">
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={() => toast.error("Erro no Google")}
-                width={340}
-                text="signup_with"
-              />
+    const handleSubmit = async () => {
+        if (!validateStep(2)) return;
+        setIsSubmitting(true);
+        try {
+            const result = await registerUser(form.email, form.password);
+            if (result.success) {
+                toast.success("Conta criada com sucesso! 🎉");
+                navigate("/");
+            } else {
+                toast.error(result.error || "Erro ao criar conta");
+            }
+        } catch {
+            toast.error("Erro inesperado");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleGoogleSuccess = async (cred: any) => {
+        try {
+            const r = await googleLogin(cred.credential!);
+            if (r.success) { toast.success("Login com Google realizado!"); navigate("/"); }
+        } catch { toast.error("Falha no login com Google"); }
+    };
+
+    // ─── Input component helper ───────────────────────────
+    const Field: React.FC<{
+        icon: React.ReactNode; label: string; id: string; placeholder: string;
+        value: string; onChange: (v: string) => void; type?: string; rightIcon?: React.ReactNode;
+    }> = ({ icon, label, id, placeholder, value, onChange, type = "text", rightIcon }) => (
+        <div className="space-y-1.5">
+            <Label htmlFor={id} className="text-gray-600 font-semibold text-xs uppercase tracking-wider">{label}</Label>
+            <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{icon}</span>
+                <input
+                    id={id} type={type} placeholder={placeholder} value={value}
+                    onChange={e => onChange(e.target.value)}
+                    className="w-full h-12 pl-11 pr-4 rounded-xl border-2 border-gray-200 bg-white text-gray-800 placeholder:text-gray-400 focus:border-[#F26A21] focus:ring-2 focus:ring-[#F26A21]/20 outline-none transition-all text-sm font-medium"
+                />
+                {rightIcon && <span className="absolute right-3 top-1/2 -translate-y-1/2">{rightIcon}</span>}
             </div>
+        </div>
+    );
 
-            <button className="w-full h-12 rounded-xl border-2 border-[#1877F2] bg-[#1877F2] text-white font-bold flex items-center justify-center gap-3 hover:bg-[#1565C0] transition-colors">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
-              Cadastrar com Facebook
-            </button>
-          </div>
+    // ─── Step Content ─────────────────────────────────────
+    const renderStep = () => {
+        const variants = {
+            enter: { opacity: 0, x: 40 },
+            center: { opacity: 1, x: 0 },
+            exit: { opacity: 0, x: -40 },
+        };
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-3 text-gray-400 font-semibold">ou cadastre com e-mail</span>
-            </div>
-          </div>
+        if (step === -1) {
+            return (
+                <motion.div key="social" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="space-y-5">
+                    <div className="text-center space-y-2">
+                        <h2 className="text-2xl font-extrabold text-gray-800">Cadastre-se agora!</h2>
+                        <p className="text-gray-500 text-sm">Escolha como deseja se cadastrar</p>
+                    </div>
 
-          <button
-            onClick={() => setStep(0)}
-            className="w-full h-12 rounded-xl border-2 border-gray-200 bg-white text-gray-700 font-bold flex items-center justify-center gap-3 hover:border-[#F26A21] hover:text-[#F26A21] transition-all"
-          >
-            <Mail className="w-5 h-5" />
-            Cadastrar com E-mail
-          </button>
+                    {/* Social buttons */}
+                    <div className="space-y-3">
+                        <div className="flex justify-center">
+                            <GoogleLogin
+                                onSuccess={handleGoogleSuccess}
+                                onError={() => toast.error("Erro no Google")}
+                                width={340}
+                                text="signup_with"
+                            />
+                        </div>
 
-          <p className="text-center text-xs text-gray-400">
-            Já tem conta?{" "}
-            <Link to="/auth" className="text-[#F26A21] font-bold hover:underline">Faça login</Link>
-          </p>
-        </motion.div>
-      );
-    }
+                        <button className="w-full h-12 rounded-xl border-2 border-[#1877F2] bg-[#1877F2] text-white font-bold flex items-center justify-center gap-3 hover:bg-[#1565C0] transition-colors">
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.954 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" /></svg>
+                            Cadastrar com Facebook
+                        </button>
+                    </div>
 
-    if (step === 0) {
-      return (
-        <motion.div key="step0" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="space-y-4">
-          <div className="space-y-1">
-            <h2 className="text-xl font-extrabold text-gray-800">Vamos começar! 🎯</h2>
-            <p className="text-gray-500 text-xs">Insira seus dados para garantir sua segurança.</p>
-          </div>
-          <Field icon={<Mail className="w-4 h-4" />} label="E-mail" id="email" placeholder="seu@email.com" value={form.email} onChange={v => set("email", v)} type="email" />
-          <Field icon={<Mail className="w-4 h-4" />} label="Confirmar E-mail" id="confirmEmail" placeholder="seu@email.com" value={form.confirmEmail} onChange={v => set("confirmEmail", v)} type="email" />
-          <Field icon={<Calendar className="w-4 h-4" />} label="Data de Nascimento" id="birthDate" placeholder="DD/MM/AAAA" value={form.birthDate} onChange={v => set("birthDate", maskDate(v))} />
-          <Field icon={<CreditCard className="w-4 h-4" />} label="CPF" id="cpf" placeholder="000.000.000-00" value={form.cpf} onChange={v => set("cpf", maskCPF(v))} />
-          <div className="space-y-1.5">
-            <Label className="text-gray-600 font-semibold text-xs uppercase tracking-wider">Gênero</Label>
-            <Select value={form.gender} onValueChange={v => set("gender", v)}>
-              <SelectTrigger className="h-12 rounded-xl border-2 border-gray-200 bg-white text-gray-800 focus:border-[#F26A21]">
-                <SelectValue placeholder="Selecione..." />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-gray-200">
-                <SelectItem value="masculino">Masculino</SelectItem>
-                <SelectItem value="feminino">Feminino</SelectItem>
-                <SelectItem value="outro">Outro</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </motion.div>
-      );
-    }
+                    <div className="relative">
+                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-white px-3 text-gray-400 font-semibold">ou cadastre com e-mail</span>
+                        </div>
+                    </div>
 
-    if (step === 1) {
-      return (
-        <motion.div key="step1" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="space-y-4">
-          <div className="space-y-1">
-            <h2 className="text-xl font-extrabold text-gray-800">Quase lá! 📍</h2>
-            <p className="text-gray-500 text-xs">Onde a sorte te encontra?</p>
-          </div>
-          <Field icon={<MapPin className="w-4 h-4" />} label="Endereço" id="address" placeholder="Rua da Sorte, 777" value={form.address} onChange={v => set("address", v)} />
-          <Field icon={<MapPin className="w-4 h-4" />} label="Cidade" id="city" placeholder="Sua cidade" value={form.city} onChange={v => set("city", v)} />
-          <Field icon={<MapPin className="w-4 h-4" />} label="CEP" id="cep" placeholder="00000-000" value={form.cep} onChange={v => set("cep", maskCEP(v))} />
-          <div className="space-y-1.5">
-            <Label className="text-gray-600 font-semibold text-xs uppercase tracking-wider">País</Label>
-            <Select value={form.country} onValueChange={v => set("country", v)}>
-              <SelectTrigger className="h-12 rounded-xl border-2 border-gray-200 bg-white text-gray-800 focus:border-[#F26A21]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-gray-200">
-                <SelectItem value="brasil">🇧🇷 Brasil</SelectItem>
-                <SelectItem value="portugal">🇵🇹 Portugal</SelectItem>
-                <SelectItem value="outro">Outro</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <Field icon={<Smartphone className="w-4 h-4" />} label="Celular" id="phone" placeholder="(00) 90000-0000" value={form.phone} onChange={v => set("phone", maskPhone(v))} type="tel" />
-        </motion.div>
-      );
-    }
+                    <button
+                        onClick={() => setStep(0)}
+                        className="w-full h-12 rounded-xl border-2 border-gray-200 bg-white text-gray-700 font-bold flex items-center justify-center gap-3 hover:border-[#F26A21] hover:text-[#F26A21] transition-all"
+                    >
+                        <Mail className="w-5 h-5" />
+                        Cadastrar com E-mail
+                    </button>
+
+                    <p className="text-center text-xs text-gray-400">
+                        Já tem conta?{" "}
+                        <Link to="/auth" className="text-[#F26A21] font-bold hover:underline">Faça login</Link>
+                    </p>
+                </motion.div>
+            );
+        }
+
+        if (step === 0) {
+            return (
+                <motion.div key="step0" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="space-y-4">
+                    <div className="space-y-1">
+                        <h2 className="text-xl font-extrabold text-gray-800">Vamos começar! 🎯</h2>
+                        <p className="text-gray-500 text-xs">Insira seus dados para garantir sua segurança.</p>
+                    </div>
+                    <Field icon={<Mail className="w-4 h-4" />} label="E-mail" id="email" placeholder="seu@email.com" value={form.email} onChange={v => set("email", v)} type="email" />
+                    <Field icon={<Mail className="w-4 h-4" />} label="Confirmar E-mail" id="confirmEmail" placeholder="seu@email.com" value={form.confirmEmail} onChange={v => set("confirmEmail", v)} type="email" />
+                    <Field icon={<Calendar className="w-4 h-4" />} label="Data de Nascimento" id="birthDate" placeholder="DD/MM/AAAA" value={form.birthDate} onChange={v => set("birthDate", maskDate(v))} />
+                    <Field icon={<CreditCard className="w-4 h-4" />} label="CPF" id="cpf" placeholder="000.000.000-00" value={form.cpf} onChange={v => set("cpf", maskCPF(v))} />
+                    <div className="space-y-1.5">
+                        <Label className="text-gray-600 font-semibold text-xs uppercase tracking-wider">Gênero</Label>
+                        <Select value={form.gender} onValueChange={v => set("gender", v)}>
+                            <SelectTrigger className="h-12 rounded-xl border-2 border-gray-200 bg-white text-gray-800 focus:border-[#F26A21]">
+                                <SelectValue placeholder="Selecione..." />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border-gray-200">
+                                <SelectItem value="masculino">Masculino</SelectItem>
+                                <SelectItem value="feminino">Feminino</SelectItem>
+                                <SelectItem value="outro">Outro</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </motion.div>
+            );
+        }
+
+        if (step === 1) {
+            return (
+                <motion.div key="step1" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="space-y-4">
+                    <div className="space-y-1">
+                        <h2 className="text-xl font-extrabold text-gray-800">Quase lá! 📍</h2>
+                        <p className="text-gray-500 text-xs">Onde a sorte te encontra?</p>
+                    </div>
+                    <Field icon={<MapPin className="w-4 h-4" />} label="Endereço" id="address" placeholder="Rua da Sorte, 777" value={form.address} onChange={v => set("address", v)} />
+                    <Field icon={<MapPin className="w-4 h-4" />} label="Cidade" id="city" placeholder="Sua cidade" value={form.city} onChange={v => set("city", v)} />
+                    <Field icon={<MapPin className="w-4 h-4" />} label="CEP" id="cep" placeholder="00000-000" value={form.cep} onChange={v => set("cep", maskCEP(v))} />
+                    <div className="space-y-1.5">
+                        <Label className="text-gray-600 font-semibold text-xs uppercase tracking-wider">País</Label>
+                        <Select value={form.country} onValueChange={v => set("country", v)}>
+                            <SelectTrigger className="h-12 rounded-xl border-2 border-gray-200 bg-white text-gray-800 focus:border-[#F26A21]">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border-gray-200">
+                                <SelectItem value="brasil">🇧🇷 Brasil</SelectItem>
+                                <SelectItem value="portugal">🇵🇹 Portugal</SelectItem>
+                                <SelectItem value="outro">Outro</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <Field icon={<Smartphone className="w-4 h-4" />} label="Celular" id="phone" placeholder="(00) 90000-0000" value={form.phone} onChange={v => set("phone", maskPhone(v))} type="tel" />
+                </motion.div>
+            );
+        }
+
+        return (
+            <motion.div key="step2" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="space-y-4">
+                <div className="space-y-1">
+                    <h2 className="text-xl font-extrabold text-gray-800">Defina seu acesso 🏆</h2>
+                    <p className="text-gray-500 text-xs">Crie seu login e comece a ganhar!</p>
+                </div>
+                <Field icon={<User className="w-4 h-4" />} label="Nome de Usuário" id="username" placeholder="ReiDoBicho2024" value={form.username} onChange={v => set("username", v)} />
+                <Field
+                    icon={<Lock className="w-4 h-4" />} label="Senha" id="password" placeholder="••••••••"
+                    value={form.password} onChange={v => set("password", v)}
+                    type={showPassword ? "text" : "password"}
+                    rightIcon={
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-gray-400 hover:text-gray-600">
+                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                    }
+                />
+                <Field icon={<Gift className="w-4 h-4" />} label="Código Promocional (opcional)" id="promo" placeholder="BONUS2024" value={form.promoCode} onChange={v => set("promoCode", v)} />
+
+                <div className="space-y-3 pt-2">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                        <Checkbox
+                            checked={form.acceptTerms}
+                            onCheckedChange={v => set("acceptTerms", !!v)}
+                            className="mt-0.5 border-gray-300 data-[state=checked]:bg-[#F26A21] data-[state=checked]:border-[#F26A21]"
+                        />
+                        <span className="text-xs text-gray-600 leading-relaxed">
+                            Li e aceito os <a href="#" className="text-[#F26A21] font-semibold hover:underline">Termos e Condições</a> e a{" "}
+                            <a href="#" className="text-[#F26A21] font-semibold hover:underline">Política de Privacidade</a>.
+                        </span>
+                    </label>
+                    <label className="flex items-start gap-3 cursor-pointer">
+                        <Checkbox
+                            checked={form.acceptBonus}
+                            onCheckedChange={v => set("acceptBonus", !!v)}
+                            className="mt-0.5 border-gray-300 data-[state=checked]:bg-[#2D8C58] data-[state=checked]:border-[#2D8C58]"
+                        />
+                        <span className="text-xs text-gray-600 leading-relaxed">
+                            Quero receber bônus, promoções e novidades por e-mail. 🎁
+                        </span>
+                    </label>
+                </div>
+            </motion.div>
+        );
+    };
 
     return (
-      <motion.div key="step2" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="space-y-4">
-        <div className="space-y-1">
-          <h2 className="text-xl font-extrabold text-gray-800">Defina seu acesso 🏆</h2>
-          <p className="text-gray-500 text-xs">Crie seu login e comece a ganhar!</p>
-        </div>
-        <Field icon={<User className="w-4 h-4" />} label="Nome de Usuário" id="username" placeholder="ReiDoBicho2024" value={form.username} onChange={v => set("username", v)} />
-        <Field
-          icon={<Lock className="w-4 h-4" />} label="Senha" id="password" placeholder="••••••••"
-          value={form.password} onChange={v => set("password", v)}
-          type={showPassword ? "text" : "password"}
-          rightIcon={
-            <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-gray-400 hover:text-gray-600">
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          }
-        />
-        <Field icon={<Gift className="w-4 h-4" />} label="Código Promocional (opcional)" id="promo" placeholder="BONUS2024" value={form.promoCode} onChange={v => set("promoCode", v)} />
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+            <div className="w-full max-w-md">
+                {/* Stepper (only for wizard steps) */}
+                {step >= 0 && <Stepper current={step} />}
 
-        <div className="space-y-3 pt-2">
-          <label className="flex items-start gap-3 cursor-pointer">
-            <Checkbox
-              checked={form.acceptTerms}
-              onCheckedChange={v => set("acceptTerms", !!v)}
-              className="mt-0.5 border-gray-300 data-[state=checked]:bg-[#F26A21] data-[state=checked]:border-[#F26A21]"
-            />
-            <span className="text-xs text-gray-600 leading-relaxed">
-              Li e aceito os <a href="#" className="text-[#F26A21] font-semibold hover:underline">Termos e Condições</a> e a{" "}
-              <a href="#" className="text-[#F26A21] font-semibold hover:underline">Política de Privacidade</a>.
-            </span>
-          </label>
-          <label className="flex items-start gap-3 cursor-pointer">
-            <Checkbox
-              checked={form.acceptBonus}
-              onCheckedChange={v => set("acceptBonus", !!v)}
-              className="mt-0.5 border-gray-300 data-[state=checked]:bg-[#2D8C58] data-[state=checked]:border-[#2D8C58]"
-            />
-            <span className="text-xs text-gray-600 leading-relaxed">
-              Quero receber bônus, promoções e novidades por e-mail. 🎁
-            </span>
-          </label>
+                {/* Form area */}
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 sm:p-8">
+                    <AnimatePresence mode="wait">
+                        {renderStep()}
+                    </AnimatePresence>
+
+                    {/* Navigation buttons */}
+                    <div className="mt-6 space-y-3">
+                        {step === -1 ? null : step < 2 ? (
+                            <>
+                                <button
+                                    onClick={next}
+                                    className="w-full h-13 rounded-xl bg-[#F26A21] text-white font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#E05A11] active:scale-[0.98] transition-all shadow-[0_4px_20px_rgba(242,106,33,0.3)] py-3.5"
+                                >
+                                    Próxima <ChevronRight className="w-5 h-5" />
+                                </button>
+                                {step > 0 && (
+                                    <button onClick={prev} className="w-full text-center text-sm text-gray-400 hover:text-gray-600 font-medium py-2">
+                                        <ChevronLeft className="w-4 h-4 inline mr-1" /> Voltar
+                                    </button>
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={isSubmitting}
+                                    className="w-full h-13 rounded-xl bg-[#2D8C58] text-white font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#257A4C] active:scale-[0.98] transition-all shadow-[0_4px_20px_rgba(45,140,88,0.3)] disabled:opacity-50 py-3.5"
+                                >
+                                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>CRIAR CONTA E APOSTAR 🎲</>}
+                                </button>
+                                <button onClick={prev} className="w-full text-center text-sm text-gray-400 hover:text-gray-600 font-medium py-2">
+                                    <ChevronLeft className="w-4 h-4 inline mr-1" /> Voltar
+                                </button>
+                            </>
+                        )}
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <p className="text-center text-[10px] text-gray-400 mt-6 leading-relaxed">
+                    Ao se cadastrar, você confirma que tem 18+ anos.<br />
+                    Jogue com responsabilidade. 🔞
+                </p>
+            </div>
         </div>
-      </motion.div>
     );
-  };
-
-  return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
-      {/* ─── Left Panel - Mascot ─────────────────────────── */}
-      <div className="hidden lg:flex lg:w-[40%] relative overflow-hidden flex-col items-center justify-center"
-        style={{ background: "linear-gradient(180deg, #121A21 0%, #0D1318 50%, #1A2530 100%)" }}
-      >
-        {/* Decorative circles */}
-        <div className="absolute top-[-100px] left-[-100px] w-[400px] h-[400px] rounded-full bg-[#F26A21]/5 blur-3xl" />
-        <div className="absolute bottom-[-80px] right-[-80px] w-[300px] h-[300px] rounded-full bg-[#2D8C58]/10 blur-3xl" />
-
-        {/* Floating cards decoration */}
-        <div className="absolute top-12 right-12 text-5xl animate-bounce" style={{ animationDuration: "3s" }}>🃏</div>
-        <div className="absolute bottom-20 left-10 text-4xl animate-bounce" style={{ animationDuration: "4s", animationDelay: "1s" }}>🎰</div>
-        <div className="absolute top-1/4 left-8 text-3xl animate-bounce" style={{ animationDuration: "3.5s", animationDelay: "0.5s" }}>🍀</div>
-
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.8, type: "spring" }}
-          className="relative z-10 flex flex-col items-center px-8"
-        >
-          <img
-            src={mascotZe}
-            alt="Zé - Mascote MundoPix"
-            className="w-[320px] h-auto drop-shadow-[0_20px_40px_rgba(242,106,33,0.3)] mb-6"
-          />
-          <h1 className="text-3xl xl:text-4xl font-black text-center leading-tight mb-3"
-            style={{ color: "#F26A21", textShadow: "0 2px 20px rgba(242,106,33,0.3)" }}
-          >
-            A SORTE ESTÁ NO<br />SEU PALPITE!
-          </h1>
-          <p className="text-gray-400 text-center text-sm max-w-xs leading-relaxed">
-            O bicho vai pegar! 🦜 Cadastre-se e ganhe<br />
-            <span className="text-[#2D8C58] font-bold">bônus de boas-vindas</span> exclusivo!
-          </p>
-        </motion.div>
-
-        {/* Bottom trust badges */}
-        <div className="absolute bottom-6 flex items-center gap-4 text-[10px] text-gray-500">
-          <span className="flex items-center gap-1"><Check className="w-3 h-3 text-[#2D8C58]" /> Seguro</span>
-          <span className="flex items-center gap-1"><Check className="w-3 h-3 text-[#2D8C58]" /> Rápido</span>
-          <span className="flex items-center gap-1"><Check className="w-3 h-3 text-[#2D8C58]" /> Confiável</span>
-        </div>
-      </div>
-
-      {/* ─── Right Panel - Form ──────────────────────────── */}
-      <div className="flex-1 bg-gray-50 flex flex-col min-h-screen lg:min-h-0">
-        {/* Mobile header only */}
-        <div className="lg:hidden p-4 text-center" style={{ background: "#121A21" }}>
-          <img src={mascotZe} alt="Zé" className="w-20 h-auto mx-auto mb-2" />
-          <h1 className="text-xl font-black text-[#F26A21]">A SORTE ESTÁ NO SEU PALPITE!</h1>
-        </div>
-
-        <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
-          <div className="w-full max-w-md">
-            {/* Zé micro-copy */}
-            <div className="flex items-center gap-2 mb-6 bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-100">
-              <img src={mascotZe} alt="" className="w-8 h-8 rounded-full object-cover" />
-              <p className="text-xs text-gray-500">
-                <span className="font-bold text-gray-700">O Zé já deu a dica:</span> hoje é dia de ganhar! 🎉
-              </p>
-            </div>
-
-            {/* Stepper (only for wizard steps) */}
-            {step >= 0 && <Stepper current={step} />}
-
-            {/* Form area */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 sm:p-8">
-              <AnimatePresence mode="wait">
-                {renderStep()}
-              </AnimatePresence>
-
-              {/* Navigation buttons */}
-              <div className="mt-6 space-y-3">
-                {step === -1 ? null : step < 2 ? (
-                  <>
-                    <button
-                      onClick={next}
-                      className="w-full h-13 rounded-xl bg-[#F26A21] text-white font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#E05A11] active:scale-[0.98] transition-all shadow-[0_4px_20px_rgba(242,106,33,0.3)] py-3.5"
-                    >
-                      Próxima <ChevronRight className="w-5 h-5" />
-                    </button>
-                    {step > 0 && (
-                      <button onClick={prev} className="w-full text-center text-sm text-gray-400 hover:text-gray-600 font-medium py-2">
-                        <ChevronLeft className="w-4 h-4 inline mr-1" /> Voltar
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={handleSubmit}
-                      disabled={isSubmitting}
-                      className="w-full h-13 rounded-xl bg-[#2D8C58] text-white font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-[#257A4C] active:scale-[0.98] transition-all shadow-[0_4px_20px_rgba(45,140,88,0.3)] disabled:opacity-50 py-3.5"
-                    >
-                      {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>CRIAR CONTA E APOSTAR 🎲</>}
-                    </button>
-                    <button onClick={prev} className="w-full text-center text-sm text-gray-400 hover:text-gray-600 font-medium py-2">
-                      <ChevronLeft className="w-4 h-4 inline mr-1" /> Voltar
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Footer */}
-            <p className="text-center text-[10px] text-gray-400 mt-6 leading-relaxed">
-              Ao se cadastrar, você confirma que tem 18+ anos.<br />
-              Jogue com responsabilidade. 🔞
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 };
 
 export default Register;
