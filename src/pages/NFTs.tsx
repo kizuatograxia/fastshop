@@ -84,17 +84,17 @@ const fallbackFeaturedNFTs: NFTItem[] = [
 
 const fallbackNFTs: NFTItem[] = [
   { id: "1", name: "Gatinho Fofo", emoji: "🐱", price: 25, rarity: "comum", description: "Miau! Super fofo e acessível.", gradient: "from-primary/20 to-accent/20", stock: 150 },
-  { id: "2", name: "Cachorrinho", emoji: "🐶", price: 25, rarity: "comum", description: "Au au! Seu melhor amigo digital.", gradient: "from-amber-500/20 to-yellow-500/20", stock: 200 },
-  { id: "3", name: "Leão Dourado", emoji: "🦁", price: 75, rarity: "raro", description: "Rei da selva digital!", gradient: "from-yellow-500/20 to-orange-500/20", stock: 50 },
-  { id: "4", name: "Panda Zen", emoji: "🐼", price: 55, rarity: "raro", description: "Paz e bambu para todos.", gradient: "from-emerald-500/20 to-teal-500/20", stock: 75 },
-  { id: "5", name: "Raposa Astuta", emoji: "🦊", price: 60, rarity: "raro", description: "Esperta e misteriosa.", gradient: "from-orange-500/20 to-red-500/20", stock: 60 },
+  { id: "2", name: "Cachorrinho", emoji: "🐶", price: 28, rarity: "comum", description: "Au au! Seu melhor amigo digital.", gradient: "from-amber-500/20 to-yellow-500/20", stock: 200 },
+  { id: "11", name: "Coelho da Sorte", emoji: "🐰", price: 30, rarity: "comum", description: "Traz boa sorte!", gradient: "from-pink-500/20 to-rose-500/20", stock: 180 },
   { id: "6", name: "Coruja Sábia", emoji: "🦉", price: 45, rarity: "raro", description: "Sabedoria ancestral.", gradient: "from-indigo-500/20 to-purple-500/20", stock: 80 },
-  { id: "7", name: "Tigre de Fogo", emoji: "🐯", price: 120, rarity: "epico", description: "Força e poder em chamas!", gradient: "from-red-500/20 to-orange-500/20", stock: 25 },
-  { id: "8", name: "Lobo Lunar", emoji: "🌕", price: 110, rarity: "epico", description: "Uiva para a lua!", gradient: "from-slate-500/20 to-blue-500/20", stock: 30 },
+  { id: "4", name: "Panda Zen", emoji: "🐼", price: 55, rarity: "raro", description: "Paz e bambu para todos.", gradient: "from-emerald-500/20 to-teal-500/20", stock: 75 },
+  { id: "12", name: "Urso Polar", emoji: "🐻‍❄️", price: 58, rarity: "raro", description: "Fresco e poderoso.", gradient: "from-cyan-500/20 to-blue-500/20", stock: 65 },
+  { id: "5", name: "Raposa Astuta", emoji: "🦊", price: 60, rarity: "raro", description: "Esperta e misteriosa.", gradient: "from-orange-500/20 to-red-500/20", stock: 60 },
+  { id: "3", name: "Leão Dourado", emoji: "🦁", price: 75, rarity: "raro", description: "Rei da selva digital!", gradient: "from-yellow-500/20 to-orange-500/20", stock: 50 },
   { id: "9", name: "Borboleta Cósmica", emoji: "🦋", price: 80, rarity: "epico", description: "Transformação eterna.", gradient: "from-violet-500/20 to-fuchsia-500/20", stock: 40 },
   { id: "10", name: "Águia Imperial", emoji: "🦅", price: 90, rarity: "epico", description: "Voe alto!", gradient: "from-amber-500/20 to-yellow-500/20", stock: 35 },
-  { id: "11", name: "Coelho da Sorte", emoji: "🐰", price: 30, rarity: "comum", description: "Traz boa sorte!", gradient: "from-pink-500/20 to-rose-500/20", stock: 180 },
-  { id: "12", name: "Urso Polar", emoji: "🐻‍❄️", price: 55, rarity: "raro", description: "Fresco e poderoso.", gradient: "from-cyan-500/20 to-blue-500/20", stock: 65 },
+  { id: "8", name: "Lobo Lunar", emoji: "🌕", price: 110, rarity: "epico", description: "Uiva para a lua!", gradient: "from-slate-500/20 to-blue-500/20", stock: 30 },
+  { id: "7", name: "Tigre de Fogo", emoji: "🐯", price: 120, rarity: "epico", description: "Força e poder em chamas!", gradient: "from-red-500/20 to-orange-500/20", stock: 25 },
 ];
 
 import { api } from "@/lib/api";
