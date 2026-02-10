@@ -81,6 +81,25 @@ const Stepper: React.FC<{ current: number }> = ({ current }) => (
     </div>
 );
 
+// ─── Input component helper ───────────────────────────
+const Field: React.FC<{
+    icon: React.ReactNode; label: string; id: string; placeholder: string;
+    value: string; onChange: (v: string) => void; type?: string; rightIcon?: React.ReactNode;
+}> = ({ icon, label, id, placeholder, value, onChange, type = "text", rightIcon }) => (
+    <div className="space-y-1.5">
+        <Label htmlFor={id} className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">{label}</Label>
+        <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{icon}</span>
+            <input
+                id={id} type={type} placeholder={placeholder} value={value}
+                onChange={e => onChange(e.target.value)}
+                className="w-full h-12 pl-11 pr-4 rounded-xl border border-input bg-background/50 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm font-medium"
+            />
+            {rightIcon && <span className="absolute right-3 top-1/2 -translate-y-1/2">{rightIcon}</span>}
+        </div>
+    </div>
+);
+
 // ─── Page ───────────────────────────────────────────────
 const Register: React.FC = () => {
     const navigate = useNavigate();
@@ -156,24 +175,7 @@ const Register: React.FC = () => {
         } catch { toast.error("Falha no login com Google"); }
     };
 
-    // ─── Input component helper ───────────────────────────
-    const Field: React.FC<{
-        icon: React.ReactNode; label: string; id: string; placeholder: string;
-        value: string; onChange: (v: string) => void; type?: string; rightIcon?: React.ReactNode;
-    }> = ({ icon, label, id, placeholder, value, onChange, type = "text", rightIcon }) => (
-        <div className="space-y-1.5">
-            <Label htmlFor={id} className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">{label}</Label>
-            <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{icon}</span>
-                <input
-                    id={id} type={type} placeholder={placeholder} value={value}
-                    onChange={e => onChange(e.target.value)}
-                    className="w-full h-12 pl-11 pr-4 rounded-xl border border-input bg-background/50 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm font-medium"
-                />
-                {rightIcon && <span className="absolute right-3 top-1/2 -translate-y-1/2">{rightIcon}</span>}
-            </div>
-        </div>
-    );
+
 
     // ─── Step Content ─────────────────────────────────────
     const renderStep = () => {
