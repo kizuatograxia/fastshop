@@ -663,7 +663,20 @@ app.get('/api/winners', async (req, res) => {
             const result = await pool.query(
                 `SELECT * FROM testimonials WHERE status = 'pending' ORDER BY created_at DESC`
             );
-            return res.json(result.rows);
+            const mapped = result.rows.map(t => ({
+                id: String(t.id),
+                userId: String(t.user_id || ''),
+                userName: t.user_name || 'Anônimo',
+                userAvatar: t.user_avatar || '',
+                raffleName: t.raffle_name || '',
+                prizeName: t.prize_name || '',
+                rating: t.rating || 5,
+                comment: t.comment || '',
+                photoUrl: t.photo_url || '',
+                createdAt: t.created_at,
+                status: t.status
+            }));
+            return res.json(mapped);
         }
 
         // Default: Return approved testimonials

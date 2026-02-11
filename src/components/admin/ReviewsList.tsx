@@ -99,7 +99,7 @@ export const ReviewsList = ({
 
                             <TableCell>
                                 <div className="flex items-center gap-0.5">
-                                    <span className="font-bold mr-1.5">{review.rating.toFixed(1)}</span>
+                                    <span className="font-bold mr-1.5">{(review.rating || 0).toFixed(1)}</span>
                                     {[...Array(5)].map((_, i) => (
                                         <Star
                                             key={i}
