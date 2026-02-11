@@ -42,6 +42,16 @@ export const api = {
         return res.json();
     },
 
+    updateProfile: async (userId: string | number, profileData: any) => {
+        const res = await fetch(`${API_URL}/users/${userId}/profile`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(profileData),
+        });
+        if (!res.ok) throw new Error((await res.json()).message);
+        return res.json();
+    },
+
     getWallet: async (userId: number | string) => {
         const res = await fetch(`${API_URL}/wallet?userId=${userId}`);
         if (!res.ok) throw new Error("Failed to fetch wallet");

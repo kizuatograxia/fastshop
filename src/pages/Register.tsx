@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { GoogleLogin } from "@react-oauth/google";
+import { api } from "@/lib/api";
 import mascotZe from "@/assets/mascot-ze.png";
 
 // ─── Types ──────────────────────────────────────────────
@@ -164,13 +165,52 @@ const Register: React.FC = () => {
         setIsSubmitting(true);
         try {
             if (isGoogleAuth) {
-                // If Google Auth, user is already created/logged in via context
-                // We just finish the wizard flow
+                // Google Auth: user already created, just save profile data
+                if (user?.id) {
+                    await api.updateProfile(user.id, {
+                        cpf: form.cpf,
+                        birthDate: form.birthDate,
+                        gender: form.gender,
+                        address: form.address,
+                        city: form.city,
+                        cep: form.cep,
+                        country: form.country,
+                        phone: form.phone,
+                        username: form.username,
+                    });
+                    // Update localStorage with profile_complete
+                    const sessionData = JSON.parse(localStorage.getItem("luckynft_session") || "{}");
+                    sessionData.profile_complete = true;
+                    localStorage.setItem("luckynft_session", JSON.stringify(sessionData));
+                    localStorage.setItem("user", JSON.stringify(sessionData));
+                }
                 toast.success("Perfil completo e conta criada! 🎉");
                 navigate("/");
             } else {
                 const result = await registerUser(form.email, form.password);
                 if (result.success) {
+                    // After registration, save profile data
+                    const sessionData = JSON.parse(localStorage.getItem("luckynft_session") || "{}");
+                    if (sessionData.id) {
+                        try {
+                            await api.updateProfile(sessionData.id, {
+                                cpf: form.cpf,
+                                birthDate: form.birthDate,
+                                gender: form.gender,
+                                address: form.address,
+                                city: form.city,
+                                cep: form.cep,
+                                country: form.country,
+                                phone: form.phone,
+                                username: form.username,
+                            });
+                            sessionData.profile_complete = true;
+                            localStorage.setItem("luckynft_session", JSON.stringify(sessionData));
+                            localStorage.setItem("user", JSON.stringify(sessionData));
+                        } catch (profileErr) {
+                            console.warn("Profile save failed, continuing:", profileErr);
+                        }
+                    }
                     toast.success("Conta criada com sucesso! 🎉");
                     navigate("/");
                 } else {
@@ -211,9 +251,15 @@ const Register: React.FC = () => {
                 if (view === 'login') {
                     navigate("/");
                 } else {
-                    // Register flow logic
-                    setIsGoogleAuth(true);
-                    setStep(0);
+                    // Register flow: check if profile is already complete
+                    const userData = JSON.parse(localStorage.getItem("luckynft_session") || "{}");
+                    if (userData.profile_complete) {
+                        toast.success("Perfil já completo! Redirecionando...");
+                        navigate("/");
+                    } else {
+                        setIsGoogleAuth(true);
+                        setStep(0);
+                    }
                 }
             }
         } catch { toast.error("Falha no login com Google"); }

@@ -156,6 +156,19 @@ const initDB = async () => {
                 // Constraint might already exist or conflict, safe to ignore for runtime stability
             }
 
+            // User Profile Columns Migration
+            await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS cpf VARCHAR(20);`);
+            await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_date VARCHAR(20);`);
+            await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS gender VARCHAR(20);`);
+            await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT;`);
+            await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS city VARCHAR(100);`);
+            await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS cep VARCHAR(20);`);
+            await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS country VARCHAR(50) DEFAULT 'brasil';`);
+            await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(30);`);
+            await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(100);`);
+            await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_complete BOOLEAN DEFAULT FALSE;`);
+            console.log('Migration: Added user profile columns');
+
             // Testimonials Table (for user reviews/depoimentos)
             await pool.query(`
                 CREATE TABLE IF NOT EXISTS testimonials (
@@ -262,7 +275,7 @@ app.post('/api/login', async (req, res) => {
         }
 
         console.log('User logged in:', email);
-        res.json({ message: 'Login realizado', user: { id: user.id, email: user.email, name: user.name, picture: user.picture } });
+        res.json({ message: 'Login realizado', user: { id: user.id, email: user.email, name: user.name, picture: user.picture, profile_complete: user.profile_complete || false } });
     } catch (error) {
         console.error('Error logging in:', error);
         res.status(500).json({ message: 'Erro ao realizar login' });
@@ -310,12 +323,48 @@ app.post('/api/auth/google', async (req, res) => {
                 id: user.id,
                 email: user.email,
                 name: user.name,
-                picture: user.picture
+                picture: user.picture,
+                profile_complete: user.profile_complete || false
             }
         });
     } catch (error) {
         console.error('Backend: Google Auth Error:', error);
         res.status(401).json({ message: 'Falha na autenticação com Google', error: error.message });
+    }
+});
+
+// Update User Profile
+app.put('/api/users/:id/profile', async (req, res) => {
+    const { id } = req.params;
+    const { cpf, birthDate, gender, address, city, cep, country, phone, username } = req.body;
+
+    try {
+        const result = await pool.query(
+            `UPDATE users SET 
+                cpf = COALESCE($1, cpf),
+                birth_date = COALESCE($2, birth_date),
+                gender = COALESCE($3, gender),
+                address = COALESCE($4, address),
+                city = COALESCE($5, city),
+                cep = COALESCE($6, cep),
+                country = COALESCE($7, country),
+                phone = COALESCE($8, phone),
+                username = COALESCE($9, username),
+                profile_complete = TRUE
+             WHERE id = $10 RETURNING id, email, name, picture, cpf, birth_date, gender, address, city, cep, country, phone, username, profile_complete`,
+            [cpf || null, birthDate || null, gender || null, address || null, city || null, cep || null, country || null, phone || null, username || null, id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Usu\u00e1rio n\u00e3o encontrado' });
+        }
+
+        const user = result.rows[0];
+        console.log('User profile updated:', id);
+        res.json({ success: true, user });
+    } catch (error) {
+        console.error('Error updating user profile:', error);
+        res.status(500).json({ message: 'Erro ao atualizar perfil' });
     }
 });
 

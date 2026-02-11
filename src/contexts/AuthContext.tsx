@@ -8,6 +8,7 @@ interface User {
     name?: string;
     picture?: string;
     walletAddress?: string;
+    profile_complete?: boolean;
 }
 
 interface AuthContextType {
@@ -54,7 +55,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     email: response.user.email,
                     name: response.user.name,
                     picture: response.user.picture,
-                    walletAddress: response.user.walletAddress
+                    walletAddress: response.user.walletAddress,
+                    profile_complete: response.user.profile_complete || false
                 };
                 setUser(sessionUser);
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser));
@@ -83,7 +85,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     email: response.user.email,
                     name: response.user.name,
                     picture: response.user.picture,
-                    walletAddress: response.user.walletAddress
+                    walletAddress: response.user.walletAddress,
+                    profile_complete: response.user.profile_complete || false
                 };
                 setUser(sessionUser);
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser));
