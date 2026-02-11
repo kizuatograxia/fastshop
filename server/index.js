@@ -56,7 +56,6 @@ app.use((req, res, next) => {
     next();
 });
 
-app.view_file
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
@@ -157,7 +156,24 @@ const initDB = async () => {
                 // Constraint might already exist or conflict, safe to ignore for runtime stability
             }
 
-            console.log('Migration: Checked/Added raffle columns including winner_id');
+            // Testimonials Table (for user reviews/depoimentos)
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS testimonials (
+                    id SERIAL PRIMARY KEY,
+                    user_id INTEGER REFERENCES users(id),
+                    user_name VARCHAR(255),
+                    user_avatar TEXT,
+                    raffle_name VARCHAR(255),
+                    prize_name VARCHAR(255),
+                    rating INTEGER DEFAULT 5,
+                    comment TEXT,
+                    photo_url TEXT,
+                    status VARCHAR(50) DEFAULT 'pending',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            `);
+
+            console.log('Migration: Checked/Added raffle columns including winner_id and testimonials table');
         } catch (migError) {
             console.error('Migration CRITICAL warning:', migError);
         }
@@ -589,34 +605,143 @@ app.delete('/api/raffles/:id', async (req, res) => {
     }
 });
 
-// Public Winners Feed
+// Public Winners Feed (returns approved testimonials + raffle winners)
 app.get('/api/winners', async (req, res) => {
+    const status = req.query.status; // Optional filter: 'pending', 'approved'
     try {
-        const query = `
-            SELECT r.id, r.title, r.image_url, r.prize_pool, r.draw_date, r.prize_value,
-                   u.name as winner_name, 
-                   u.picture as winner_picture,
-                   u.address as winner_location -- optional if available
-            FROM raffles r
-            JOIN users u ON r.winner_id = u.id
-            WHERE r.status IN ('encerrado', 'ended')
-            ORDER BY r.draw_date DESC
-            LIMIT 10
-        `;
-        const result = await pool.query(query);
-        const winners = result.rows.map(row => ({
-            id: row.id,
-            name: row.winner_name || 'Anônimo',
-            picture: row.winner_picture,
-            prize: row.prize_pool || row.title,
-            image: row.image_url,
-            date: row.draw_date,
-            ticketNumber: Math.floor(Math.random() * 10000).toString().padStart(4, '0') // Mock ticket for now as we don't store winning ticket explicitly yet
+        // If admin requesting pending reviews
+        if (status === 'pending') {
+            const result = await pool.query(
+                `SELECT * FROM testimonials WHERE status = 'pending' ORDER BY created_at DESC`
+            );
+            return res.json(result.rows);
+        }
+
+        // Default: Return approved testimonials
+        const testimonialResult = await pool.query(
+            `SELECT * FROM testimonials WHERE status = 'approved' ORDER BY created_at DESC LIMIT 20`
+        );
+
+        // Also get raffle draw winners (for combined feed)
+        let raffleWinners = [];
+        try {
+            const raffleResult = await pool.query(`
+                SELECT r.id, r.title, r.image_url, r.prize_pool, r.draw_date, r.prize_value,
+                       u.name as winner_name, 
+                       u.picture as winner_picture
+                FROM raffles r
+                JOIN users u ON r.winner_id = u.id
+                WHERE r.status IN ('encerrado', 'ended')
+                ORDER BY r.draw_date DESC
+                LIMIT 10
+            `);
+            raffleWinners = raffleResult.rows.map(row => ({
+                id: 'raffle-' + row.id,
+                userName: row.winner_name || 'Anônimo',
+                userAvatar: row.winner_picture,
+                prizeName: row.prize_pool || row.title,
+                photoUrl: row.image_url,
+                createdAt: row.draw_date,
+                rating: 5,
+                comment: `Ganhei ${row.prize_pool || row.title}! Muito feliz!`,
+                status: 'approved'
+            }));
+        } catch (e) {
+            console.warn('Could not fetch raffle winners for combined feed:', e.message);
+        }
+
+        // Map testimonials to consistent format
+        const testimonials = testimonialResult.rows.map(t => ({
+            id: t.id,
+            userName: t.user_name,
+            userAvatar: t.user_avatar,
+            raffleName: t.raffle_name,
+            prizeName: t.prize_name,
+            rating: t.rating,
+            comment: t.comment,
+            photoUrl: t.photo_url,
+            createdAt: t.created_at,
+            status: t.status
         }));
-        res.json(winners);
+
+        // Combine and return
+        res.json([...testimonials, ...raffleWinners]);
     } catch (error) {
         console.error('Error fetching winners:', error);
         res.status(500).json({ message: 'Erro ao buscar ganhadores' });
+    }
+});
+
+// Submit Testimonial (Public)
+app.post('/api/winners', async (req, res) => {
+    const { userId, userName, userAvatar, raffleName, prizeName, rating, comment, photoUrl } = req.body;
+
+    if (!comment || !rating) {
+        return res.status(400).json({ message: 'Comentário e avaliação são obrigatórios' });
+    }
+
+    try {
+        const result = await pool.query(
+            `INSERT INTO testimonials (user_id, user_name, user_avatar, raffle_name, prize_name, rating, comment, photo_url, status)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending')
+             RETURNING *`,
+            [userId || null, userName || 'Anônimo', userAvatar || '', raffleName || '', prizeName || '', rating || 5, comment, photoUrl || '']
+        );
+        console.log('New testimonial submitted:', result.rows[0].id);
+        res.json({ success: true, testimonial: result.rows[0] });
+    } catch (error) {
+        console.error('Error submitting testimonial:', error);
+        res.status(500).json({ message: 'Erro ao enviar depoimento' });
+    }
+});
+
+// Approve Testimonial (Admin)
+app.put('/api/winners/:id/approve', async (req, res) => {
+    const { id } = req.params;
+    const { password } = req.body;
+
+    if (password !== ADMIN_PASSWORD) {
+        return res.status(401).json({ message: 'Não autorizado' });
+    }
+
+    try {
+        const result = await pool.query(
+            `UPDATE testimonials SET status = 'approved' WHERE id = $1 RETURNING *`,
+            [id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Depoimento não encontrado' });
+        }
+        console.log('Testimonial approved:', id);
+        res.json({ success: true, testimonial: result.rows[0] });
+    } catch (error) {
+        console.error('Error approving testimonial:', error);
+        res.status(500).json({ message: 'Erro ao aprovar depoimento' });
+    }
+});
+
+// Reject Testimonial (Admin)
+app.put('/api/winners/:id/reject', async (req, res) => {
+    const { id } = req.params;
+    const { password } = req.body;
+
+    if (password !== ADMIN_PASSWORD) {
+        return res.status(401).json({ message: 'Não autorizado' });
+    }
+
+    try {
+        const result = await pool.query(
+            `DELETE FROM testimonials WHERE id = $1 RETURNING *`,
+            [id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Depoimento não encontrado' });
+        }
+        console.log('Testimonial rejected and deleted:', id);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error rejecting testimonial:', error);
+        res.status(500).json({ message: 'Erro ao rejeitar depoimento' });
     }
 });
 
