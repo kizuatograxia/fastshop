@@ -69,18 +69,22 @@ export const SubmitTestimonialModal = ({
     // await new Promise((resolve) => setTimeout(resolve, 1500));
 
     try {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const user = JSON.parse(localStorage.getItem("user") || "{}"); // Keep local storage for existing session data, or use hook
+      // Actually better to use hook for freshness but the user might not be in context?
+      // Since this modal is triggered from WinnersFeed which is public, auth wrapper might be high up.
+      // Let's stick to localStorage for now to be safe, but improve photo logic.
+
       const raffle = wonRaffles.find(r => String(r.raffle.id) === selectedPrize)?.raffle;
 
       await api.submitTestimonial({
         userId: user.id || "0",
         userName: user.name || "Ganhador da MundoPix",
-        userAvatar: user.picture || user.avatar || "", // Fix: use user.picture as primary source
+        userAvatar: user.picture || user.avatar || "",
         raffleName: raffle?.titulo || "Sorteio",
         prizeName: raffle?.premio || "Prêmio",
         rating,
         comment: testimonial,
-        photoUrl: imagePreview || user.picture || "" // Use uploaded photo OR user avatar
+        photoUrl: imagePreview || user.picture || ""
       });
 
       toast.success("Depoimento enviado com sucesso!", {

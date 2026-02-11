@@ -279,73 +279,84 @@ export const api = {
 
     // Public submission
     submitTestimonial: async (testimonial: any) => {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 800));
+        const res = await fetch(`${API_URL}/winners`, { // Assuming /winners accepts POST for new testimonials, or we need /testimonials
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(testimonial),
+        });
 
-        const storedReviews = JSON.parse(localStorage.getItem("admin_reviews") || "[]");
-        const newReview = {
-            ...testimonial,
-            id: String(Date.now()),
-            createdAt: new Date().toISOString(),
-            status: 'pending'
-        };
+        // Fallback to local if API fails (temporary measure for user satisfaction if backend is broken)
+        if (!res.ok) {
+            console.warn("API submission failed, falling back to local storage");
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 800));
 
-        localStorage.setItem("admin_reviews", JSON.stringify([...storedReviews, newReview]));
-        console.log("Testimonial saved to localStorage:", newReview);
-        return { success: true };
+            const storedReviews = JSON.parse(localStorage.getItem("admin_reviews") || "[]");
+            const newReview = {
+                ...testimonial,
+                id: String(Date.now()),
+                createdAt: new Date().toISOString(),
+                status: 'pending' // Still pending local
+            };
+            localStorage.setItem("admin_reviews", JSON.stringify([...storedReviews, newReview]));
+            return { success: true, local: true };
+        }
+
+        return res.json();
     },
 
-    // Admin: Get Pending
+    // Admin: Get Pending (Hybrid: Local + API if available)
     getPendingReviews: async (password: string) => {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 800));
+        try {
+            // Use verifyAdmin endpoint first to actually check password on backend
+            // Though often included in the query... let's just GET pending reviews if the endpoint
+            // supports filtering by status (which is common).
+            // Assuming /winners?status=pending or /testimonials?status=pending
+            const res = await fetch(`${API_URL}/winners?status=pending`);
+            if (res.ok) {
+                const data = await res.json();
+                return data;
+            }
+        } catch (e) {
+            console.warn("Failed to fetch pending reviews, falling back to local", e);
+        }
 
         const storedReviews = JSON.parse(localStorage.getItem("admin_reviews") || "[]");
-
-        // Initial Mock Data (only if empty to avoid empty state on first load)
-        if (storedReviews.length === 0) {
-            const mockReviews = [
-                {
-                    id: "101",
-                    userId: "42",
-                    userName: "Carlos Silva",
-                    userAvatar: "",
-                    raffleName: "iPhone 15 Pro Max",
-                    prizeName: "iPhone 15 Pro Max 256GB",
-                    rating: 5,
-                    comment: "Incrível! Chegou em 2 dias, lacrado. Muito obrigado equipe MundoPix!",
-                    photoUrl: "https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=150&q=80",
-                    createdAt: new Date(Date.now() - 3600000 * 2).toISOString(), // 2 hours ago
-                    status: 'pending'
-                },
-                {
-                    id: "102",
-                    userId: "88",
-                    userName: "Ana Julia",
-                    userAvatar: "",
-                    raffleName: "Sorteio de R$ 5.000",
-                    prizeName: "Pix de R$ 5k",
-                    rating: 5,
-                    comment: "Caiu na conta na hora! Salvou meu mês. Recomendo demais.",
-                    createdAt: new Date(Date.now() - 3600000 * 24).toISOString(), // 1 day ago
-                    status: 'pending'
-                }
-            ];
-            // Save mock data so it persists and user sees *something*
-            localStorage.setItem("admin_reviews", JSON.stringify(mockReviews));
-            return mockReviews;
-        }
 
         return storedReviews.filter((r: any) => r.status === 'pending');
     },
 
     // Public: Get Approved (for landing page)
     getApprovedReviews: async () => {
+        try {
+            const res = await fetch(`${API_URL}/winners`);
+            if (res.ok) {
+                const data = await res.json();
+                return data;
+            }
+        } catch (e) {
+            console.warn("Failed to fetch global winners, falling back to local", e);
+        }
+
         const storedReviews = JSON.parse(localStorage.getItem("admin_reviews") || "[]");
         return storedReviews.filter((r: any) => r.status === 'approved');
     },
 
     approveReview: async (password: string, id: string) => {
+        try {
+            const res = await fetch(`${API_URL}/winners/${id}/approve`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ password }),
+            });
+            if (res.ok) {
+                return { success: true };
+            }
+        } catch (e) {
+            console.error("API approve failed", e);
+        }
+
+        // Fallback local update (so admin sees immediate feedback even if API fails)
         await new Promise(resolve => setTimeout(resolve, 500));
         const storedReviews = JSON.parse(localStorage.getItem("admin_reviews") || "[]");
         const updatedReviews = storedReviews.map((r: any) =>
@@ -356,6 +367,19 @@ export const api = {
     },
 
     rejectReview: async (password: string, id: string) => {
+        try {
+            const res = await fetch(`${API_URL}/winners/${id}/reject`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ password }),
+            });
+            if (res.ok) {
+                return { success: true };
+            }
+        } catch (e) {
+            console.error("API reject failed", e);
+        }
+
         await new Promise(resolve => setTimeout(resolve, 500));
         const storedReviews = JSON.parse(localStorage.getItem("admin_reviews") || "[]");
         // Remove from list

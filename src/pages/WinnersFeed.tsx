@@ -20,24 +20,23 @@ const WinnersFeed = () => {
       try {
         if (!isPolling) setLoading(true);
 
-        // Fetch approved reviews from localStorage (connected to Admin)
-        const approvedReviews = await api.getApprovedReviews();
+        const approvedReviews = await api.getApprovedReviews(); // Now calls /winners API inside
 
         const mappedWinners: WinnerTestimonial[] = approvedReviews.map((r: any) => ({
           id: r.id,
-          name: r.userName || "Usuário",
-          prize: r.prizeName || r.raffleName || "Prêmio",
-          image: r.photoUrl || "/placeholder.svg",
-          avatar: r.userAvatar || "/placeholder.svg",
-          date: r.createdAt || new Date().toISOString(),
-          testimonial: r.comment || "",
+          name: r.userName || r.user_name || "Usuário",
+          prize: r.prizeName || r.prize_name || r.raffleName || r.raffle_title || "Prêmio",
+          image: r.photoUrl || r.photo_url || "/placeholder.svg",
+          avatar: r.userAvatar || r.user_avatar || r.user_picture || "/placeholder.svg", // Added fallbacks
+          date: r.createdAt || r.created_at || new Date().toISOString(),
+          testimonial: r.comment || r.testimonial || "",
           rating: r.rating || 5,
-          verified: true, // Approved by admin = verified
-          likes: 0,
-          prizeImage: r.photoUrl || "/placeholder.svg" // Show user's photo as the main card image
+          verified: true,
+          likes: r.likes || 0,
+          prizeImage: r.photoUrl || r.photo_url || r.image_url || "/placeholder.svg" // Use uploaded photo OR raffle image
         }));
 
-        setWinners(mappedWinners.reverse()); // Show newest first
+        setWinners(mappedWinners.reverse());
       } catch (error) {
         console.error("Failed to fetch winners:", error);
         if (!isPolling) toast.error("Não foi possível carregar os ganhadores.");
