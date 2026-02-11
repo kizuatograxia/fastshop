@@ -103,12 +103,17 @@ const Field: React.FC<{
 // ─── Page ───────────────────────────────────────────────
 const Register: React.FC = () => {
     const navigate = useNavigate();
-    const { register: registerUser, googleLogin, user } = useAuth();
+    const { register: registerUser, login, googleLogin, user } = useAuth();
+    const [view, setView] = useState<'register' | 'login'>('register');
     const [step, setStep] = useState<-1 | 0 | 1 | 2>(-1); // -1 = social/email choice
     const [form, setForm] = useState<FormData>(INITIAL_FORM);
     const [showPassword, setShowPassword] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isGoogleAuth, setIsGoogleAuth] = useState(false);
+
+    // Login state
+    const [loginEmail, setLoginEmail] = useState("");
+    const [loginPassword, setLoginPassword] = useState("");
 
     const set = useCallback((field: keyof FormData, value: string | boolean) => {
         setForm(prev => ({ ...prev, [field]: value }));
@@ -179,31 +184,37 @@ const Register: React.FC = () => {
         }
     };
 
+    const handleLoginSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!loginEmail || !loginPassword) { toast.error("Preencha email e senha"); return; }
+        setIsSubmitting(true);
+        try {
+            const result = await login(loginEmail, loginPassword);
+            if (result.success) {
+                toast.success("Login realizado com sucesso!");
+                navigate("/");
+            } else {
+                toast.error(result.error || "Email ou senha incorretos");
+            }
+        } catch {
+            toast.error("Erro ao fazer login");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     const handleGoogleSuccess = async (cred: any) => {
         try {
             const r = await googleLogin(cred.credential!);
             if (r.success) {
-                toast.success("Login com Google realizado! Complete seu perfil.");
-                // Decode token manually or just fetch from context if updated quickly
-                // For now, let's use a small timeout or assume context updates fast enough?
-                // Actually, r.success usually means user is set.
-                // But we need the email to pre-fill form.
-                // Assuming we can get it from decode or context.
-
-                // Let's rely on the fact that googleLogin implementation sets useAuth().user
-                // We'll just set step to 0 and let user fill rest.
-                setIsGoogleAuth(true);
-                setStep(0);
-
-                // Need to get email. 
-                // We can't access `user` immediately here as state updates async.
-                // But we can decode the token or simply wait.
-                // Let's decode minimally or just trust user will see/edit it?
-                // Actually, we want to prefill.
-                // Let's try to extract from token payload (JWT) if possible?
-                // Simpler: assume user fills it or we fetch it?
-                // Let's rely on a small trick: if user is logged in, useAuth().user is set.
-                // We can use a useEffect to sync form with user email if isGoogleAuth is true?
+                toast.success("Login com Google realizado!");
+                if (view === 'login') {
+                    navigate("/");
+                } else {
+                    // Register flow logic
+                    setIsGoogleAuth(true);
+                    setStep(0);
+                }
             }
         } catch { toast.error("Falha no login com Google"); }
     };
@@ -222,6 +233,71 @@ const Register: React.FC = () => {
             center: { opacity: 1, x: 0 },
             exit: { opacity: 0, x: -40 },
         };
+
+        if (view === 'login') {
+            return (
+                <motion.div key="login" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="space-y-5">
+                    <div className="text-center space-y-2">
+                        <h2 className="text-2xl font-extrabold text-foreground">Bem-vindo de volta! 👋</h2>
+                        <p className="text-muted-foreground text-sm">Entre na sua conta para continuar</p>
+                    </div>
+
+                    {/* Social buttons */}
+                    <div className="space-y-3">
+                        <div className="flex justify-center">
+                            <GoogleLogin
+                                onSuccess={handleGoogleSuccess}
+                                onError={() => toast.error("Erro no Google")}
+                                width={340}
+                                theme="filled_black"
+                                shape="pill"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="relative">
+                        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-background px-3 text-muted-foreground font-semibold">ou entre com e-mail</span>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleLoginSubmit} className="space-y-4">
+                        <Field
+                            icon={<Mail className="w-4 h-4" />}
+                            label="Email"
+                            id="loginEmail"
+                            placeholder="seu@email.com"
+                            value={loginEmail}
+                            onChange={setLoginEmail}
+                            type="email"
+                        />
+                        <Field
+                            icon={<Lock className="w-4 h-4" />}
+                            label="Senha"
+                            id="loginPassword"
+                            placeholder="••••••••"
+                            value={loginPassword}
+                            onChange={setLoginPassword}
+                            type={showPassword ? "text" : "password"}
+                            rightIcon={
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-muted-foreground hover:text-foreground">
+                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                            }
+                        />
+                        <Button type="submit" className="w-full h-12 rounded-xl text-lg font-bold" disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "ENTRAR AGORA"}
+                        </Button>
+                    </form>
+
+                    <p className="text-center text-xs text-muted-foreground">
+                        Não tem conta?{" "}
+                        <button onClick={() => setView('register')} className="text-primary font-bold hover:underline">Cadastre-se grátis</button>
+                    </p>
+                </motion.div>
+            );
+        }
 
         if (step === -1) {
             return (
@@ -269,7 +345,7 @@ const Register: React.FC = () => {
 
                     <p className="text-center text-xs text-muted-foreground">
                         Já tem conta?{" "}
-                        <Link to="/auth" className="text-primary font-bold hover:underline">Faça login</Link>
+                        <button onClick={() => setView('login')} className="text-primary font-bold hover:underline">Faça login</button>
                     </p>
                 </motion.div>
             );
@@ -395,8 +471,8 @@ const Register: React.FC = () => {
     return (
         <div className="min-h-screen flex items-center justify-center bg-background p-4 font-sans">
             <div className="w-full max-w-md">
-                {/* Stepper (only for wizard steps) */}
-                {step >= 0 && <Stepper current={step} />}
+                {/* Stepper (only for wizard steps and IF in register view) */}
+                {view === 'register' && step >= 0 && <Stepper current={step} />}
 
                 {/* Form area */}
                 <div className="bg-card/50 backdrop-blur-sm rounded-2xl shadow-lg border border-border p-6 sm:p-8">
@@ -404,50 +480,48 @@ const Register: React.FC = () => {
                         {renderStep()}
                     </AnimatePresence>
 
-                    {/* Navigation buttons */}
-                    <div className="mt-6 space-y-3">
-                        {step === -1 ? null : step < 2 ? (
-                            <>
-                                <button
-                                    onClick={next}
-                                    className="w-full h-13 rounded-xl bg-primary text-primary-foreground font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-[0.98] transition-all shadow-glow py-3.5"
-                                >
-                                    Próxima <ChevronRight className="w-5 h-5" />
-                                </button>
-                                {step > 0 && (
+                    {/* Navigation buttons (Wizard only) */}
+                    {view === 'register' && (
+                        <div className="mt-6 space-y-3">
+                            {step === -1 ? null : step < 2 ? (
+                                <>
+                                    <button
+                                        onClick={next}
+                                        className="w-full h-13 rounded-xl bg-primary text-primary-foreground font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-[0.98] transition-all shadow-glow py-3.5"
+                                    >
+                                        Próxima <ChevronRight className="w-5 h-5" />
+                                    </button>
+                                    {step > 0 && (
+                                        <button onClick={prev} className="w-full text-center text-sm text-muted-foreground hover:text-foreground font-medium py-2">
+                                            <ChevronLeft className="w-4 h-4 inline mr-1" /> Voltar
+                                        </button>
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={handleSubmit}
+                                        disabled={isSubmitting}
+                                        className="w-full h-13 rounded-xl bg-primary text-primary-foreground font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-[0.98] transition-all shadow-glow disabled:opacity-50 py-3.5"
+                                    >
+                                        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>CRIAR CONTA E APOSTAR 🎲</>}
+                                    </button>
                                     <button onClick={prev} className="w-full text-center text-sm text-muted-foreground hover:text-foreground font-medium py-2">
                                         <ChevronLeft className="w-4 h-4 inline mr-1" /> Voltar
                                     </button>
-                                )}
-                            </>
-                        ) : (
-                            <>
-                                <button
-                                    onClick={handleSubmit}
-                                    disabled={isSubmitting}
-                                    className="w-full h-13 rounded-xl bg-primary text-primary-foreground font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-[0.98] transition-all shadow-glow disabled:opacity-50 py-3.5"
-                                >
-                                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>CRIAR CONTA E APOSTAR 🎲</>}
-                                </button>
-                                <button onClick={prev} className="w-full text-center text-sm text-muted-foreground hover:text-foreground font-medium py-2">
-                                    <ChevronLeft className="w-4 h-4 inline mr-1" /> Voltar
-                                </button>
-                            </>
-                        )}
+                                </>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {view === 'register' && step === -1 && (
+                    <div className="text-center mt-6">
+                        <p className="text-sm text-muted-foreground">
+                            Já tem conta? <button onClick={() => setView('login')} className="text-primary hover:underline font-bold">Faça login</button>
+                        </p>
                     </div>
-                </div>
-
-                <div className="text-center mt-6">
-                    <p className="text-sm text-muted-foreground">
-                        Já tem conta? <Link to="/auth" className="text-primary hover:underline font-bold">Faça login</Link>
-                    </p>
-                </div>
-
-                {/* Footer */}
-                <p className="text-center text-[10px] text-muted-foreground mt-4 leading-relaxed">
-                    Ao se cadastrar, você confirma que tem 18+ anos.<br />
-                    Jogue com responsabilidade. 🔞
-                </p>
+                )}
             </div>
         </div>
     );

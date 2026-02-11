@@ -57,8 +57,8 @@ const App = () => (
                       </Route>
 
                       {/* Standalone Routes */}
-                      <Route path="/auth" element={<Auth />} />
-                      <Route path="/login" element={<Auth defaultTab="login" />} />
+                      <Route path="/auth" element={<RegisterPage />} />
+                      <Route path="/login" element={<RegisterPage />} />
                       <Route path="/register" element={<RegisterPage />} />
                       <Route path="/admin" element={<Admin />} />
 

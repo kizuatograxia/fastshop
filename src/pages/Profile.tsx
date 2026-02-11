@@ -48,7 +48,7 @@ const Profile = () => {
 
     useEffect(() => {
         if (!isAuthenticated) {
-            navigate("/auth");
+            navigate("/register");
         }
     }, [isAuthenticated, navigate]);
 
