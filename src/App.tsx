@@ -24,6 +24,7 @@ import ComoFunciona from "./pages/ComoFunciona";
 import NotFound from "./pages/NotFound";
 import RegisterPage from "./pages/Register";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { CPFGate } from "@/components/gate/CPFGate";
 
 const queryClient = new QueryClient();
 
@@ -42,30 +43,32 @@ const App = () => (
                   <Toaster />
                   <Sonner />
                   <BrowserRouter>
-                    <Routes>
-                      {/* Main Layout Routes */}
-                      <Route element={<MainLayout />}>
-                        <Route path="/" element={<Index />} />
-                        <Route path="/feed" element={<WinnersFeed />} />
-                        <Route path="/sorteios" element={<Sorteios />} />
-                        <Route path="/nfts" element={<NFTs />} />
-                        <Route path="/como-funciona" element={<ComoFunciona />} />
-                        <Route path="/profile" element={<Profile />} />
-                        <Route path="/raffle/:id" element={<RaffleDetails />} />
-                        <Route path="/checkout" element={<Checkout />} />
-                        <Route path="/winners" element={<WinnersFeed />} />
-                      </Route>
+                    <CPFGate>
+                      <Routes>
+                        {/* Main Layout Routes */}
+                        <Route element={<MainLayout />}>
+                          <Route path="/" element={<Index />} />
+                          <Route path="/feed" element={<WinnersFeed />} />
+                          <Route path="/sorteios" element={<Sorteios />} />
+                          <Route path="/nfts" element={<NFTs />} />
+                          <Route path="/como-funciona" element={<ComoFunciona />} />
+                          <Route path="/profile" element={<Profile />} />
+                          <Route path="/raffle/:id" element={<RaffleDetails />} />
+                          <Route path="/checkout" element={<Checkout />} />
+                          <Route path="/winners" element={<WinnersFeed />} />
+                        </Route>
 
-                      {/* Standalone Routes */}
-                      <Route path="/auth" element={<RegisterPage />} />
-                      <Route path="/login" element={<RegisterPage />} />
-                      <Route path="/register" element={<RegisterPage />} />
-                      <Route path="/admin" element={<Admin />} />
+                        {/* Standalone Routes */}
+                        <Route path="/auth" element={<RegisterPage />} />
+                        <Route path="/login" element={<RegisterPage />} />
+                        <Route path="/register" element={<RegisterPage />} />
+                        <Route path="/admin" element={<Admin />} />
 
-                      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                    <RaffleParticipationWidget />
+                        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                      <RaffleParticipationWidget />
+                    </CPFGate>
                   </BrowserRouter>
                 </TooltipProvider>
               </RaffleEventsProvider>

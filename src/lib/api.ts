@@ -261,6 +261,18 @@ export const api = {
         return res.json();
     },
 
+    // Gate Verification (Mock)
+    verifyGate: async (cpf: string, birthDate: string) => {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Here you would validate against a blacklist or database
+        // For now, we trust the client-side validation which handles format/age
+        console.log("Gate verified for:", { cpf, birthDate });
+
+        return { success: true };
+    },
+
     // ------------------------------------------------------------------
     // RESTORED / ADDED: Testimonials / Reviews (LocalStorage Implementation)
     // ------------------------------------------------------------------
