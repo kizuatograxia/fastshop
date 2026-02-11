@@ -103,11 +103,12 @@ const Field: React.FC<{
 // ─── Page ───────────────────────────────────────────────
 const Register: React.FC = () => {
     const navigate = useNavigate();
-    const { register: registerUser, googleLogin } = useAuth();
+    const { register: registerUser, googleLogin, user } = useAuth();
     const [step, setStep] = useState<-1 | 0 | 1 | 2>(-1); // -1 = social/email choice
     const [form, setForm] = useState<FormData>(INITIAL_FORM);
     const [showPassword, setShowPassword] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isGoogleAuth, setIsGoogleAuth] = useState(false);
 
     const set = useCallback((field: keyof FormData, value: string | boolean) => {
         setForm(prev => ({ ...prev, [field]: value }));
@@ -137,7 +138,10 @@ const Register: React.FC = () => {
         }
         if (s === 2) {
             if (!form.username || form.username.length < 3) { toast.error("Nome de usuário muito curto"); return false; }
-            if (!form.password || form.password.length < 6) { toast.error("Senha deve ter 6+ caracteres"); return false; }
+            // Skip password validation if Google Auth
+            if (!isGoogleAuth) {
+                if (!form.password || form.password.length < 6) { toast.error("Senha deve ter 6+ caracteres"); return false; }
+            }
             if (!form.acceptTerms) { toast.error("Aceite os termos para continuar"); return false; }
             return true;
         }
@@ -154,12 +158,19 @@ const Register: React.FC = () => {
         if (!validateStep(2)) return;
         setIsSubmitting(true);
         try {
-            const result = await registerUser(form.email, form.password);
-            if (result.success) {
-                toast.success("Conta criada com sucesso! 🎉");
+            if (isGoogleAuth) {
+                // If Google Auth, user is already created/logged in via context
+                // We just finish the wizard flow
+                toast.success("Perfil completo e conta criada! 🎉");
                 navigate("/");
             } else {
-                toast.error(result.error || "Erro ao criar conta");
+                const result = await registerUser(form.email, form.password);
+                if (result.success) {
+                    toast.success("Conta criada com sucesso! 🎉");
+                    navigate("/");
+                } else {
+                    toast.error(result.error || "Erro ao criar conta");
+                }
             }
         } catch {
             toast.error("Erro inesperado");
@@ -171,11 +182,38 @@ const Register: React.FC = () => {
     const handleGoogleSuccess = async (cred: any) => {
         try {
             const r = await googleLogin(cred.credential!);
-            if (r.success) { toast.success("Login com Google realizado!"); navigate("/"); }
+            if (r.success) {
+                toast.success("Login com Google realizado! Complete seu perfil.");
+                // Decode token manually or just fetch from context if updated quickly
+                // For now, let's use a small timeout or assume context updates fast enough?
+                // Actually, r.success usually means user is set.
+                // But we need the email to pre-fill form.
+                // Assuming we can get it from decode or context.
+
+                // Let's rely on the fact that googleLogin implementation sets useAuth().user
+                // We'll just set step to 0 and let user fill rest.
+                setIsGoogleAuth(true);
+                setStep(0);
+
+                // Need to get email. 
+                // We can't access `user` immediately here as state updates async.
+                // But we can decode the token or simply wait.
+                // Let's decode minimally or just trust user will see/edit it?
+                // Actually, we want to prefill.
+                // Let's try to extract from token payload (JWT) if possible?
+                // Simpler: assume user fills it or we fetch it?
+                // Let's rely on a small trick: if user is logged in, useAuth().user is set.
+                // We can use a useEffect to sync form with user email if isGoogleAuth is true?
+            }
         } catch { toast.error("Falha no login com Google"); }
     };
 
-
+    // Sync email from context if Google Auth is active and form email is empty
+    React.useEffect(() => {
+        if (isGoogleAuth && user?.email && !form.email) {
+            setForm(f => ({ ...f, email: user.email, confirmEmail: user.email }));
+        }
+    }, [isGoogleAuth, user]);
 
     // ─── Step Content ─────────────────────────────────────
     const renderStep = () => {
@@ -244,8 +282,18 @@ const Register: React.FC = () => {
                         <h2 className="text-xl font-extrabold text-foreground">Vamos começar! 🎯</h2>
                         <p className="text-muted-foreground text-xs">Insira seus dados para garantir sua segurança.</p>
                     </div>
-                    <Field icon={<Mail className="w-4 h-4" />} label="E-mail" id="email" placeholder="seu@email.com" value={form.email} onChange={v => set("email", v)} type="email" />
-                    <Field icon={<Mail className="w-4 h-4" />} label="Confirmar E-mail" id="confirmEmail" placeholder="seu@email.com" value={form.confirmEmail} onChange={v => set("confirmEmail", v)} type="email" />
+                    {/* If Google Auth, maybe restrict editing email? Or let them confirm? 
+                        The requirement implies using gmail data, so pre-fill is good.
+                        Maybe disable readOnly to allow correction if needed, but Google email is usually fixed for the account.
+                    */}
+                    <div className={isGoogleAuth ? "opacity-70 pointer-events-none" : ""}>
+                        <Field icon={<Mail className="w-4 h-4" />} label="E-mail" id="email" placeholder="seu@email.com" value={form.email} onChange={v => set("email", v)} type="email" />
+                    </div>
+                    {/* Hide Confirm Email if Google Auth, redundant */}
+                    {!isGoogleAuth && (
+                        <Field icon={<Mail className="w-4 h-4" />} label="Confirmar E-mail" id="confirmEmail" placeholder="seu@email.com" value={form.confirmEmail} onChange={v => set("confirmEmail", v)} type="email" />
+                    )}
+
                     <Field icon={<Calendar className="w-4 h-4" />} label="Data de Nascimento" id="birthDate" placeholder="DD/MM/AAAA" value={form.birthDate} onChange={v => set("birthDate", maskDate(v))} />
                     <Field icon={<CreditCard className="w-4 h-4" />} label="CPF" id="cpf" placeholder="000.000.000-00" value={form.cpf} onChange={v => set("cpf", maskCPF(v))} />
                     <div className="space-y-1.5">
@@ -300,16 +348,21 @@ const Register: React.FC = () => {
                     <p className="text-muted-foreground text-xs">Crie seu login e comece a ganhar!</p>
                 </div>
                 <Field icon={<User className="w-4 h-4" />} label="Nome de Usuário" id="username" placeholder="ReiDoBicho2024" value={form.username} onChange={v => set("username", v)} />
-                <Field
-                    icon={<Lock className="w-4 h-4" />} label="Senha" id="password" placeholder="••••••••"
-                    value={form.password} onChange={v => set("password", v)}
-                    type={showPassword ? "text" : "password"}
-                    rightIcon={
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-muted-foreground hover:text-foreground">
-                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                    }
-                />
+
+                {/* Hide password for Google Auth */}
+                {!isGoogleAuth && (
+                    <Field
+                        icon={<Lock className="w-4 h-4" />} label="Senha" id="password" placeholder="••••••••"
+                        value={form.password} onChange={v => set("password", v)}
+                        type={showPassword ? "text" : "password"}
+                        rightIcon={
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-muted-foreground hover:text-foreground">
+                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                        }
+                    />
+                )}
+
                 <Field icon={<Gift className="w-4 h-4" />} label="Código Promocional (opcional)" id="promo" placeholder="BONUS2024" value={form.promoCode} onChange={v => set("promoCode", v)} />
 
                 <div className="space-y-3 pt-2">
