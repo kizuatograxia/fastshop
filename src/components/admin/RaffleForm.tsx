@@ -172,25 +172,46 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label>Data e Hora do Sorteio</Label>
+                            <Label>Data e Hora do Sorteio (Seu Horário Local)</Label>
                             <div className="flex gap-2">
                                 <Input
                                     type="date"
-                                    value={formData.draw_date ? formData.draw_date.split('T')[0] : ''}
+                                    value={formData.draw_date ? new Date(formData.draw_date).toLocaleDateString('en-CA') : ''} // YYYY-MM-DD
                                     onChange={(e) => {
-                                        const newDate = e.target.value;
-                                        const currentTime = formData.draw_date ? formData.draw_date.split('T')[1]?.split('.')[0] || '00:00:00' : '00:00:00';
-                                        setFormData({ ...formData, draw_date: `${newDate}T${currentTime}` });
+                                        const dateStr = e.target.value;
+                                        if (!dateStr) return;
+
+                                        const current = formData.draw_date ? new Date(formData.draw_date) : new Date();
+                                        const [year, month, day] = dateStr.split('-').map(Number);
+
+                                        // Create Date object keeping the current time but changing date
+                                        const newDate = new Date(current);
+                                        newDate.setFullYear(year);
+                                        newDate.setMonth(month - 1);
+                                        newDate.setDate(day);
+
+                                        setFormData({ ...formData, draw_date: newDate.toISOString() });
                                     }}
                                     className="bg-background/50 flex-1"
                                 />
                                 <Input
                                     type="time"
-                                    value={formData.draw_date ? formData.draw_date.split('T')[1]?.substring(0, 5) : '00:00'}
+                                    value={formData.draw_date ? new Date(formData.draw_date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '00:00'}
                                     onChange={(e) => {
-                                        const newTime = e.target.value; // HH:mm
-                                        const currentDate = formData.draw_date ? formData.draw_date.split('T')[0] : new Date().toISOString().split('T')[0];
-                                        setFormData({ ...formData, draw_date: `${currentDate}T${newTime}:00.000Z` });
+                                        const timeStr = e.target.value;
+                                        if (!timeStr) return;
+
+                                        const [hours, minutes] = timeStr.split(':').map(Number);
+                                        const current = formData.draw_date ? new Date(formData.draw_date) : new Date();
+
+                                        // Create Date object keeping the current date but changing time
+                                        const newDate = new Date(current);
+                                        newDate.setHours(hours);
+                                        newDate.setMinutes(minutes);
+                                        newDate.setSeconds(0);
+                                        newDate.setMilliseconds(0);
+
+                                        setFormData({ ...formData, draw_date: newDate.toISOString() });
                                     }}
                                     className="bg-background/50 w-32"
                                 />
