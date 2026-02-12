@@ -35,7 +35,6 @@ dotenv.config({ path: '../.env' });
 
 const app = express();
 const PORT = process.env.PORT || 5050;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 
 // Validate essential environment variables
 if (!process.env.DATABASE_URL) {
