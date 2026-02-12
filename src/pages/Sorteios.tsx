@@ -94,8 +94,13 @@ const Sorteios: React.FC = () => {
   }, [searchQuery, activeCategory, sortBy, raffles]);
 
   // Helper to calculate ends in (simplified)
+  // Defensive UTC handling: if no timezone indicator, treat as UTC
   const getTimeRemaining = (endDate: string) => {
-    const diff = new Date(endDate).getTime() - new Date().getTime();
+    let dateStr = endDate.trim();
+    if (dateStr.includes('T') && !dateStr.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(dateStr)) {
+      dateStr = dateStr + 'Z';
+    }
+    const diff = new Date(dateStr).getTime() - new Date().getTime();
     if (diff <= 0) return "Encerrado";
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));

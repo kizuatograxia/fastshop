@@ -7,6 +7,15 @@ import cron from 'node-cron';
 
 import pkg from 'pg';
 
+// Fix timezone handling: Ensure TIMESTAMP WITHOUT TIMEZONE (type 1114)
+// is returned as a raw ISO string, not a Date object that could be
+// misinterpreted by the client's local timezone.
+const { types } = pkg;
+types.setTypeParser(1114, (stringValue) => {
+    // Append 'Z' to explicitly mark as UTC if not already present
+    return stringValue ? new Date(stringValue + 'Z').toISOString() : null;
+});
+
 import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs';
@@ -130,6 +139,10 @@ const initDB = async () => {
         // Migration: Add columns if they don't exist (for existing production DB)
         // Migration: Add columns if they don't exist
         try {
+            // CRITICAL: Migrate draw_date from TIMESTAMP to TIMESTAMPTZ for proper timezone handling
+            await pool.query(`ALTER TABLE raffles ALTER COLUMN draw_date TYPE TIMESTAMPTZ USING draw_date AT TIME ZONE 'UTC';`);
+            console.log('Migration: draw_date column upgraded to TIMESTAMPTZ');
+
             await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS prize_value DECIMAL(10,2) DEFAULT 0;`);
             await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS category VARCHAR(50) DEFAULT 'tech';`);
             await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS rarity VARCHAR(50) DEFAULT 'comum';`);
