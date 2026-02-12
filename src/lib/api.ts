@@ -1,5 +1,8 @@
 // Hardcoded fallback for production debug
-const PROD_URL = "https://mundopix-production.up.railway.app/api";
+// Use relative path in production (same domain) to avoid CORS and support custom domains
+const PROD_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? "https://mundopix-production.up.railway.app/api"
+    : "/api";
 export const API_URL = import.meta.env.VITE_API_URL || PROD_URL;
 console.log("API URL configured as:", API_URL);
 
