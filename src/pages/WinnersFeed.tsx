@@ -99,34 +99,40 @@ const WinnersFeed = () => {
           </Button>
         </motion.section>
 
-        {/* Stats Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12"
-        >
-          {[
-            { label: "Prêmios Entregues", value: "1.234+", icon: Trophy },
-            { label: "Valor Total", value: "R$ 2.5M+", icon: Sparkles },
-            { label: "Ganhadores Felizes", value: "890+", icon: Trophy },
-            { label: "Avaliação Média", value: "4.9/5", icon: Sparkles },
-          ].map((stat, index) => (
+        {/* Stats Section - Shows real count from loaded data */}
+        {winners.length > 0 && (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="grid grid-cols-2 gap-4 mb-12"
+          >
             <motion.div
-              key={stat.label}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4 + index * 0.1 }}
+              transition={{ delay: 0.4 }}
               className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 text-center hover:border-primary/30 transition-colors"
             >
-              <stat.icon className="w-6 h-6 text-primary mx-auto mb-2" />
+              <Trophy className="w-6 h-6 text-primary mx-auto mb-2" />
               <p className="text-2xl md:text-3xl font-bold text-foreground">
-                {stat.value}
+                {winners.length}
               </p>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
+              <p className="text-sm text-muted-foreground">Depoimentos Verificados</p>
             </motion.div>
-          ))}
-        </motion.section>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5 }}
+              className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 text-center hover:border-primary/30 transition-colors"
+            >
+              <Sparkles className="w-6 h-6 text-primary mx-auto mb-2" />
+              <p className="text-2xl md:text-3xl font-bold text-foreground">
+                {(winners.reduce((sum, w) => sum + w.rating, 0) / winners.length).toFixed(1)}/5
+              </p>
+              <p className="text-sm text-muted-foreground">Avaliação Média</p>
+            </motion.div>
+          </motion.section>
+        )}
 
         {/* Winners Grid */}
         <section>

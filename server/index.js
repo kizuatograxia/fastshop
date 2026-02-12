@@ -679,38 +679,11 @@ app.get('/api/winners', async (req, res) => {
             return res.json(mapped);
         }
 
-        // Default: Return approved testimonials
+        // Default: Return ONLY real, user-submitted approved testimonials
+        // NO auto-generated fake testimonials (legal risk)
         const testimonialResult = await pool.query(
             `SELECT * FROM testimonials WHERE status = 'approved' ORDER BY created_at DESC LIMIT 20`
         );
-
-        // Also get raffle draw winners (for combined feed)
-        let raffleWinners = [];
-        try {
-            const raffleResult = await pool.query(`
-                SELECT r.id, r.title, r.image_url, r.prize_pool, r.draw_date, r.prize_value,
-                       u.name as winner_name, 
-                       u.picture as winner_picture
-                FROM raffles r
-                JOIN users u ON r.winner_id = u.id
-                WHERE r.status IN ('encerrado', 'ended')
-                ORDER BY r.draw_date DESC
-                LIMIT 10
-            `);
-            raffleWinners = raffleResult.rows.map(row => ({
-                id: 'raffle-' + row.id,
-                userName: row.winner_name || 'Anônimo',
-                userAvatar: row.winner_picture,
-                prizeName: row.prize_pool || row.title,
-                photoUrl: row.image_url,
-                createdAt: row.draw_date,
-                rating: 5,
-                comment: `Ganhei ${row.prize_pool || row.title}! Muito feliz!`,
-                status: 'approved'
-            }));
-        } catch (e) {
-            console.warn('Could not fetch raffle winners for combined feed:', e.message);
-        }
 
         // Map testimonials to consistent format
         const testimonials = testimonialResult.rows.map(t => ({
@@ -726,8 +699,7 @@ app.get('/api/winners', async (req, res) => {
             status: t.status
         }));
 
-        // Combine and return
-        res.json([...testimonials, ...raffleWinners]);
+        res.json(testimonials);
     } catch (error) {
         console.error('Error fetching winners:', error);
         res.status(500).json({ message: 'Erro ao buscar ganhadores' });
