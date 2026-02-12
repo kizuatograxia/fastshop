@@ -43,32 +43,30 @@ const App = () => (
                   <Toaster />
                   <Sonner />
                   <BrowserRouter>
-                    <CPFGate>
-                      <Routes>
-                        {/* Main Layout Routes */}
-                        <Route element={<MainLayout />}>
-                          <Route path="/" element={<Index />} />
-                          <Route path="/feed" element={<WinnersFeed />} />
-                          <Route path="/sorteios" element={<Sorteios />} />
-                          <Route path="/nfts" element={<NFTs />} />
-                          <Route path="/como-funciona" element={<ComoFunciona />} />
-                          <Route path="/profile" element={<Profile />} />
-                          <Route path="/raffle/:id" element={<RaffleDetails />} />
-                          <Route path="/checkout" element={<Checkout />} />
-                          <Route path="/winners" element={<WinnersFeed />} />
-                        </Route>
+                    <Routes>
+                      {/* Main Layout Routes */}
+                      <Route element={<MainLayout />}>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/feed" element={<WinnersFeed />} />
+                        <Route path="/sorteios" element={<Sorteios />} />
+                        <Route path="/nfts" element={<NFTs />} />
+                        <Route path="/como-funciona" element={<ComoFunciona />} />
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="/raffle/:id" element={<RaffleDetails />} />
+                        <Route path="/checkout" element={<Checkout />} />
+                        <Route path="/winners" element={<WinnersFeed />} />
+                      </Route>
 
-                        {/* Standalone Routes */}
-                        <Route path="/auth" element={<RegisterPage />} />
-                        <Route path="/login" element={<RegisterPage />} />
-                        <Route path="/register" element={<RegisterPage />} />
-                        <Route path="/admin" element={<Admin />} />
+                      {/* Standalone Routes */}
+                      <Route path="/auth" element={<CPFGate><RegisterPage /></CPFGate>} />
+                      <Route path="/login" element={<CPFGate><RegisterPage /></CPFGate>} />
+                      <Route path="/register" element={<CPFGate><RegisterPage /></CPFGate>} />
+                      <Route path="/admin" element={<Admin />} />
 
-                        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                      <RaffleParticipationWidget />
-                    </CPFGate>
+                      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                    <RaffleParticipationWidget />
                   </BrowserRouter>
                 </TooltipProvider>
               </RaffleEventsProvider>
