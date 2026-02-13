@@ -43,7 +43,7 @@ export function RaffleList({ raffles, onEdit, onViewDetails, onViewParticipants,
                             Ver Detalhes
                         </div>
                     </div>
-                    <RaffleCard raffle={raffle} index={index} />
+                    <RaffleCard raffle={raffle} index={index} disableNavigation />
                 </div>
             ))}
         </div>
