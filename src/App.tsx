@@ -58,9 +58,9 @@ const App = () => (
                       </Route>
 
                       {/* Standalone Routes */}
-                      <Route path="/auth" element={<CPFGate><RegisterPage /></CPFGate>} />
-                      <Route path="/login" element={<CPFGate><RegisterPage /></CPFGate>} />
-                      <Route path="/register" element={<CPFGate><RegisterPage /></CPFGate>} />
+                      <Route path="/auth" element={<RegisterPage />} />
+                      <Route path="/login" element={<RegisterPage />} />
+                      <Route path="/register" element={<RegisterPage />} />
                       <Route path="/admin" element={<Admin />} />
 
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
