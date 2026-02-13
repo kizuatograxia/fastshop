@@ -263,6 +263,7 @@ const Admin = () => {
                 setView(v);
             }}
             onLogout={handleLogout}
+            pendingReviews={reviews.length}
         >
             {view === 'dashboard' && (
                 <div className="space-y-8">
