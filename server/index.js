@@ -77,8 +77,12 @@ const authenticateToken = (req, res, next) => {
 
 // Fix for Google OAuth Popup (COOP)
 app.use((req, res, next) => {
-    res.setHeader("Cross-Origin-Opener-Policy", "unsafe-none");
+    res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+    res.setHeader("Cross-Origin-Embedder-Policy", "require-corp"); // Or unsafe-none, but try standard first
+    // Actually, require-corp breaks loading external resources (images). 
+    // Let's stick to unsafe-none for COEP, but same-origin-allow-popups for COOP.
     res.setHeader("Cross-Origin-Embedder-Policy", "unsafe-none");
+    res.setHeader("Referrer-Policy", "no-referrer-when-downgrade");
     next();
 });
 
