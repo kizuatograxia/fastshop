@@ -369,12 +369,12 @@ app.post('/api/auth/google', async (req, res) => {
             user.picture = picture;
         }
 
-        const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
+        const sessionToken = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
 
         console.log('Backend: User logged in via Google:', email);
         res.json({
             message: 'Login realizado com Google',
-            token,
+            token: sessionToken,
             user: {
                 id: user.id,
                 email: user.email,
