@@ -46,9 +46,13 @@ export const api = {
     },
 
     updateProfile: async (userId: string | number, profileData: any) => {
+        const token = localStorage.getItem('auth_token');
         const res = await fetch(`${API_URL}/users/${userId}/profile`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            },
             body: JSON.stringify(profileData),
         });
         if (!res.ok) throw new Error((await res.json()).message);
@@ -56,15 +60,24 @@ export const api = {
     },
 
     getWallet: async (userId: number | string) => {
-        const res = await fetch(`${API_URL}/wallet?userId=${userId}`);
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch(`${API_URL}/wallet?userId=${userId}`, {
+            headers: {
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            }
+        });
         if (!res.ok) throw new Error("Failed to fetch wallet");
         return res.json();
     },
 
     addToWallet: async (userId: number | string, nft: any) => {
+        const token = localStorage.getItem('auth_token');
         const res = await fetch(`${API_URL}/wallet`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            },
             body: JSON.stringify({ userId, nft }),
         });
         if (!res.ok) throw new Error("Failed to add to wallet");
@@ -72,9 +85,13 @@ export const api = {
     },
 
     removeFromWallet: async (userId: number | string, nftId: string, quantity: number = 1) => {
+        const token = localStorage.getItem('auth_token');
         const res = await fetch(`${API_URL}/wallet/remove`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            },
             body: JSON.stringify({ userId, nftId, quantity }),
         });
         if (!res.ok) throw new Error("Failed to remove from wallet");
@@ -135,9 +152,13 @@ export const api = {
     },
 
     joinRaffle: async (raffleId: number | string, userId: number | string, nfts: Record<string, number>, ticketCount?: number, txHash?: string) => {
+        const token = localStorage.getItem('auth_token');
         const res = await fetch(`${API_URL}/raffles/${raffleId}/join`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            },
             body: JSON.stringify({ userId, nfts, ticketCount, txHash }),
         });
         if (!res.ok) throw new Error((await res.json()).message);
@@ -145,9 +166,13 @@ export const api = {
     },
 
     buyNFTs: async (userId: number | string, items: { id: string; quantity: number }[]) => {
+        const token = localStorage.getItem('auth_token');
         const res = await fetch(`${API_URL}/shop/buy`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            },
             body: JSON.stringify({ userId, items }),
         });
         if (!res.ok) throw new Error((await res.json()).message);

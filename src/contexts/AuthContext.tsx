@@ -63,6 +63,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 // Also save to "user" key for consistency with other parts of the app
                 localStorage.setItem("user", JSON.stringify(sessionUser));
 
+                if (response.token) {
+                    localStorage.setItem("auth_token", response.token);
+                }
+
                 return { success: true };
             }
             return { success: false, error: "Invalid response from server" };
@@ -91,6 +95,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setUser(sessionUser);
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser));
                 localStorage.setItem("user", JSON.stringify(sessionUser));
+
+                if (response.token) {
+                    localStorage.setItem("auth_token", response.token);
+                }
+
                 toast.success("Login com Google realizado!");
                 return { success: true };
             }
@@ -115,6 +124,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 };
                 setUser(sessionUser);
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser));
+
+                if (response.token) {
+                    localStorage.setItem("auth_token", response.token);
+                }
+
                 toast.success("Conta criada com sucesso!");
                 return { success: true };
             }
@@ -131,6 +145,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
         localStorage.removeItem(SESSION_STORAGE_KEY);
         localStorage.removeItem("user");
+        localStorage.removeItem("auth_token");
     }, []);
 
     const setWalletAddress = useCallback((address: string) => {

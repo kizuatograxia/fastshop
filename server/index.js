@@ -21,6 +21,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import nfts from './nfts.js';
+import jwt from 'jsonwebtoken';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -58,6 +59,21 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+
+    if (!token) return res.status(401).json({ message: 'Token de autenticação necessário' });
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).json({ message: 'Token inválido ou expirado' });
+        req.user = user;
+        next();
+    });
+};
 
 // Fix for Google OAuth Popup (COOP)
 app.use((req, res, next) => {
@@ -268,8 +284,10 @@ app.post('/api/register', async (req, res) => {
         );
         const newUser = newUserResult.rows[0];
 
+        const token = jwt.sign({ id: newUser.id, email: newUser.email }, JWT_SECRET, { expiresIn: '24h' });
+
         console.log('User registered:', email);
-        res.json({ message: 'Usuário criado com sucesso', user: newUser });
+        res.json({ message: 'Usuário criado com sucesso', user: newUser, token });
     } catch (error) {
         console.error('Error registering user:', error);
         res.status(500).json({ message: 'Erro ao registrar usuário' });
@@ -288,8 +306,20 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ message: 'Credenciais inválidas' });
         }
 
+        const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
+
         console.log('User logged in:', email);
-        res.json({ message: 'Login realizado', user: { id: user.id, email: user.email, name: user.name, picture: user.picture, profile_complete: user.profile_complete || false } });
+        res.json({
+            message: 'Login realizado',
+            token,
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                picture: user.picture,
+                profile_complete: user.profile_complete || false
+            }
+        });
     } catch (error) {
         console.error('Error logging in:', error);
         res.status(500).json({ message: 'Erro ao realizar login' });
@@ -330,9 +360,12 @@ app.post('/api/auth/google', async (req, res) => {
             user.picture = picture;
         }
 
+        const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
+
         console.log('Backend: User logged in via Google:', email);
         res.json({
             message: 'Login realizado com Google',
+            token,
             user: {
                 id: user.id,
                 email: user.email,
@@ -348,8 +381,14 @@ app.post('/api/auth/google', async (req, res) => {
 });
 
 // Update User Profile
-app.put('/api/users/:id/profile', async (req, res) => {
+app.put('/api/users/:id/profile', authenticateToken, async (req, res) => {
     const { id } = req.params;
+
+    // Authorization Check
+    if (parseInt(id) !== req.user.id) {
+        return res.status(403).json({ message: 'Acesso negado: Você só pode editar seu próprio perfil.' });
+    }
+
     const { cpf, birthDate, gender, address, city, cep, country, phone, username } = req.body;
 
     try {
@@ -383,8 +422,10 @@ app.put('/api/users/:id/profile', async (req, res) => {
 });
 
 // Get Wallet
-app.get('/api/wallet', async (req, res) => {
-    const userId = parseInt(req.query.userId);
+app.get('/api/wallet', authenticateToken, async (req, res) => {
+    const userId = req.user.id;
+    // const userId = parseInt(req.query.userId); // Legacy
+
     if (!userId) return res.status(400).json({ message: 'UserId required' });
 
     try {
@@ -405,10 +446,11 @@ app.get('/api/wallet', async (req, res) => {
 
 
 // POST /api/shop/buy - Secure Batch Purchase
-app.post('/api/shop/buy', async (req, res) => {
-    const { userId, items } = req.body; // items: [{ id, quantity }]
+app.post('/api/shop/buy', authenticateToken, async (req, res) => {
+    const { items } = req.body; // items: [{ id, quantity }]
+    const userId = req.user.id; // User from Token
 
-    if (!userId || !items || !Array.isArray(items)) {
+    if (!items || !Array.isArray(items)) {
         return res.status(400).json({ message: 'Dados inválidos' });
     }
 
@@ -912,9 +954,10 @@ app.get('/api/admin/raffles', async (req, res) => {
 });
 
 // Join Raffle (Buy Ticket) - SECURE ATOMIC TRANSACTION
-app.post('/api/raffles/:id/join', async (req, res) => {
+app.post('/api/raffles/:id/join', authenticateToken, async (req, res) => {
     const { id } = req.params;
-    const { userId, nfts, ticketCount, txHash } = req.body; // ticketCount is now ignored/calculated server-side for security if 'nfts' is present
+    const { nfts, ticketCount, txHash } = req.body; // ticketCount is now ignored/calculated server-side for security if 'nfts' is present
+    const userId = req.user.id;
 
     if (!userId) return res.status(400).json({ message: 'UserId required' });
 
