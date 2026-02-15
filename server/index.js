@@ -402,7 +402,7 @@ app.get('/api/wallet', async (req, res) => {
     }
 });
 
-import nfts from './nfts.js';
+
 
 // POST /api/shop/buy - Secure Batch Purchase
 app.post('/api/shop/buy', async (req, res) => {
