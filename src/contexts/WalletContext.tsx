@@ -12,6 +12,7 @@ interface WalletContextType {
     ownedNFTs: OwnedNFT[];
     balance: number;
     addNFT: (nft: NFT) => Promise<void>;
+    buyNFTs: (items: { id: string; quantity: number }[]) => Promise<void>;
     removeNFT: (nftId: string, quantidade?: number) => Promise<void>;
     getTotalNFTs: () => number;
     hasNFT: (nftId: string) => boolean;
@@ -150,6 +151,19 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     }, [user]);
 
+    const buyNFTs = useCallback(async (items: { id: string; quantity: number }[]) => {
+        if (!user) return;
+        try {
+            await api.buyNFTs(Number(user.id), items);
+            // Refresh wallet
+            const data = await api.getWallet(Number(user.id));
+            setOwnedNFTs(data);
+        } catch (error) {
+            console.error("Failed to buy NFTs", error);
+            throw error;
+        }
+    }, [user]);
+
     const getTotalNFTs = useCallback(() => {
         return cartItems.reduce((sum, nft) => sum + nft.quantidade, 0);
     }, [cartItems]);
@@ -173,6 +187,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 ownedNFTs,
                 balance,
                 addNFT,
+                buyNFTs,
                 removeNFT,
                 getTotalNFTs,
                 hasNFT,

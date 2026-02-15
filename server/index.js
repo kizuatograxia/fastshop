@@ -20,6 +20,7 @@ import crypto from 'crypto';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import nfts from './nfts.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -401,9 +402,105 @@ app.get('/api/wallet', async (req, res) => {
     }
 });
 
-// Add to Wallet (Buy NFT)
+import nfts from './nfts.js';
+
+// POST /api/shop/buy - Secure Batch Purchase
+app.post('/api/shop/buy', async (req, res) => {
+    const { userId, items } = req.body; // items: [{ id, quantity }]
+
+    if (!userId || !items || !Array.isArray(items)) {
+        return res.status(400).json({ message: 'Dados inválidos' });
+    }
+
+    const client = await pool.connect();
+
+    try {
+        await client.query('BEGIN');
+
+        let totalCost = 0;
+        const purchasedItems = [];
+
+        for (const item of items) {
+            const { id, quantity } = item;
+            if (!id || !quantity || quantity <= 0) continue;
+
+            // Validate Item exists in catalog
+            const catalogItem = nfts.find(n => n.id === id);
+            if (!catalogItem) {
+                throw new Error(`Item inválido ou não disponível: ${id}`);
+            }
+
+            // Calculate cost (server-side price)
+            totalCost += catalogItem.preco * quantity;
+
+            // Prepare metadata (from catalog, ignore client metadata)
+            const metadata = { ...catalogItem };
+            // We don't store quantity in metadata, we store it in column.
+
+            // Add/Update Wallet
+            // Check existing
+            const check = await client.query('SELECT * FROM wallets WHERE user_id = $1 AND nft_id = $2', [userId, id]);
+
+            if (check.rows.length > 0) {
+                // Update
+                let currentMetadata = check.rows[0].nft_metadata || {};
+                let currentHashes = currentMetadata.hashes || [];
+
+                // Add new hashes for new items
+                for (let i = 0; i < quantity; i++) {
+                    currentHashes.push({ hash: crypto.randomUUID(), created_at: new Date().toISOString() });
+                }
+
+                currentMetadata = { ...currentMetadata, hashes: currentHashes }; // Keep other metadata? Ideally yes.
+
+                await client.query('UPDATE wallets SET quantity = quantity + $1, nft_metadata = $2 WHERE user_id = $3 AND nft_id = $4',
+                    [quantity, JSON.stringify(currentMetadata), userId, id]);
+            } else {
+                // Insert
+                const hashes = [];
+                for (let i = 0; i < quantity; i++) {
+                    hashes.push({ hash: crypto.randomUUID(), created_at: new Date().toISOString() });
+                }
+                const newMetadata = { ...metadata, hashes };
+
+                await client.query('INSERT INTO wallets (user_id, nft_id, nft_metadata, quantity) VALUES ($1, $2, $3, $4)',
+                    [userId, id, JSON.stringify(newMetadata), quantity]);
+            }
+            purchasedItems.push({ ...catalogItem, quantity });
+        }
+
+        // Payment Verification Logic should go here 
+        // (verify Stripe/Pix status based on simulated payment ID)
+        // For now we simulate success but at least we validate PRICES correcty.
+
+        await client.query('COMMIT');
+
+        console.log(`User ${userId} purchased items for R$ ${totalCost}`);
+
+        // Return updated wallet
+        const result = await client.query('SELECT nft_id as id, nft_metadata, quantity as quantidade FROM wallets WHERE user_id = $1', [userId]);
+        const wallet = result.rows.map(row => ({
+            id: row.id,
+            ...row.nft_metadata,
+            quantidade: row.quantidade
+        }));
+
+        res.json({ success: true, wallet, totalCost });
+
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error processing purchase:', error);
+        res.status(500).json({ message: error.message || 'Erro ao processar compra' });
+    } finally {
+        client.release();
+    }
+});
+
+// Add to Wallet (Legacy/Single - TODO: Deprecate or Secure)
 app.post('/api/wallet', async (req, res) => {
+    // ... (keep existing for now but warn/refactor later)
     const { userId, nft } = req.body;
+    // ... existing logic ...
     if (!userId || !nft) return res.status(400).json({ message: 'UserId and nft required' });
 
     try {
@@ -870,7 +967,7 @@ app.post('/api/raffles/:id/join', async (req, res) => {
                 }
 
                 // Calculate Value
-                totalValue += nftPrice * (qtyRequested as number);
+                totalValue += nftPrice * Number(qtyRequested);
 
                 // Deduct NFT
                 if (currentQty == qtyRequested) {

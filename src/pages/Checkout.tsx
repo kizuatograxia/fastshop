@@ -29,7 +29,7 @@ interface PixPayment {
 
 const Checkout: React.FC = () => {
     const navigate = useNavigate();
-    const { cartItems, getTotalNFTs, addNFT, clearCart, ownedNFTs } = useWallet();
+    const { cartItems, getTotalNFTs, addNFT, buyNFTs, clearCart, ownedNFTs } = useWallet();
     const { toast } = useToast();
 
     const [isLoading, setIsLoading] = useState(false);
@@ -68,17 +68,23 @@ const Checkout: React.FC = () => {
 
     // Função de teste para simular o callback de sucesso
     const simulateSuccessfulPayment = async () => {
-        for (const item of cartItems) {
-            for (let i = 0; i < item.quantidade; i++) {
-                await addNFT(item);
-            }
+        try {
+            const itemsToBuy = cartItems.map(item => ({ id: item.id, quantity: item.quantidade }));
+            await buyNFTs(itemsToBuy);
+
+            clearCart();
+            toast({
+                title: "Compra realizada com sucesso!",
+                description: "Seus NFTs foram adicionados à sua carteira.",
+            });
+            navigate("/profile");
+        } catch (error) {
+            toast({
+                title: "Erro na compra",
+                description: "Não foi possível finalizar a compra. Tente novamente.",
+                variant: "destructive"
+            });
         }
-        clearCart();
-        toast({
-            title: "Compra realizada com sucesso!",
-            description: "Seus NFTs foram adicionados à sua carteira.",
-        });
-        navigate("/profile");
     };
 
     const handleCopyPixCode = () => {

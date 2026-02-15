@@ -144,6 +144,16 @@ export const api = {
         return res.json();
     },
 
+    buyNFTs: async (userId: number | string, items: { id: string; quantity: number }[]) => {
+        const res = await fetch(`${API_URL}/shop/buy`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ userId, items }),
+        });
+        if (!res.ok) throw new Error((await res.json()).message);
+        return res.json();
+    },
+
     getUserRaffles: async (userId: number | string) => {
         const res = await fetch(`${API_URL}/user/raffles?userId=${userId}`);
         if (!res.ok) throw new Error("Failed to fetch user raffles");
