@@ -331,12 +331,21 @@ const client = new OAuth2Client(process.env.VITE_GOOGLE_CLIENT_ID);
 
 app.post('/api/auth/google', async (req, res) => {
     const { token } = req.body;
+    const clientId = process.env.VITE_GOOGLE_CLIENT_ID;
+
     console.log('Backend: Received Google auth request');
+    console.log('Backend: Configured Client ID:', clientId ? `${clientId.substring(0, 10)}...` : 'MISSING');
+    console.log('Backend: Received Token length:', token ? token.length : 'EMPTY');
+
+    if (!token) {
+        return res.status(400).json({ message: 'Token não fornecido' });
+    }
+
     try {
         console.log('Backend: Verifying token...');
         const ticket = await client.verifyIdToken({
             idToken: token,
-            audience: process.env.VITE_GOOGLE_CLIENT_ID,
+            audience: clientId,
         });
         const payload = ticket.getPayload();
         const { email, name, picture } = payload;
