@@ -16,6 +16,7 @@ interface WalletContextType {
     getTotalNFTs: () => number;
     hasNFT: (nftId: string) => boolean;
     getNFTCount: (nftId: string) => number;
+    refreshWallet: () => Promise<void>;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -176,6 +177,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 getTotalNFTs,
                 hasNFT,
                 getNFTCount,
+                refreshWallet: () => api.getWallet(Number(user?.id)).then(setOwnedNFTs),
             }}
         >
             {children}

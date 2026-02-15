@@ -134,11 +134,11 @@ export const api = {
         return res.json();
     },
 
-    joinRaffle: async (raffleId: number | string, userId: number | string, ticketCount: number, txHash?: string) => {
+    joinRaffle: async (raffleId: number | string, userId: number | string, nfts: Record<string, number>, ticketCount?: number, txHash?: string) => {
         const res = await fetch(`${API_URL}/raffles/${raffleId}/join`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId, ticketCount, txHash }),
+            body: JSON.stringify({ userId, nfts, ticketCount, txHash }),
         });
         if (!res.ok) throw new Error((await res.json()).message);
         return res.json();

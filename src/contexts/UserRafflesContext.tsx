@@ -13,7 +13,7 @@ interface UserRaffle {
 
 interface UserRafflesContextType {
     userRaffles: UserRaffle[];
-    addUserRaffle: (raffle: Raffle, tickets: number, value: number) => Promise<void>;
+    addUserRaffle: (raffle: Raffle, tickets: number, value: number, nfts: Record<string, number>) => Promise<void>;
     removeUserRaffle: (raffleId: string) => void;
     isParticipating: (raffleId: string) => boolean;
     getTicketCount: (raffleId: string) => number;
@@ -47,7 +47,7 @@ export const UserRafflesProvider: React.FC<{ children: React.ReactNode }> = ({ c
         fetchUserRaffles();
     }, [fetchUserRaffles]);
 
-    const addUserRaffle = useCallback(async (raffle: Raffle, tickets: number, value: number) => {
+    const addUserRaffle = useCallback(async (raffle: Raffle, tickets: number, value: number, nfts: Record<string, number>) => {
         if (!user) return;
         try {
             // Optimistic update
@@ -82,8 +82,8 @@ export const UserRafflesProvider: React.FC<{ children: React.ReactNode }> = ({ c
             if (isNaN(rId)) throw new Error("ID do sorteio inválido");
             if (isNaN(uId)) throw new Error("ID do usuário inválido");
 
-            // Call API
-            await api.joinRaffle(rId, uId, tickets);
+            // Call API with NFTs
+            await api.joinRaffle(rId, uId, nfts, tickets);
 
             // Refresh to ensure sync with backend
             await fetchUserRaffles();
@@ -95,6 +95,7 @@ export const UserRafflesProvider: React.FC<{ children: React.ReactNode }> = ({ c
             // Revert optimistic update
             fetchUserRaffles();
             toast.error(error.message || "Erro ao registrar participação");
+            throw error; // Re-throw to handle in UI
         }
     }, [user, fetchUserRaffles]);
 
