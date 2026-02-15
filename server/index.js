@@ -376,7 +376,7 @@ app.post('/api/auth/google', async (req, res) => {
         });
     } catch (error) {
         console.error('Backend: Google Auth Error:', error);
-        res.status(401).json({ message: 'Falha na autenticação com Google', error: error.message });
+        res.status(401).json({ message: 'Falha na autenticação com Google', error: error.message, stack: error.stack });
     }
 });
 

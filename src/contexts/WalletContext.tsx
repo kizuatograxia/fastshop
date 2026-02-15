@@ -23,7 +23,7 @@ interface WalletContextType {
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const [ownedNFTs, setOwnedNFTs] = useState<OwnedNFT[]>([]);
     const [cartItems, setCartItems] = useState<OwnedNFT[]>([]);
     const [balance] = useState(0);
@@ -33,7 +33,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (user) {
             api.getWallet(Number(user.id))
                 .then((data) => setOwnedNFTs(data))
-                .catch((err) => console.error("Failed to load wallet", err));
+                .catch((err) => {
+                    console.error("Failed to load wallet", err);
+                    // Automatic logout on wallet fetch failure (likely invalid token)
+                    // This prevents "zombie" sessions
+                    logout();
+                    toast.error("Sessão expirada. Por favor entre novamente.");
+                });
         } else {
             setOwnedNFTs([]);
         }
