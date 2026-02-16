@@ -12,7 +12,7 @@ interface WalletContextType {
     ownedNFTs: OwnedNFT[];
     balance: number;
     addNFT: (nft: NFT) => Promise<void>;
-    buyNFTs: (items: { id: string; quantity: number }[]) => Promise<void>;
+    buyNFTs: (items: { id: string; quantity: number }[], couponCode?: string) => Promise<void>;
     removeNFT: (nftId: string, quantidade?: number) => Promise<void>;
     getTotalNFTs: () => number;
     hasNFT: (nftId: string) => boolean;
@@ -157,10 +157,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     }, [user]);
 
-    const buyNFTs = useCallback(async (items: { id: string; quantity: number }[]) => {
+    const buyNFTs = useCallback(async (items: { id: string; quantity: number }[], couponCode?: string) => {
         if (!user) return;
         try {
-            await api.buyNFTs(Number(user.id), items);
+            await api.buyNFTs(Number(user.id), items, couponCode);
             // Refresh wallet
             const data = await api.getWallet(Number(user.id));
             setOwnedNFTs(data);

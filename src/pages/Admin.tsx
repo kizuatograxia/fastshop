@@ -17,7 +17,9 @@ import { ParticipantsTable } from "@/components/admin/ParticipantsTable";
 import { AdminRaffleDetails } from "@/components/admin/AdminRaffleDetails";
 import { ReviewsList, Review } from "@/components/admin/ReviewsList";
 
-type ViewMode = 'dashboard' | 'create' | 'participants' | 'raffles' | 'settings' | 'details' | 'reviews';
+import { CouponsManager } from "@/components/admin/CouponsManager";
+
+type ViewMode = 'dashboard' | 'create' | 'participants' | 'raffles' | 'settings' | 'details' | 'reviews' | 'coupons';
 
 const Admin = () => {
     // --- AUTH STATE ---
@@ -348,6 +350,10 @@ const Admin = () => {
                 <div className="flex items-center justify-center p-12 text-muted-foreground border border-dashed border-white/10 rounded-xl">
                     <p>Configurações do sistema em breve.</p>
                 </div>
+            )}
+
+            {view === 'coupons' && (
+                <CouponsManager />
             )}
 
             {/* LIVE ROULETTE OVERLAY */}

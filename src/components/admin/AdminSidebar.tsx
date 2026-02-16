@@ -33,6 +33,7 @@ interface AdminSidebarProps {
 const mainMenu = [
     { id: "dashboard" as const, label: "Dashboard", icon: LayoutDashboard },
     { id: "raffles" as const, label: "Sorteios", icon: Ticket },
+    { id: "coupons" as const, label: "Cupons", icon: Ticket },
     { id: "create" as const, label: "Novo Sorteio", icon: PlusCircle },
 ];
 

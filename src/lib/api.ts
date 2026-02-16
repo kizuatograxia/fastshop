@@ -165,7 +165,7 @@ export const api = {
         return res.json();
     },
 
-    buyNFTs: async (userId: number | string, items: { id: string; quantity: number }[]) => {
+    buyNFTs: async (userId: number | string, items: { id: string; quantity: number }[], couponCode?: string) => {
         const token = localStorage.getItem('auth_token');
         const res = await fetch(`${API_URL}/shop/buy`, {
             method: "POST",
@@ -173,7 +173,17 @@ export const api = {
                 "Content-Type": "application/json",
                 ...(token ? { "Authorization": `Bearer ${token}` } : {})
             },
-            body: JSON.stringify({ userId, items }),
+            body: JSON.stringify({ userId, items, couponCode }),
+        });
+        if (!res.ok) throw new Error((await res.json()).message);
+        return res.json();
+    },
+
+    validateCoupon: async (code: string, cartTotal: number) => {
+        const res = await fetch(`${API_URL}/coupons/validate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code, cartTotal }),
         });
         if (!res.ok) throw new Error((await res.json()).message);
         return res.json();

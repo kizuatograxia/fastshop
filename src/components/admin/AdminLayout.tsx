@@ -4,7 +4,7 @@ import { AdminSidebar } from "./AdminSidebar";
 import { Separator } from "@/components/ui/separator";
 import { ChevronRight } from "lucide-react";
 
-type ViewMode = 'dashboard' | 'create' | 'participants' | 'raffles' | 'settings' | 'details' | 'reviews';
+type ViewMode = 'dashboard' | 'create' | 'participants' | 'raffles' | 'settings' | 'details' | 'reviews' | 'coupons';
 
 const viewTitles: Record<ViewMode, string> = {
     dashboard: "Visão Geral",
@@ -14,6 +14,7 @@ const viewTitles: Record<ViewMode, string> = {
     reviews: "Moderação de Depoimentos",
     details: "Detalhes do Sorteio",
     settings: "Configurações",
+    coupons: "Gerenciar Cupons",
 };
 
 // Breadcrumb parent for sub-views
