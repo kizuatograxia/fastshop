@@ -225,6 +225,22 @@ const initDB = async () => {
             console.error('Migration CRITICAL warning:', migError);
         }
 
+        // Purchases/Orders Table (for Pix Payments)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS purchases (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
+                status VARCHAR(50) DEFAULT 'pending', -- pending, paid, cancelled
+                items JSONB NOT NULL, -- [{id, quantity, price}]
+                total_cost DECIMAL(10,2) NOT NULL,
+                txid VARCHAR(255), -- Pix Transaction ID (Sicoob)
+                pix_code TEXT, -- Copy Paste Code
+                spedy_nfe_id VARCHAR(255), -- Spedy Invoice ID
+                nfe_url TEXT, -- Link to PDF/XML
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
         await pool.query(`
             CREATE TABLE IF NOT EXISTS tickets (
                 id SERIAL PRIMARY KEY,
