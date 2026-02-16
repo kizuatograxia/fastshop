@@ -307,7 +307,7 @@ const Checkout: React.FC = () => {
                             {/* Info */}
                             <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
                                 <p className="text-muted-foreground">
-                                    <strong className="text-foreground">Valor:</strong> R$ {totalPriceInBRL.toFixed(2)}
+                                    <strong className="text-foreground">Valor:</strong> R$ {finalPrice.toFixed(2)}
                                 </p>
                                 <p className="text-muted-foreground">
                                     <strong className="text-foreground">Validade:</strong> 30 minutos

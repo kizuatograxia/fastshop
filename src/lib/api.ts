@@ -1,9 +1,10 @@
-// Hardcoded fallback for production debug
-// Use relative path in production (same domain) to avoid CORS and support custom domains
-const PROD_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-    ? "https://4fx59qbb.up.railway.app/api"
-    : "/api";
-export const API_URL = import.meta.env.VITE_API_URL || PROD_URL;
+const PROD_URL = "https://4fx59qbb.up.railway.app/api";
+
+export const API_URL = import.meta.env.VITE_API_URL || (
+    typeof window !== 'undefined' && window.location.hostname === 'localhost'
+        ? "http://localhost:3000/api" // Local Backend
+        : PROD_URL // Remote Backend (or relative path if served statically)
+);
 console.log("API URL configured as:", API_URL);
 
 export const api = {
