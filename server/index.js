@@ -251,7 +251,28 @@ const initDB = async () => {
             );
         `);
 
-        // Seed some raffles if empty
+        // Coupons Table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS coupons (
+                id SERIAL PRIMARY KEY,
+                code VARCHAR(50) UNIQUE NOT NULL,
+                type VARCHAR(20) DEFAULT 'percent', -- 'percent' or 'fixed'
+                value DECIMAL(10,2) NOT NULL,
+                min_purchase DECIMAL(10,2) DEFAULT 0,
+                usage_limit INTEGER,
+                used_count INTEGER DEFAULT 0,
+                expires_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        // Seed initial coupon
+        await pool.query(`
+            INSERT INTO coupons (code, type, value, usage_limit)
+            VALUES ('BEMVINDO10', 'percent', 10, 100)
+            ON CONFLICT (code) DO NOTHING;
+        `);
+
         const rafflesCheck = await pool.query('SELECT count(*) FROM raffles');
         if (parseInt(rafflesCheck.rows[0].count) === 0) {
             await pool.query(`
@@ -474,10 +495,88 @@ app.get('/api/wallet', authenticateToken, async (req, res) => {
 
 
 
-// POST /api/shop/buy - Secure Batch Purchase
+// --- COUPON LOGIC ---
+const validateCouponLogic = async (code, cartTotal) => {
+    const res = await pool.query('SELECT * FROM coupons WHERE code = $1', [code]);
+    const coupon = res.rows[0];
+
+    if (!coupon) return { valid: false, message: 'Cupom inválido' };
+    if (coupon.expires_at && new Date() > new Date(coupon.expires_at)) return { valid: false, message: 'Cupom expirado' };
+    if (coupon.usage_limit && coupon.used_count >= coupon.usage_limit) return { valid: false, message: 'Cupom esgotado' };
+    if (cartTotal < parseFloat(coupon.min_purchase)) return { valid: false, message: `Valor mínimo para este cupom: R$ ${coupon.min_purchase}` };
+
+    let discount = 0;
+    if (coupon.type === 'percent') {
+        discount = (cartTotal * parseFloat(coupon.value)) / 100;
+    } else {
+        discount = parseFloat(coupon.value);
+    }
+
+    // Ensure discount doesn't exceed total
+    if (discount > cartTotal) discount = cartTotal;
+
+    return {
+        valid: true,
+        coupon,
+        discount,
+        newTotal: Math.max(0, cartTotal - discount)
+    };
+};
+
+// --- COUPON API ROUTES ---
+
+// Validate Coupon (Public)
+app.post('/api/coupons/validate', async (req, res) => {
+    const { code, cartTotal } = req.body;
+    try {
+        const result = await validateCouponLogic(code, parseFloat(cartTotal));
+        if (!result.valid) return res.status(400).json(result);
+        res.json(result);
+    } catch (error) {
+        console.error('Coupon Validation Error:', error);
+        res.status(500).json({ message: 'Erro ao validar cupom' });
+    }
+});
+
+// Admin Coupon Routes
+app.get('/api/admin/coupons', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM coupons ORDER BY created_at DESC');
+        res.json(result.rows);
+    } catch (error) {
+        res.status(500).json({ message: 'Erro ao listar cupons' });
+    }
+});
+
+app.post('/api/admin/coupons', async (req, res) => {
+    const { code, type, value, min_purchase, usage_limit, expires_at } = req.body;
+    try {
+        await pool.query(
+            `INSERT INTO coupons (code, type, value, min_purchase, usage_limit, expires_at)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [code.toUpperCase(), type, value, min_purchase || 0, usage_limit, expires_at]
+        );
+        res.json({ message: 'Cupom criado' });
+    } catch (error) {
+        if (error.code === '23505') return res.status(400).json({ message: 'Código já existe' });
+        res.status(500).json({ message: 'Erro ao criar cupom' });
+    }
+});
+
+app.delete('/api/admin/coupons/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        await pool.query('DELETE FROM coupons WHERE id = $1', [id]);
+        res.json({ message: 'Cupom deletado' });
+    } catch (error) {
+        res.status(500).json({ message: 'Erro ao deletar cupom' });
+    }
+});
+
+// POST /api/shop/buy - Purchase with Coupon Support
 app.post('/api/shop/buy', authenticateToken, async (req, res) => {
-    const { items } = req.body; // items: [{ id, quantity }]
-    const userId = req.user.id; // User from Token
+    const { items, couponCode } = req.body; // items: [{ id, quantity }]
+    const userId = req.user.id;
 
     if (!items || !Array.isArray(items)) {
         return res.status(400).json({ message: 'Dados inválidos' });
@@ -491,62 +590,87 @@ app.post('/api/shop/buy', authenticateToken, async (req, res) => {
         let totalCost = 0;
         const purchasedItems = [];
 
+        // 1. Validate Items & Calculate Base Total
         for (const item of items) {
             const { id, quantity } = item;
             if (!id || !quantity || quantity <= 0) continue;
 
-            // Validate Item exists in catalog
             const catalogItem = nfts.find(n => n.id === id);
-            if (!catalogItem) {
-                throw new Error(`Item inválido ou não disponível: ${id}`);
-            }
+            if (!catalogItem) throw new Error(`Item inválido: ${id}`);
 
-            // Calculate cost (server-side price)
             totalCost += catalogItem.preco * quantity;
+            purchasedItems.push({ ...catalogItem, quantity });
+        }
 
-            // Prepare metadata (from catalog, ignore client metadata)
-            const metadata = { ...catalogItem };
-            // We don't store quantity in metadata, we store it in column.
+        // 2. Apply Coupon (if any)
+        let discount = 0;
+        let finalCost = totalCost;
+        let appliedCoupon = null;
 
-            // Add/Update Wallet
+        if (couponCode) {
+            const couponResult = await client.query('SELECT * FROM coupons WHERE code = $1', [couponCode]);
+            const coupon = couponResult.rows[0];
+
+            if (coupon) {
+                // Validate limits again inside transaction to be safe
+                if (coupon.usage_limit && coupon.used_count >= coupon.usage_limit) {
+                    throw new Error('Cupom esgotado');
+                }
+                if (coupon.expires_at && new Date() > new Date(coupon.expires_at)) {
+                    throw new Error('Cupom expirado');
+                }
+                if (totalCost < parseFloat(coupon.min_purchase)) {
+                    throw new Error(`Valor mínimo não atingido para o cupom`);
+                }
+
+                // Calculate
+                if (coupon.type === 'percent') {
+                    discount = (totalCost * parseFloat(coupon.value)) / 100;
+                } else {
+                    discount = parseFloat(coupon.value);
+                }
+                if (discount > totalCost) discount = totalCost;
+
+                finalCost = totalCost - discount;
+                appliedCoupon = coupon;
+
+                // Increment Usage
+                await client.query('UPDATE coupons SET used_count = used_count + 1 WHERE id = $1', [coupon.id]);
+            }
+        }
+
+        // 3. Process Delivery (Add to Wallet)
+        for (const item of purchasedItems) {
             // Check existing
-            const check = await client.query('SELECT * FROM wallets WHERE user_id = $1 AND nft_id = $2', [userId, id]);
+            const check = await client.query('SELECT * FROM wallets WHERE user_id = $1 AND nft_id = $2', [userId, item.id]);
 
             if (check.rows.length > 0) {
                 // Update
                 let currentMetadata = check.rows[0].nft_metadata || {};
                 let currentHashes = currentMetadata.hashes || [];
-
-                // Add new hashes for new items
-                for (let i = 0; i < quantity; i++) {
-                    currentHashes.push({ hash: crypto.randomUUID(), created_at: new Date().toISOString() });
-                }
-
-                currentMetadata = { ...currentMetadata, hashes: currentHashes }; // Keep other metadata? Ideally yes.
+                // Add new hashes
+                for (let i = 0; i < item.quantity; i++) currentHashes.push({ hash: crypto.randomUUID(), created_at: new Date().toISOString() });
+                currentMetadata = { ...currentMetadata, hashes: currentHashes };
 
                 await client.query('UPDATE wallets SET quantity = quantity + $1, nft_metadata = $2 WHERE user_id = $3 AND nft_id = $4',
-                    [quantity, JSON.stringify(currentMetadata), userId, id]);
+                    [item.quantity, JSON.stringify(currentMetadata), userId, item.id]);
             } else {
                 // Insert
                 const hashes = [];
-                for (let i = 0; i < quantity; i++) {
-                    hashes.push({ hash: crypto.randomUUID(), created_at: new Date().toISOString() });
-                }
-                const newMetadata = { ...metadata, hashes };
+                for (let i = 0; i < item.quantity; i++) hashes.push({ hash: crypto.randomUUID(), created_at: new Date().toISOString() });
+                const newMetadata = { ...item, hashes };
 
                 await client.query('INSERT INTO wallets (user_id, nft_id, nft_metadata, quantity) VALUES ($1, $2, $3, $4)',
-                    [userId, id, JSON.stringify(newMetadata), quantity]);
+                    [userId, item.id, JSON.stringify(newMetadata), item.quantity]);
             }
-            purchasedItems.push({ ...catalogItem, quantity });
         }
 
-        // Payment Verification Logic should go here 
-        // (verify Stripe/Pix status based on simulated payment ID)
-        // For now we simulate success but at least we validate PRICES correcty.
+        // 4. (Optional) Record Purchase/Order History if table exists
+        // if (purchases_table_exists) ... skip for now to keep it simple as user paused Sicoob
 
         await client.query('COMMIT');
 
-        console.log(`User ${userId} purchased items for R$ ${totalCost}`);
+        console.log(`User ${userId} bought items. Total: ${totalCost}, Discount: ${discount}, Final: ${finalCost}`);
 
         // Return updated wallet
         const result = await client.query('SELECT nft_id as id, nft_metadata, quantity as quantidade FROM wallets WHERE user_id = $1', [userId]);
@@ -556,12 +680,12 @@ app.post('/api/shop/buy', authenticateToken, async (req, res) => {
             quantidade: row.quantidade
         }));
 
-        res.json({ success: true, wallet, totalCost });
+        res.json({ success: true, wallet, totalCost, discount, finalCost });
 
     } catch (error) {
         await client.query('ROLLBACK');
-        console.error('Error processing purchase:', error);
-        res.status(500).json({ message: error.message || 'Erro ao processar compra' });
+        console.error('Purchase error:', error);
+        res.status(500).json({ message: error.message || 'Erro ao realizar compra' });
     } finally {
         client.release();
     }
