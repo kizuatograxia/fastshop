@@ -241,6 +241,31 @@ export const api = {
         return res.json();
     },
 
+    // Admin Coupons
+    getCoupons: async () => {
+        const res = await fetch(`${API_URL}/admin/coupons`);
+        if (!res.ok) throw new Error("Falha ao buscar cupons");
+        return res.json();
+    },
+
+    createCoupon: async (coupon: any) => {
+        const res = await fetch(`${API_URL}/admin/coupons`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(coupon),
+        });
+        if (!res.ok) throw new Error((await res.json()).message || "Falha ao criar cupom");
+        return res.json();
+    },
+
+    deleteCoupon: async (id: number | string) => {
+        const res = await fetch(`${API_URL}/admin/coupons/${id}`, {
+            method: "DELETE",
+        });
+        if (!res.ok) throw new Error("Falha ao deletar cupom");
+        return res.json();
+    },
+
     updateRaffle: async (password: string, id: string, raffle: any) => {
         const res = await fetch(`${API_URL}/raffles/${id}`, {
             method: "PUT",

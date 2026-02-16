@@ -34,49 +34,18 @@ export const CouponsManager = () => {
     const fetchCoupons = async () => {
         setIsLoading(true);
         try {
-            const data = await api.get('/admin/coupons'); // Assuming generic GET in api.ts or added
-            // If api.get doesn't exist, we might need to add it to api.ts or use fetch directly
-            // For now using api.get assuming it calls axios or fetch with auth headers
+            const data = await api.getCoupons();
             setCoupons(data);
         } catch (error) {
             console.error(error);
-            // toast.error("Erro ao carregar cupons"); 
-            // Mocking for now if backend not fully wired or CORS issues in dev
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Use specific API calls if generic not available.
-    // I'll assume I need to add `getCoupons`, `createCoupon`, `deleteCoupon` to api.ts later.
-    // Or I'll implement them here using `api.client` if exposed, or `fetch`.
-    // Let's use `fetch` with localStorage token for now to be safe.
-    const getAuthHeaders = () => {
-        const token = localStorage.getItem('auth_token');
-        return {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        };
-    };
-
-    const fetchCouponsDirect = async () => {
-        setIsLoading(true);
-        try {
-            // Admin authentication? Admin endpoints might use different auth or just generic token + check?
-            // Existing admin uses "password" body/param usually. The new endpoints didn't enforce it strictly yet or relied on open access for dev.
-            // Let's call the endpoint.
-            const res = await fetch('http://localhost:3000/api/admin/coupons');
-            const data = await res.json();
-            if (Array.isArray(data)) setCoupons(data);
-        } catch (e) {
-            toast.error("Erro na conexão");
+            toast.error("Erro ao carregar cupons. Verifique se o servidor está rodando.");
         } finally {
             setIsLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchCouponsDirect();
+        fetchCoupons();
     }, []);
 
     const handleCreate = async (e: React.FormEvent) => {
@@ -88,37 +57,27 @@ export const CouponsManager = () => {
                 value: parseFloat(newValue),
                 min_purchase: parseFloat(newMinPurchase) || 0,
                 usage_limit: parseInt(newLimit) || null,
-                expires_at: null // Todo: Add date picker
+                expires_at: null
             };
 
-            const res = await fetch('http://localhost:3000/api/admin/coupons', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-
-            if (res.ok) {
-                toast.success("Cupom criado!");
-                setIsCreating(false);
-                fetchCouponsDirect();
-                // Reset form
-                setNewCode("");
-                setNewValue("");
-            } else {
-                const err = await res.json();
-                toast.error(err.message || "Erro ao criar");
-            }
-        } catch (e) {
-            toast.error("Erro ao criar cupom");
+            await api.createCoupon(body);
+            toast.success("Cupom criado!");
+            setIsCreating(false);
+            fetchCoupons();
+            // Reset form
+            setNewCode("");
+            setNewValue("");
+        } catch (e: any) {
+            toast.error(e.message || "Erro ao criar cupom");
         }
     };
 
     const handleDelete = async (id: number) => {
         if (!confirm("Deletar cupom?")) return;
         try {
-            await fetch(`http://localhost:3000/api/admin/coupons/${id}`, { method: 'DELETE' });
+            await api.deleteCoupon(id);
             toast.success("Cupom removido");
-            fetchCouponsDirect();
+            fetchCoupons();
         } catch (e) {
             toast.error("Erro ao deletar");
         }
