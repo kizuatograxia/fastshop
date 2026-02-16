@@ -42,6 +42,39 @@ const Checkout: React.FC = () => {
 
     const { user } = useAuth(); // We need user info for the payment
 
+    const [couponCode, setCouponCode] = useState("");
+    const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; type: string } | null>(null);
+    const [couponLoading, setCouponLoading] = useState(false);
+
+    // Recalculate totals
+    const finalPrice = appliedCoupon ? Math.max(0, totalPrice - appliedCoupon.discount) : totalPrice;
+
+    const handleApplyCoupon = async () => {
+        if (!couponCode.trim()) return;
+        setCouponLoading(true);
+        try {
+            const res = await api.validateCoupon(couponCode, totalPrice);
+            setAppliedCoupon({
+                code: res.coupon.code,
+                discount: res.discount,
+                type: res.coupon.type
+            });
+            toast({
+                title: "Cupom aplicado!",
+                description: `Desconto de R$ ${res.discount.toFixed(2)}`,
+            });
+        } catch (error: any) {
+            setAppliedCoupon(null);
+            toast({
+                title: "Erro no cupom",
+                description: error.message || "Cupom inválido",
+                variant: "destructive"
+            });
+        } finally {
+            setCouponLoading(false);
+        }
+    };
+
     const handlePayWithPix = async () => {
         setIsLoading(true);
 
@@ -70,7 +103,8 @@ const Checkout: React.FC = () => {
     const simulateSuccessfulPayment = async () => {
         try {
             const itemsToBuy = cartItems.map(item => ({ id: item.id, quantity: item.quantidade }));
-            await buyNFTs(itemsToBuy);
+            // Pass couponCode if applied
+            await buyNFTs(itemsToBuy, appliedCoupon?.code);
 
             clearCart();
             toast({
@@ -173,9 +207,39 @@ const Checkout: React.FC = () => {
 
                                 <Separator />
 
+                                {/* Coupon Input */}
+                                <div className="flex gap-2">
+                                    <Input
+                                        placeholder="Cupom de desconto"
+                                        value={couponCode}
+                                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                        disabled={!!appliedCoupon || isLoading || !!pixData}
+                                    />
+                                    {appliedCoupon ? (
+                                        <Button variant="destructive" onClick={() => { setAppliedCoupon(null); setCouponCode(""); }}>
+                                            Remover
+                                        </Button>
+                                    ) : (
+                                        <Button onClick={handleApplyCoupon} disabled={!couponCode || couponLoading || !!pixData}>
+                                            {couponLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Aplicar"}
+                                        </Button>
+                                    )}
+                                </div>
+
+                                {appliedCoupon && (
+                                    <div className="flex justify-between text-green-400 font-medium text-sm">
+                                        <span>Desconto ({appliedCoupon.code})</span>
+                                        <span>- R$ {appliedCoupon.discount.toFixed(2)}</span>
+                                    </div>
+                                )}
+
+                                <Separator className="bg-white/10" />
+
                                 <div className="flex justify-between items-center text-lg font-bold">
                                     <span>Total</span>
-                                    <span className="text-gradient">R$ {totalPriceInBRL.toFixed(2)}</span>
+                                    <span className={appliedCoupon ? "text-primary" : "text-gradient"}>
+                                        R$ {finalPrice.toFixed(2)}
+                                    </span>
                                 </div>
                             </CardContent>
                         </Card>
