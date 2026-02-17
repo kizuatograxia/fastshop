@@ -288,7 +288,7 @@ export const AdminSupportDashboard: React.FC<AdminSupportDashboardProps> = ({ on
                                     <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                                         <div className={`
                                             max-w-[85%] rounded-2xl px-3 py-2 text-sm
-                                            ${isMe ? 'bg-primary text-primary-foreground rounded-tr-none' : 'bg-white border rounded-tl-none'}
+                                            ${isMe ? 'bg-primary text-primary-foreground rounded-tr-none' : 'bg-muted text-foreground rounded-tl-none'}
                                         `}>
                                             <p>{msg.content}</p>
                                             <span className={`text-[10px] block text-right mt-1 ${isMe ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
