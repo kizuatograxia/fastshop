@@ -257,6 +257,7 @@ const Admin = () => {
                                 className="bg-background/50 border-white/10 h-12 text-lg"
                                 placeholder="••••••••"
                                 autoFocus
+                                autoComplete="current-password"
                             />
                         </div>
                         <Button type="submit" className="w-full h-12 text-lg font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all" disabled={isLoading}>
