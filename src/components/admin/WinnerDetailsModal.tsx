@@ -50,6 +50,18 @@ export const WinnerDetailsModal: React.FC<WinnerDetailsModalProps> = ({ userId, 
     useEffect(() => {
         if (isOpen && userId) {
             fetchData();
+
+            // Poll for new messages every 3 seconds while chat is open
+            const interval = setInterval(async () => {
+                try {
+                    const chatRes = await api.getMessages(userId);
+                    setMessages(chatRes);
+                } catch (error) {
+                    console.error("Error polling messages", error);
+                }
+            }, 3000);
+
+            return () => clearInterval(interval);
         }
     }, [isOpen, userId]);
 
