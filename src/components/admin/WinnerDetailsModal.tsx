@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { User, MessageSquare, Send, X, MapPin, Phone, CreditCard } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -102,6 +102,7 @@ export const WinnerDetailsModal: React.FC<WinnerDetailsModalProps> = ({ userId, 
                     <div className="w-1/3 border-r bg-muted/30 p-6 space-y-6 overflow-y-auto">
                         <DialogHeader className="p-0">
                             <DialogTitle>Detalhes do Ganhador</DialogTitle>
+                            <DialogDescription className="sr-only">Detalhes e chat com o ganhador</DialogDescription>
                         </DialogHeader>
 
                         {isLoading ? (

@@ -18,7 +18,8 @@ interface AuthProps {
 const Field: React.FC<{
     icon: React.ReactNode; label: string; id: string; placeholder: string;
     value: string; onChange: (v: string) => void; type?: string; rightIcon?: React.ReactNode;
-}> = ({ icon, label, id, placeholder, value, onChange, type = "text", rightIcon }) => (
+    autoComplete?: string;
+}> = ({ icon, label, id, placeholder, value, onChange, type = "text", rightIcon, autoComplete }) => (
     <div className="space-y-1.5">
         <Label htmlFor={id} className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">{label}</Label>
         <div className="relative">
@@ -26,6 +27,7 @@ const Field: React.FC<{
             <input
                 id={id} type={type} placeholder={placeholder} value={value}
                 onChange={e => onChange(e.target.value)}
+                autoComplete={autoComplete}
                 className="w-full h-12 pl-11 pr-4 rounded-xl border border-input bg-background/50 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm font-medium"
             />
             {rightIcon && <span className="absolute right-3 top-1/2 -translate-y-1/2">{rightIcon}</span>}
@@ -191,8 +193,8 @@ const Auth: React.FC<AuthProps> = ({ defaultTab = "login" }) => {
                             <button
                                 onClick={() => setIsLogin(true)}
                                 className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${isLogin
-                                        ? "bg-primary text-primary-foreground shadow-sm"
-                                        : "text-muted-foreground hover:text-foreground hover:bg-accent/10"
+                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-accent/10"
                                     }`}
                             >
                                 <LogIn className="w-4 h-4" /> Entrar
@@ -200,8 +202,8 @@ const Auth: React.FC<AuthProps> = ({ defaultTab = "login" }) => {
                             <button
                                 onClick={() => setIsLogin(false)}
                                 className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${!isLogin
-                                        ? "bg-primary text-primary-foreground shadow-sm"
-                                        : "text-muted-foreground hover:text-foreground hover:bg-accent/10"
+                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-accent/10"
                                     }`}
                             >
                                 <UserPlus className="w-4 h-4" /> Cadastrar
@@ -217,6 +219,7 @@ const Auth: React.FC<AuthProps> = ({ defaultTab = "login" }) => {
                                 value={email}
                                 onChange={setEmail}
                                 type="email"
+                                autoComplete="username"
                             />
 
                             <Field
@@ -227,6 +230,7 @@ const Auth: React.FC<AuthProps> = ({ defaultTab = "login" }) => {
                                 value={password}
                                 onChange={setPassword}
                                 type={showPassword ? "text" : "password"}
+                                autoComplete={isLogin ? "current-password" : "new-password"}
                                 rightIcon={
                                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-muted-foreground hover:text-foreground transition-colors">
                                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
