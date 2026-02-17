@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Shield, X, Send, Minimize2, Maximize2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { MessageSquare, Shield, Send } from "lucide-react";
 import { api } from "@/lib/api";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { AdminSupportDashboard } from "@/components/admin/AdminSupportDashboard";
 
 interface Message {
     id: number;
@@ -19,7 +19,6 @@ interface Message {
 
 export const SupportWidget: React.FC = () => {
     const { user, isAuthenticated } = useAuth();
-    const navigate = useNavigate();
     const [isVisible, setIsVisible] = useState(false);
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -50,7 +49,6 @@ export const SupportWidget: React.FC = () => {
 
                 // Check messages
                 if (msgs && msgs.length > 0) {
-                    setIsVisible(true);
                     setMessages(msgs);
                 }
 
@@ -63,7 +61,6 @@ export const SupportWidget: React.FC = () => {
                 if (hasWon) {
                     setIsVisible(true);
                 }
-
 
             } catch (error) {
                 console.error("Error checking support widget visibility", error);
@@ -83,9 +80,8 @@ export const SupportWidget: React.FC = () => {
         const interval = setInterval(() => {
             api.getMessages(user.id).then(msgs => {
                 if (msgs.length > 0) {
-                    setIsVisible(true);
                     setMessages(msgs);
-                    // If chat is NOT open, we could track "unread" here by comparing length or last message ID
+                    // If chat is NOT open, we could track "unread" here
                     if (!isChatOpen) {
                         setHasUnread(true);
                     }
@@ -123,18 +119,26 @@ export const SupportWidget: React.FC = () => {
 
     if (!isVisible) return null;
 
+    // --- ADMIN VIEW: DASHBOARD ---
     if (user?.role === 'admin') {
         return (
-            <Button
-                onClick={() => navigate('/admin')}
-                className="fixed bottom-6 left-6 z-50 rounded-full shadow-2xl h-14 px-6 bg-gradient-to-r from-red-600 to-red-900 border border-red-500/50 hover:scale-105 transition-all animate-in fade-in slide-in-from-bottom-4 duration-500"
-            >
-                <Shield className="w-5 h-5 mr-2" />
-                Painel Admin
-            </Button>
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button
+                        className="fixed bottom-6 left-6 z-50 rounded-full shadow-2xl h-14 px-6 bg-gradient-to-r from-red-600 to-red-900 border border-red-500/50 hover:scale-105 transition-all animate-in fade-in slide-in-from-bottom-4 duration-500"
+                    >
+                        <Shield className="w-5 h-5 mr-2" />
+                        Admin Dashboard
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[450px] h-[600px] flex flex-col p-0 gap-0 overflow-hidden bg-background">
+                    <AdminSupportDashboard />
+                </DialogContent>
+            </Dialog>
         );
     }
 
+    // --- USER VIEW: SIMPLE CHAT ---
     return (
         <>
             <Button
