@@ -24,7 +24,7 @@ export const SupportWidget: React.FC = () => {
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState("");
-    const scrollRef = useRef<HTMLDivElement>(null);
+
     const [hasUnread, setHasUnread] = useState(false);
 
     // 1. Initial Visibility Check
@@ -64,6 +64,7 @@ export const SupportWidget: React.FC = () => {
                     setIsVisible(true);
                 }
 
+
             } catch (error) {
                 console.error("Error checking support widget visibility", error);
             }
@@ -95,10 +96,12 @@ export const SupportWidget: React.FC = () => {
         return () => clearInterval(interval);
     }, [isAuthenticated, user, isChatOpen]);
 
+    const bottomRef = useRef<HTMLDivElement>(null);
+
     // 3. Auto-scroll chat
     useEffect(() => {
-        if (isChatOpen && scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        if (isChatOpen && bottomRef.current) {
+            bottomRef.current.scrollIntoView({ behavior: "smooth" });
         }
     }, [messages, isChatOpen]);
 
@@ -159,7 +162,7 @@ export const SupportWidget: React.FC = () => {
                         </DialogDescription>
                     </DialogHeader>
 
-                    <ScrollArea className="flex-1 p-4 bg-background/50" ref={scrollRef}>
+                    <ScrollArea className="flex-1 p-4 bg-background/50">
                         <div className="space-y-4">
                             {messages.length === 0 && (
                                 <div className="text-center text-muted-foreground text-sm py-8">
@@ -182,6 +185,7 @@ export const SupportWidget: React.FC = () => {
                                     </div>
                                 );
                             })}
+                            <div ref={bottomRef} />
                         </div>
                     </ScrollArea>
 

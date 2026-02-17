@@ -65,10 +65,12 @@ export const WinnerDetailsModal: React.FC<WinnerDetailsModalProps> = ({ userId, 
         }
     }, [isOpen, userId]);
 
+    const bottomRef = useRef<HTMLDivElement>(null);
+
     // Auto-scroll to bottom of chat
     useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        if (bottomRef.current) {
+            bottomRef.current.scrollIntoView({ behavior: "smooth" });
         }
     }, [messages]);
 
@@ -192,7 +194,7 @@ export const WinnerDetailsModal: React.FC<WinnerDetailsModalProps> = ({ userId, 
                             </Button>
                         </div>
 
-                        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+                        <ScrollArea className="flex-1 p-4">
                             <div className="space-y-4">
                                 {messages.length === 0 && (
                                     <div className="text-center text-muted-foreground py-10 opacity-50">
@@ -215,6 +217,7 @@ export const WinnerDetailsModal: React.FC<WinnerDetailsModalProps> = ({ userId, 
                                         </div>
                                     );
                                 })}
+                                <div ref={bottomRef} />
                             </div>
                         </ScrollArea>
 
