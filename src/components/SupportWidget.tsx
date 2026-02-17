@@ -127,7 +127,7 @@ export const SupportWidget: React.FC = () => {
         return (
             <Button
                 onClick={() => navigate('/admin')}
-                className="fixed bottom-6 right-6 z-50 rounded-full shadow-2xl h-14 px-6 bg-gradient-to-r from-red-600 to-red-900 border border-red-500/50 hover:scale-105 transition-all animate-in fade-in slide-in-from-bottom-4 duration-500"
+                className="fixed bottom-6 left-6 z-50 rounded-full shadow-2xl h-14 px-6 bg-gradient-to-r from-red-600 to-red-900 border border-red-500/50 hover:scale-105 transition-all animate-in fade-in slide-in-from-bottom-4 duration-500"
             >
                 <Shield className="w-5 h-5 mr-2" />
                 Painel Admin
@@ -139,7 +139,7 @@ export const SupportWidget: React.FC = () => {
         <>
             <Button
                 onClick={() => setIsChatOpen(true)}
-                className="fixed bottom-6 right-6 z-50 rounded-full shadow-2xl h-14 w-14 p-0 bg-primary hover:bg-primary/90 hover:scale-110 transition-all animate-bounce-subtle"
+                className="fixed bottom-6 left-6 z-50 rounded-full shadow-2xl h-14 w-14 p-0 bg-primary hover:bg-primary/90 hover:scale-110 transition-all animate-bounce-subtle"
             >
                 <MessageSquare className="w-6 h-6 text-primary-foreground" />
                 {hasUnread && (
