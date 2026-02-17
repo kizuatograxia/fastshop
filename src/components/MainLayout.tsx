@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import WalletDrawer from "./WalletDrawer";
+import { SupportWidget } from "./SupportWidget";
 
 const MainLayout: React.FC = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -28,6 +29,7 @@ const MainLayout: React.FC = () => {
             <main>
                 <Outlet context={{ activeCategory, setActiveCategory }} />
             </main>
+            <SupportWidget />
         </div>
     );
 };
