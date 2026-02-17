@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Raffle } from "@/types/raffle";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, Users, Trophy, Target, Calendar, DollarSign, Pen } from "lucide-react";
+import { ArrowLeft, Clock, Users, Trophy, Target, Calendar, DollarSign, Pen, MessageSquare } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { CountdownBadge } from "@/components/CountdownBadge";
+import { WinnerDetailsModal } from "@/components/admin/WinnerDetailsModal";
 
 interface AdminRaffleDetailsProps {
     raffle: Raffle;
@@ -13,6 +15,7 @@ interface AdminRaffleDetailsProps {
 }
 
 export function AdminRaffleDetails({ raffle, onBack, onEdit, onViewParticipants, onDraw }: AdminRaffleDetailsProps) {
+    const [showWinnerModal, setShowWinnerModal] = useState(false);
 
     const targetRevenue = (raffle.premioValor || 5000) * 1.5;
     const currentRevenue = (raffle.participantes * (raffle.custoNFT || 0));
@@ -79,22 +82,41 @@ export function AdminRaffleDetails({ raffle, onBack, onEdit, onViewParticipants,
 
                     {/* Winner Section */}
                     {raffle.status === 'encerrado' && raffle.winner && (
-                        <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/50 rounded-2xl p-6 flex items-center gap-6">
-                            <div className="relative">
-                                <img
-                                    src={raffle.winner.picture}
-                                    alt={raffle.winner.name}
-                                    className="w-20 h-20 rounded-full border-2 border-white object-cover shadow-xl"
-                                />
-                                <div className="absolute -bottom-2 -right-2 bg-yellow-500 text-black p-1.5 rounded-full shadow-lg border border-white">
-                                    <Trophy className="w-4 h-4" fill="black" />
+                        <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/50 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6 justify-between">
+                            <div className="flex items-center gap-6">
+                                <div className="relative">
+                                    <img
+                                        src={raffle.winner.picture}
+                                        alt={raffle.winner.name}
+                                        className="w-20 h-20 rounded-full border-2 border-white object-cover shadow-xl"
+                                    />
+                                    <div className="absolute -bottom-2 -right-2 bg-yellow-500 text-black p-1.5 rounded-full shadow-lg border border-white">
+                                        <Trophy className="w-4 h-4" fill="black" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="text-yellow-500 font-bold uppercase tracking-wider text-xs mb-1">Grande Vencedor</p>
+                                    <h2 className="text-2xl font-bold text-white mb-1">{raffle.winner.name}</h2>
+                                    <p className="text-sm text-yellow-500/80">ID: {raffle.winner.id}</p>
                                 </div>
                             </div>
-                            <div>
-                                <p className="text-yellow-500 font-bold uppercase tracking-wider text-xs mb-1">Grande Vencedor</p>
-                                <h2 className="text-2xl font-bold text-white mb-1">{raffle.winner.name}</h2>
-                                <p className="text-sm text-yellow-500/80">ID: {raffle.winner.id}</p>
-                            </div>
+
+                            <Button
+                                className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold shadow-lg shadow-yellow-500/20"
+                                onClick={() => setShowWinnerModal(true)}
+                            >
+                                <MessageSquare className="w-4 h-4 mr-2" />
+                                Ver Detalhes & Chat
+                            </Button>
+
+                            {/* Modal */}
+                            {raffle.winner.id && (
+                                <WinnerDetailsModal
+                                    userId={raffle.winner.id}
+                                    isOpen={showWinnerModal}
+                                    onClose={() => setShowWinnerModal(false)}
+                                />
+                            )}
                         </div>
                     )}
                 </div>
@@ -158,3 +180,4 @@ export function AdminRaffleDetails({ raffle, onBack, onEdit, onViewParticipants,
         </div>
     );
 }
+

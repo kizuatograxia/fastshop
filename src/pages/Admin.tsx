@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ type ViewMode = 'dashboard' | 'create' | 'participants' | 'raffles' | 'settings'
 
 const Admin = () => {
     // --- AUTH STATE ---
+    const { user } = useAuth();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -39,9 +41,19 @@ const Admin = () => {
     const [winnerId, setWinnerId] = useState<number | null>(null);
 
     useEffect(() => {
-        // Auto-login if session persists
+        // Auto-login if session persists OR USER HAS ADMIN ROLE
         const checkAuth = async () => {
             const storedKey = localStorage.getItem("admin_key");
+
+            // Check if user is admin via RBAC
+            if (user && user.role === 'admin') {
+                setIsAuthenticated(true);
+                toast.success(`Bem-vindo, Admin ${user.name}`);
+                const data = await api.getAdminRaffles();
+                setRaffles(data);
+                return;
+            }
+
             if (storedKey) {
                 try {
                     await api.verifyAdmin(storedKey);
@@ -57,7 +69,7 @@ const Admin = () => {
             }
         };
         checkAuth();
-    }, []);
+    }, [user]); // Re-run when user loads
 
     // Update handlers to fetch reviews when view changes
     useEffect(() => {

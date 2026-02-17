@@ -267,6 +267,29 @@ export const api = {
         return res.json();
     },
 
+    // Admin Users & Chat
+    getAdminUserDetails: async (userId: number | string) => {
+        const res = await fetch(`${API_URL}/admin/users/${userId}`);
+        if (!res.ok) throw new Error("Falha ao buscar detalhes do usuário");
+        return res.json();
+    },
+
+    getMessages: async (userId: number | string) => {
+        const res = await fetch(`${API_URL}/chat/${userId}`);
+        if (!res.ok) throw new Error("Falha ao carregar mensagens");
+        return res.json();
+    },
+
+    sendMessage: async (sender_id: number | string, receiver_id: number | string, content: string) => {
+        const res = await fetch(`${API_URL}/chat/send`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sender_id, receiver_id, content }),
+        });
+        if (!res.ok) throw new Error("Falha ao enviar mensagem");
+        return res.json();
+    },
+
     updateRaffle: async (password: string, id: string, raffle: any) => {
         const res = await fetch(`${API_URL}/raffles/${id}`, {
             method: "PUT",

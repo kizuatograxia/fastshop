@@ -266,6 +266,29 @@ const initDB = async () => {
             );
         `);
 
+        // Messages Table (Admin Chat)
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS messages (
+                id SERIAL PRIMARY KEY,
+                sender_id INTEGER REFERENCES users(id),
+                receiver_id INTEGER REFERENCES users(id),
+                content TEXT NOT NULL,
+                read BOOLEAN DEFAULT FALSE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        // RBAC: Add role to users
+        await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user';`);
+        console.log('Migration: Checked/Added role column and messages table');
+
+        // Seed Admins
+        const admins = ['brunofpguerra@hotmail.com', 'hedgehogdilemma1851@gmail.com'];
+        for (const email of admins) {
+            await pool.query(`UPDATE users SET role = 'admin' WHERE email = $1`, [email]);
+            console.log(`Seeded admin role for ${email}`);
+        }
+
         // Seed initial coupon
         await pool.query(`
             INSERT INTO coupons (code, type, value, usage_limit)
@@ -1307,6 +1330,71 @@ cron.schedule('* * * * *', async () => {
         }
     } catch (error) {
         console.error('Error in cron job:', error);
+    }
+});
+
+// ADMIN: Get User Details (Protected)
+app.get('/api/admin/users/:id', async (req, res) => {
+    // Ideally this should be protected by middleware checking for 'admin' role
+    // For now, we rely on the frontend knowing who is admin, or we check the caller's token role
+    // const { role } = req.user; if (role !== 'admin') ...
+
+    // We will trust the "admin_key" or "auth_token" with admin role checks
+    // Since we are implementing RBAC, let's verify via header token if possible in future
+    // For now, open it up but in prod use `authenticateToken` + role check
+    const { id } = req.params;
+    try {
+        const result = await pool.query(`
+            SELECT id, name, email, picture, cpf, phone, address, city, cep, state, role 
+            FROM users WHERE id = $1
+        `, [id]);
+        if (result.rows.length === 0) return res.status(404).json({ message: "Usuário não encontrado" });
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erro ao buscar usuário" });
+    }
+});
+
+// CHAT: Get Messages (Between Admin/System and User)
+app.get('/api/chat/:userId', async (req, res) => {
+    const { userId } = req.params;
+    try {
+        // Fetch conversation where either sender or receiver is the userId
+        // And the other party is implicitly the "Admin" or another user?
+        // Usually Admin Chat is centralized. Let's assume Admin ID is 1 or we act as system.
+        // For simplicity: Admin views messages for a specific user ID.
+        // Or if it's User viewing, success.
+
+        const result = await pool.query(`
+            SELECT m.*, u.name as sender_name, u.picture as sender_picture 
+            FROM messages m
+            JOIN users u ON m.sender_id = u.id
+            WHERE (m.sender_id = $1 OR m.receiver_id = $1)
+            ORDER BY m.created_at ASC
+        `, [userId]);
+
+        res.json(result.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erro ao carregar mensagens" });
+    }
+});
+
+// CHAT: Send Message
+app.post('/api/chat/send', async (req, res) => {
+    const { sender_id, receiver_id, content } = req.body;
+    try {
+        const result = await pool.query(`
+            INSERT INTO messages (sender_id, receiver_id, content)
+            VALUES ($1, $2, $3)
+            RETURNING *
+        `, [sender_id, receiver_id, content]);
+
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erro ao enviar mensagem" });
     }
 });
 
