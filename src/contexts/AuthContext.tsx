@@ -31,11 +31,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
+    const ADMIN_EMAILS = ['brunofpguerra@hotmail.com', 'hedgehogdilemma1851@gmail.com'];
+
     useEffect(() => {
         const sessionData = localStorage.getItem(SESSION_STORAGE_KEY);
         if (sessionData) {
             try {
                 const parsedUser = JSON.parse(sessionData);
+                // Force admin role if email matches
+                if (ADMIN_EMAILS.includes(parsedUser.email)) {
+                    parsedUser.role = 'admin';
+                }
                 setUser(parsedUser);
             } catch {
                 localStorage.removeItem(SESSION_STORAGE_KEY);
@@ -50,6 +56,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const response = await api.login(email, password);
             console.log("Login response:", response);
             if (response.user) {
+                const role = ADMIN_EMAILS.includes(response.user.email) ? 'admin' : (response.user.role || 'user');
+
                 // Ensure ID is string to match interface if needed, API sends number or string
                 const sessionUser: User = {
                     id: String(response.user.id),
@@ -58,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     picture: response.user.picture,
                     walletAddress: response.user.walletAddress,
                     profile_complete: response.user.profile_complete || false,
-                    role: response.user.role || 'user'
+                    role: role
                 };
                 setUser(sessionUser);
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser));
@@ -86,6 +94,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const response = await api.googleLogin(token);
             console.log("Google Login response:", response);
             if (response.user) {
+                const role = ADMIN_EMAILS.includes(response.user.email) ? 'admin' : (response.user.role || 'user');
+
                 const sessionUser: User = {
                     id: String(response.user.id),
                     email: response.user.email,
@@ -93,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     picture: response.user.picture,
                     walletAddress: response.user.walletAddress,
                     profile_complete: response.user.profile_complete || false,
-                    role: response.user.role || 'user'
+                    role: role
                 };
                 setUser(sessionUser);
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser));
@@ -121,10 +131,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             const response = await api.register(email, password);
             if (response.user) {
+                const role = ADMIN_EMAILS.includes(response.user.email) ? 'admin' : 'user';
+
                 const sessionUser: User = {
                     id: String(response.user.id),
                     email: response.user.email,
-                    role: 'user'
+                    role: role
                 };
                 setUser(sessionUser);
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser));
