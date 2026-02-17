@@ -63,7 +63,7 @@ export function AdminRaffleDetails({ raffle, onBack, onEdit, onViewParticipants,
 
                     <div>
                         <h1 className="text-3xl font-bold mb-2">{raffle.titulo}</h1>
-                        <p className="text-muted-foreground text-lg leading-relaxed">{raffle.descricao}</p>
+                        <p className="text-muted-foreground text-lg leading-relaxed whitespace-pre-wrap">{raffle.descricao}</p>
 
                         {/* Action Button for Draw */}
                         {raffle.status === 'ativo' && (

@@ -276,7 +276,7 @@ const RaffleDetails: React.FC = () => {
                             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
                                 {raffle.titulo}
                             </h1>
-                            <p className="text-lg text-muted-foreground">
+                            <p className="text-lg text-muted-foreground whitespace-pre-wrap">
                                 {raffle.descricao}
                             </p>
                         </div>
