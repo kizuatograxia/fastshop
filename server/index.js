@@ -153,7 +153,10 @@ const initDB = async () => {
                 prize_value DECIMAL(10,2) DEFAULT 0,
                 category VARCHAR(50) DEFAULT 'tech',
                 rarity VARCHAR(50) DEFAULT 'comum',
-                winner_id INTEGER REFERENCES users(id)
+                winner_id INTEGER REFERENCES users(id),
+                tracking_code VARCHAR(255),
+                carrier VARCHAR(100),
+                shipped_at TIMESTAMP
             );
         `);
 
@@ -203,7 +206,14 @@ const initDB = async () => {
             await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(30);`);
             await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(100);`);
             await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_complete BOOLEAN DEFAULT FALSE;`);
+            await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_complete BOOLEAN DEFAULT FALSE;`);
             console.log('Migration: Added user profile columns');
+
+            // Tracking Migration
+            await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS tracking_code VARCHAR(255);`);
+            await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS carrier VARCHAR(100);`);
+            await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS shipped_at TIMESTAMP;`);
+            console.log('Migration: Added tracking columns to raffles');
 
             // Testimonials Table (for user reviews/depoimentos)
             await pool.query(`
@@ -991,6 +1001,49 @@ app.put('/api/raffles/:id', async (req, res) => {
     }
 });
 
+// Admin: Update Tracking Info
+app.put('/api/admin/raffles/:id/tracking', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    const { trackingCode, carrier } = req.body;
+
+    // Check admin role
+    if (req.user.role !== 'admin') {
+        const admins = ['brunofpguerra@hotmail.com', 'hedgehogdilemma1851@gmail.com'];
+        if (!admins.includes(req.user.email)) return res.status(403).json({ message: 'Acesso negado' });
+    }
+
+    try {
+        const result = await pool.query(
+            `UPDATE raffles 
+             SET tracking_code = $1, carrier = $2, shipped_at = NOW() 
+             WHERE id = $3 
+             RETURNING *`,
+            [trackingCode, carrier, id]
+        );
+
+        if (result.rows.length === 0) return res.status(404).json({ message: 'Sorteio não encontrado' });
+
+        const raffle = result.rows[0];
+
+        // Notify Winner
+        if (raffle.winner_id) {
+            await pool.query(`
+                INSERT INTO notifications (user_id, title, message)
+                VALUES ($1, $2, $3)
+            `, [
+                raffle.winner_id,
+                'Seu prêmio foi enviado! 🚚',
+                `O rastreio do seu prêmio (${raffle.title}) já está disponível: ${trackingCode} (${carrier}).`
+            ]);
+        }
+
+        res.json({ success: true, raffle });
+    } catch (error) {
+        console.error('Error updating tracking:', error);
+        res.status(500).json({ message: 'Erro ao atualizar rastreio' });
+    }
+});
+
 app.delete('/api/raffles/:id', async (req, res) => {
     const { id } = req.params;
     const { password } = req.body; // or query, or header. Keeping body for simplicity
@@ -1491,7 +1544,10 @@ app.get('/api/user/raffles', async (req, res) => {
                 rarity: row.rarity || 'comum',
                 winner_id: row.winner_id,
                 winner_name: row.winner_name,
-                winner_picture: row.winner_picture // Wait, join query needs update too?
+                // Tracking Info
+                trackingCode: row.tracking_code,
+                carrier: row.carrier,
+                shippedAt: row.shipped_at
             },
             ticketsComprados: parseInt(row.tickets_comprados),
             totalValueContributed: parseInt(row.tickets_comprados) * row.ticket_price,

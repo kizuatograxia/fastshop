@@ -24,6 +24,9 @@ export interface Raffle {
     raridade?: string;
     winner_id?: number;
     winner?: RaffleWinner;
+    trackingCode?: string;
+    carrier?: string;
+    shippedAt?: string;
 }
 
 export interface RaffleWinner {

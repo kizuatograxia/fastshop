@@ -300,6 +300,17 @@ export const api = {
         return res.json();
     },
 
+    updateTracking: async (raffleId: string, trackingData: { trackingCode: string, carrier: string }) => {
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch(`${API_URL}/admin/raffles/${raffleId}/tracking`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(trackingData),
+        });
+        if (!res.ok) throw new Error('Failed to update tracking');
+        return res.json();
+    },
+
     updateRaffle: async (password: string, id: string, raffle: any) => {
         const res = await fetch(`${API_URL}/raffles/${id}`, {
             method: "PUT",

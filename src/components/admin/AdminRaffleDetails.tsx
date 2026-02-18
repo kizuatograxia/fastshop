@@ -16,6 +16,9 @@ interface AdminRaffleDetailsProps {
 
 export function AdminRaffleDetails({ raffle, onBack, onEdit, onViewParticipants, onDraw }: AdminRaffleDetailsProps) {
     const [showWinnerModal, setShowWinnerModal] = useState(false);
+    const [trackingCode, setTrackingCode] = useState(raffle.trackingCode || "");
+    const [carrier, setCarrier] = useState(raffle.carrier || "");
+    const [isSavingTracking, setIsSavingTracking] = useState(false);
 
     const targetRevenue = (raffle.premioValor || 5000) * 1.5;
     const currentRevenue = (raffle.participantes * (raffle.custoNFT || 0));
@@ -117,6 +120,61 @@ export function AdminRaffleDetails({ raffle, onBack, onEdit, onViewParticipants,
                                     onClose={() => setShowWinnerModal(false)}
                                 />
                             )}
+                        </div>
+                    )}
+
+                    {/* Tracking Section */}
+                    {raffle.status === 'encerrado' && raffle.winner && (
+                        <div className="bg-card border border-white/5 rounded-2xl p-6 shadow-xl">
+                            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                <span className="text-xl">🚚</span>
+                                Rastreamento do Prêmio
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-muted-foreground">Código de Rastreio</label>
+                                    <input
+                                        type="text"
+                                        value={trackingCode}
+                                        onChange={(e) => setTrackingCode(e.target.value)}
+                                        className="w-full bg-background border border-white/10 rounded-md p-2 text-sm text-foreground"
+                                        placeholder="Ex: BR123456789PT"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-muted-foreground">Transportadora</label>
+                                    <input
+                                        type="text"
+                                        value={carrier}
+                                        onChange={(e) => setCarrier(e.target.value)}
+                                        className="w-full bg-background border border-white/10 rounded-md p-2 text-sm text-foreground"
+                                        placeholder="Ex: Correios, Jadlog"
+                                    />
+                                </div>
+                            </div>
+                            <div className="mt-4 flex justify-end">
+                                <Button
+                                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                                    onClick={async () => {
+                                        setIsSavingTracking(true);
+                                        try {
+                                            const { api } = await import("@/lib/api");
+                                            const { toast } = await import("sonner");
+                                            await api.updateTracking(raffle.id, { trackingCode, carrier });
+                                            toast.success("Rastreio atualizado com sucesso!");
+                                        } catch (error) {
+                                            console.error(error);
+                                            const { toast } = await import("sonner");
+                                            toast.error("Erro ao atualizar rastreio");
+                                        } finally {
+                                            setIsSavingTracking(false);
+                                        }
+                                    }}
+                                    disabled={isSavingTracking}
+                                >
+                                    {isSavingTracking ? "Salvando..." : "Salvar Rastreio"}
+                                </Button>
+                            </div>
                         </div>
                     )}
                 </div>
