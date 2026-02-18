@@ -10,6 +10,10 @@ interface User {
     walletAddress?: string;
     profile_complete?: boolean;
     role?: string;
+    cep?: string;
+    address?: string;
+    city?: string;
+    state?: string;
 }
 
 interface AuthContextType {

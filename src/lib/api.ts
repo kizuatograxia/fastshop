@@ -280,13 +280,23 @@ export const api = {
         return res.json();
     },
 
-    sendMessage: async (sender_id: number | string, receiver_id: number | string, content: string) => {
-        const res = await fetch(`${API_URL}/chat/send`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ sender_id, receiver_id, content }),
+    sendMessage: async (senderId: number, receiverId: number, content: string) => {
+        const res = await fetch(`${API_URL}/chat/messages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+            body: JSON.stringify({ senderId, receiverId, content }),
         });
-        if (!res.ok) throw new Error("Falha ao enviar mensagem");
+        if (!res.ok) throw new Error('Failed to send message');
+        return res.json();
+    },
+
+    calculateShipping: async (cep: string, items: any[]) => {
+        const res = await fetch(`${API_URL}/shipping/calculate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+            body: JSON.stringify({ cep, items }),
+        });
+        if (!res.ok) throw new Error('Failed to calculate shipping');
         return res.json();
     },
 
