@@ -396,7 +396,19 @@ app.post('/api/login', async (req, res) => {
                 email: user.email,
                 name: user.name,
                 picture: user.picture,
-                profile_complete: user.profile_complete || false
+                profile_complete: user.profile_complete || false,
+                cpf: user.cpf,
+                birthDate: user.birth_date,
+                gender: user.gender,
+                address: user.address,
+                city: user.city,
+                state: user.state,
+                cep: user.cep,
+                number: user.number,
+                district: user.district,
+                country: user.country,
+                phone: user.phone,
+                username: user.username
             }
         });
     } catch (error) {
@@ -459,7 +471,19 @@ app.post('/api/auth/google', async (req, res) => {
                 email: user.email,
                 name: user.name,
                 picture: user.picture,
-                profile_complete: user.profile_complete || false
+                profile_complete: user.profile_complete || false,
+                cpf: user.cpf,
+                birthDate: user.birth_date,
+                gender: user.gender,
+                address: user.address,
+                city: user.city,
+                state: user.state,
+                cep: user.cep,
+                number: user.number,
+                district: user.district,
+                country: user.country,
+                phone: user.phone,
+                username: user.username
             }
         });
     } catch (error) {
@@ -1560,9 +1584,10 @@ app.get('/api/user/raffles', async (req, res) => {
                 winner_id: row.winner_id,
                 winner_name: row.winner_name,
                 // Tracking Info
-                trackingCode: row.tracking_code,
+                tracking_code: row.tracking_code,
                 carrier: row.carrier,
-                shippedAt: row.shipped_at
+                shipping_status: row.shipping_status,
+                shipped_at: row.shipped_at
             },
             ticketsComprados: parseInt(row.tickets_comprados),
             totalValueContributed: parseInt(row.tickets_comprados) * row.ticket_price,
