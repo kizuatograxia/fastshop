@@ -96,7 +96,11 @@ export const WinnerDetailsModal: React.FC<WinnerDetailsModalProps> = ({ userId, 
         if (!newMessage.trim() || !currentUser) return;
 
         try {
-            await api.sendMessage(typeof currentUser.id === 'string' ? parseInt(currentUser.id) : currentUser.id, userId, newMessage);
+            await api.sendMessage(
+                typeof currentUser.id === 'string' ? parseInt(currentUser.id) : currentUser.id,
+                typeof userId === 'string' ? parseInt(userId) : userId,
+                newMessage
+            );
             setNewMessage("");
             // Refresh messages
             const chatRes = await api.getMessages(userId);
