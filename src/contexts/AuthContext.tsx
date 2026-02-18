@@ -16,6 +16,12 @@ interface User {
     state?: string;
     number?: string;
     district?: string;
+    cpf?: string;
+    birthDate?: string;
+    gender?: string;
+    country?: string;
+    phone?: string;
+    username?: string;
 
 }
 
