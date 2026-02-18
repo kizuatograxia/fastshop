@@ -202,6 +202,8 @@ const initDB = async () => {
             await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS state VARCHAR(50);`);
             await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS state VARCHAR(50);`); // Added state column
             await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS cep VARCHAR(20);`);
+            await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS number VARCHAR(20);`);
+            await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS district VARCHAR(100);`);
             await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS country VARCHAR(50) DEFAULT 'brasil';`);
             await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(30);`);
             await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(100);`);
@@ -474,7 +476,7 @@ app.put('/api/users/:id/profile', authenticateToken, async (req, res) => {
         return res.status(403).json({ message: 'Acesso negado: Você só pode editar seu próprio perfil.' });
     }
 
-    const { cpf, birthDate, gender, address, city, cep, country, phone, username } = req.body;
+    const { cpf, birthDate, gender, address, city, cep, country, phone, username, state, number, district } = req.body;
 
     try {
         const result = await pool.query(
@@ -488,9 +490,12 @@ app.put('/api/users/:id/profile', authenticateToken, async (req, res) => {
                 country = COALESCE($7, country),
                 phone = COALESCE($8, phone),
                 username = COALESCE($9, username),
-                profile_complete = TRUE
-             WHERE id = $10 RETURNING id, email, name, picture, cpf, birth_date, gender, address, city, cep, country, phone, username, profile_complete`,
-            [cpf || null, birthDate || null, gender || null, address || null, city || null, cep || null, country || null, phone || null, username || null, id]
+                profile_complete = TRUE,
+                state = COALESCE($10, state),
+                number = COALESCE($11, number),
+                district = COALESCE($12, district)
+             WHERE id = $13 RETURNING id, email, name, picture, cpf, birth_date, gender, address, city, cep, country, phone, username, profile_complete, state, number, district`,
+            [cpf || null, birthDate || null, gender || null, address || null, city || null, cep || null, country || null, phone || null, username || null, state || null, number || null, district || null, id]
         );
 
         if (result.rows.length === 0) {

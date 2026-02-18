@@ -25,7 +25,10 @@ interface FormData {
     cpf: string;
     gender: string;
     address: string;
+    number: string;
+    district: string;
     city: string;
+    state: string;
     cep: string;
     country: string;
     phone: string;
@@ -38,7 +41,7 @@ interface FormData {
 
 const INITIAL_FORM: FormData = {
     email: "", confirmEmail: "", birthDate: "", cpf: "", gender: "",
-    address: "", city: "", cep: "", country: "brasil", phone: "",
+    address: "", number: "", district: "", city: "", state: "", cep: "", country: "brasil", phone: "",
     username: "", password: "", promoCode: "", acceptTerms: false, acceptBonus: true,
 };
 
@@ -112,6 +115,8 @@ const Register: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isGoogleAuth, setIsGoogleAuth] = useState(false);
 
+    const [cepLoading, setCepLoading] = useState(false);
+
     // Login state
     const [loginEmail, setLoginEmail] = useState("");
     const [loginPassword, setLoginPassword] = useState("");
@@ -119,6 +124,34 @@ const Register: React.FC = () => {
     const set = useCallback((field: keyof FormData, value: string | boolean) => {
         setForm(prev => ({ ...prev, [field]: value }));
     }, []);
+
+    const handleBlurCep = async () => {
+        const rawCep = form.cep.replace(/\D/g, '');
+        if (rawCep.length === 8) {
+            setCepLoading(true);
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${rawCep}/json/`);
+                const data = await response.json();
+                if (!data.erro) {
+                    setForm(prev => ({
+                        ...prev,
+                        address: data.logradouro,
+                        district: data.bairro,
+                        city: data.localidade,
+                        state: data.uf,
+                    }));
+                    // Focus number field if possible
+                    document.getElementById('number')?.focus();
+                } else {
+                    toast.error("CEP não encontrado");
+                }
+            } catch (error) {
+                toast.error("Erro ao buscar CEP");
+            } finally {
+                setCepLoading(false);
+            }
+        }
+    };
 
     // Validation per step
     const validateStep = (s: number): boolean => {
@@ -137,8 +170,12 @@ const Register: React.FC = () => {
             return true;
         }
         if (s === 1) {
+            if (!form.cep || form.cep.replace(/\D/g, "").length < 8) { toast.error("CEP inválido"); return false; }
             if (!form.address) { toast.error("Informe seu endereço"); return false; }
+            if (!form.number) { toast.error("Informe o número"); return false; }
+            if (!form.district) { toast.error("Informe o bairro"); return false; }
             if (!form.city) { toast.error("Informe sua cidade"); return false; }
+            if (!form.state) { toast.error("Informe o estado"); return false; }
             if (!form.phone || form.phone.replace(/\D/g, "").length < 10) { toast.error("Celular inválido"); return false; }
             return true;
         }
@@ -172,7 +209,10 @@ const Register: React.FC = () => {
                         birthDate: form.birthDate,
                         gender: form.gender,
                         address: form.address,
+                        number: form.number,
+                        district: form.district,
                         city: form.city,
+                        state: form.state,
                         cep: form.cep,
                         country: form.country,
                         phone: form.phone,
@@ -198,7 +238,10 @@ const Register: React.FC = () => {
                                 birthDate: form.birthDate,
                                 gender: form.gender,
                                 address: form.address,
+                                number: form.number,
+                                district: form.district,
                                 city: form.city,
+                                state: form.state,
                                 cep: form.cep,
                                 country: form.country,
                                 phone: form.phone,
@@ -442,9 +485,36 @@ const Register: React.FC = () => {
                         <h2 className="text-xl font-extrabold text-foreground">Quase lá! 📍</h2>
                         <p className="text-muted-foreground text-xs">Onde a sorte te encontra?</p>
                     </div>
-                    <Field icon={<MapPin className="w-4 h-4" />} label="Endereço" id="address" placeholder="Rua da Sorte, 777" value={form.address} onChange={v => set("address", v)} />
-                    <Field icon={<MapPin className="w-4 h-4" />} label="Cidade" id="city" placeholder="Sua cidade" value={form.city} onChange={v => set("city", v)} />
-                    <Field icon={<MapPin className="w-4 h-4" />} label="CEP" id="cep" placeholder="00000-000" value={form.cep} onChange={v => set("cep", maskCEP(v))} />
+
+                    <div className="space-y-1.5">
+                        <Label htmlFor="cep" className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">CEP</Label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                                {cepLoading ? <Loader2 className="w-4 h-4 animate-spin text-primary" /> : <MapPin className="w-4 h-4" />}
+                            </span>
+                            <input
+                                id="cep" type="text" placeholder="00000-000" value={form.cep}
+                                onChange={e => {
+                                    const v = maskCEP(e.target.value);
+                                    set("cep", v);
+                                }}
+                                onBlur={handleBlurCep}
+                                className="w-full h-12 pl-11 pr-4 rounded-xl border border-input bg-background/50 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm font-medium"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-[1fr,100px] gap-4">
+                        <Field icon={<MapPin className="w-4 h-4" />} label="Endereço (Rua)" id="address" placeholder="Rua da Sorte" value={form.address} onChange={v => set("address", v)} />
+                        <Field icon={<MapPin className="w-4 h-4" />} label="Número" id="number" placeholder="123" value={form.number} onChange={v => set("number", v)} />
+                    </div>
+
+                    <Field icon={<MapPin className="w-4 h-4" />} label="Bairro" id="district" placeholder="Centro" value={form.district} onChange={v => set("district", v)} />
+
+                    <div className="grid grid-cols-[1fr,80px] gap-4">
+                        <Field icon={<MapPin className="w-4 h-4" />} label="Cidade" id="city" placeholder="Sua cidade" value={form.city} onChange={v => set("city", v)} />
+                        <Field icon={<MapPin className="w-4 h-4" />} label="Estado" id="state" placeholder="UF" value={form.state} onChange={v => set("state", v)} />
+                    </div>
                     <div className="space-y-1.5">
                         <Label className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">País</Label>
                         <Select value={form.country} onValueChange={v => set("country", v)}>

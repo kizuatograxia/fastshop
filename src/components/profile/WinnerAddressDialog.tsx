@@ -21,10 +21,37 @@ export function WinnerAddressDialog({ isOpen, onOpenChange, onSuccess }: WinnerA
     const [formData, setFormData] = useState({
         cep: user?.cep || "",
         address: user?.address || "",
-        number: "", // Number is often separate but user object might store it in address or separate. For now simple.
+        number: user?.number || "",
+        district: user?.district || "",
         city: user?.city || "",
         state: user?.state || ""
     });
+
+    const handleBlurCep = async () => {
+        const rawCep = formData.cep.replace(/\D/g, '');
+        if (rawCep.length === 8) {
+            setLoading(true);
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${rawCep}/json/`);
+                const data = await response.json();
+                if (!data.erro) {
+                    setFormData(prev => ({
+                        ...prev,
+                        address: data.logradouro,
+                        district: data.bairro,
+                        city: data.localidade,
+                        state: data.uf,
+                    }));
+                } else {
+                    toast({ title: "CEP não encontrado", variant: "destructive" });
+                }
+            } catch (error) {
+                toast({ title: "Erro ao buscar CEP", variant: "destructive" });
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
 
     const handleSave = async () => {
         if (!formData.cep || !formData.address || !formData.city || !formData.state) {
@@ -36,7 +63,9 @@ export function WinnerAddressDialog({ isOpen, onOpenChange, onSuccess }: WinnerA
         try {
             await api.updateProfile(user!.id, {
                 cep: formData.cep,
-                address: `${formData.address}${formData.number ? `, ${formData.number}` : ''}`, // Combine for now if backend expects single string or keep separate if backend updated
+                address: formData.address,
+                number: formData.number,
+                district: formData.district,
                 city: formData.city,
                 state: formData.state
             });
@@ -65,6 +94,7 @@ export function WinnerAddressDialog({ isOpen, onOpenChange, onSuccess }: WinnerA
                         <Input
                             value={formData.cep}
                             onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
+                            onBlur={handleBlurCep}
                             placeholder="00000-000"
                             maxLength={9}
                         />
@@ -94,6 +124,14 @@ export function WinnerAddressDialog({ isOpen, onOpenChange, onSuccess }: WinnerA
                             value={formData.address}
                             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                             placeholder="Rua, Bairro"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Bairro</Label>
+                        <Input
+                            value={formData.district}
+                            onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+                            placeholder="Bairro"
                         />
                     </div>
                     <div className="space-y-2">

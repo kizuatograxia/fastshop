@@ -15,6 +15,8 @@ interface User {
     city?: string;
     state?: string;
     number?: string;
+    district?: string;
+
 }
 
 interface AuthContextType {
