@@ -285,10 +285,10 @@ export const api = {
     },
 
     sendMessage: async (senderId: number, receiverId: number, content: string) => {
-        const res = await fetch(`${API_URL}/chat/messages`, {
+        const res = await fetch(`${API_URL}/chat/send`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-            body: JSON.stringify({ senderId, receiverId, content }),
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+            body: JSON.stringify({ sender_id: senderId, receiver_id: receiverId, content }),
         });
         if (!res.ok) throw new Error('Failed to send message');
         return res.json();
