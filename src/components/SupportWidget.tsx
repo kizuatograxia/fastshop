@@ -71,26 +71,45 @@ export const SupportWidget: React.FC = () => {
     }, [isAuthenticated, user]);
 
     // 2. Polling for new messages
+    // 2. Polling for new messages
     useEffect(() => {
         if (!isAuthenticated || !user || user.role === 'admin') return;
 
         // Poll more frequently (3s) if chat is open, otherwise slower (15s) to check for notification bubble
-        const intervalTime = isChatOpen ? 3000 : 15000;
+        const intervalTime = isChatOpen ? 3000 : 5000;
+        let lastMessageCount = messages.length;
 
         const interval = setInterval(() => {
             api.getMessages(user.id).then(msgs => {
-                if (msgs.length > 0) {
+                if (msgs.length > lastMessageCount) {
+                    // New message detected!
+                    const newMsg = msgs[msgs.length - 1];
+                    const isAdminMsg = String(newMsg.sender_id) !== String(user.id);
+
                     setMessages(msgs);
-                    // If chat is NOT open, we could track "unread" here
-                    if (!isChatOpen) {
+                    lastMessageCount = msgs.length;
+
+                    if (!isChatOpen && isAdminMsg) {
                         setHasUnread(true);
+                        toast.info("Nova mensagem do Suporte", {
+                            description: newMsg.content,
+                            action: {
+                                label: "Ver",
+                                onClick: () => setIsChatOpen(true)
+                            }
+                        });
+                        // Optional: Play sound here
                     }
+                } else if (msgs.length !== lastMessageCount) {
+                    // Just sync if deleted or something (unlikely but good practice)
+                    setMessages(msgs);
+                    lastMessageCount = msgs.length;
                 }
             }).catch(() => { });
         }, intervalTime);
 
         return () => clearInterval(interval);
-    }, [isAuthenticated, user, isChatOpen]);
+    }, [isAuthenticated, user, isChatOpen, messages.length]); // Depend on messages.length to reset logic if needed
 
     const bottomRef = useRef<HTMLDivElement>(null);
 
