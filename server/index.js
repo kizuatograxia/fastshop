@@ -1008,14 +1008,14 @@ app.put('/api/raffles/:id', async (req, res) => {
 });
 
 // Admin: Update Tracking Info
-app.put('/api/admin/raffles/:id/tracking', authenticateToken, async (req, res) => {
+app.put('/api/admin/raffles/:id/tracking', async (req, res) => {
     const { id } = req.params;
-    const { trackingCode, carrier, status } = req.body;
+    const { trackingCode, carrier, status, password } = req.body;
 
-    // Check admin role
-    if (req.user.role !== 'admin') {
-        const admins = ['brunofpguerra@hotmail.com', 'hedgehogdilemma1851@gmail.com'];
-        if (!admins.includes(req.user.email)) return res.status(403).json({ message: 'Acesso negado' });
+    // Auth: accept password OR JWT
+    const token = req.headers.authorization?.split(' ')[1];
+    if (password !== ADMIN_PASSWORD && !token) {
+        return res.status(401).json({ message: 'Não autorizado' });
     }
 
     try {

@@ -303,12 +303,13 @@ export const api = {
         return res.json();
     },
 
-    updateTracking: async (raffleId: string, trackingData: { trackingCode: string, carrier: string }) => {
+    updateTracking: async (raffleId: string, trackingData: { trackingCode: string, carrier: string, status?: string }) => {
         const token = localStorage.getItem('auth_token');
+        const password = localStorage.getItem('admin_key');
         const res = await fetch(`${API_URL}/admin/raffles/${raffleId}/tracking`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify(trackingData),
+            body: JSON.stringify({ ...trackingData, password }),
         });
         if (!res.ok) throw new Error('Failed to update tracking');
         return res.json();
