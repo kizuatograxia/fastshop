@@ -219,6 +219,7 @@ export const api = {
                 } : undefined,
                 trackingCode: ur.raffle.tracking_code,
                 carrier: ur.raffle.carrier,
+                shippingStatus: ur.raffle.shipping_status,
                 shippedAt: ur.raffle.shipped_at
             }
         }));

@@ -25,6 +25,7 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { WinnerAddressDialog } from "@/components/profile/WinnerAddressDialog";
+import DeliveryProgress from "@/components/DeliveryProgress";
 
 const rarityColors: Record<string, string> = {
     comum: "from-gray-400 to-gray-500",
@@ -232,28 +233,12 @@ const Profile = () => {
 
                                                         {/* Tracking Status */}
                                                         {ur.raffle.trackingCode ? (
-                                                            <div className="flex flex-col md:flex-row gap-2 md:items-center bg-green-500/10 p-3 rounded-lg border border-green-500/20">
-                                                                <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/30 gap-1 w-fit">
-                                                                    <span>🚚 Enviado</span>
-                                                                </Badge>
-                                                                <span className="text-sm text-foreground">
-                                                                    {ur.raffle.carrier}: <span className="font-mono select-all">{ur.raffle.trackingCode}</span>
-                                                                </span>
-                                                                <Button
-                                                                    variant="link"
-                                                                    size="sm"
-                                                                    className="h-auto p-0 text-primary ml-auto"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        const url = ur.raffle.carrier?.toLowerCase().includes('correios')
-                                                                            ? `https://rastreamento.correios.com.br/app/index.php?objeto=${ur.raffle.trackingCode}`
-                                                                            : `https://www.google.com/search?q=rastreio+${ur.raffle.trackingCode}`;
-                                                                        window.open(url, '_blank');
-                                                                    }}
-                                                                >
-                                                                    Rastrear
-                                                                </Button>
-                                                            </div>
+                                                            <DeliveryProgress
+                                                                status={ur.raffle.shippingStatus || 'shipped'}
+                                                                trackingCode={ur.raffle.trackingCode}
+                                                                carrier={ur.raffle.carrier}
+                                                                shippedAt={ur.raffle.shippedAt}
+                                                            />
                                                         ) : (
                                                             <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/30 p-3 rounded-lg">
                                                                 <Clock className="w-4 h-4" />
