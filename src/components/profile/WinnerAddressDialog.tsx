@@ -15,7 +15,7 @@ interface WinnerAddressDialogProps {
 }
 
 export function WinnerAddressDialog({ isOpen, onOpenChange, onSuccess }: WinnerAddressDialogProps) {
-    const { user } = useAuth();
+    const { user, updateUser } = useAuth();
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
@@ -62,6 +62,15 @@ export function WinnerAddressDialog({ isOpen, onOpenChange, onSuccess }: WinnerA
         setLoading(true);
         try {
             await api.updateProfile(user!.id, {
+                cep: formData.cep,
+                address: formData.address,
+                number: formData.number,
+                district: formData.district,
+                city: formData.city,
+                state: formData.state
+            });
+            // Update local user context immediately
+            updateUser({
                 cep: formData.cep,
                 address: formData.address,
                 number: formData.number,

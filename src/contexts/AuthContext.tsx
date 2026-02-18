@@ -28,6 +28,7 @@ interface AuthContextType {
     googleLogin: (token: string) => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
     setWalletAddress: (address: string) => void;
+    updateUser: (data: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -73,7 +74,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     picture: response.user.picture,
                     walletAddress: response.user.walletAddress,
                     profile_complete: response.user.profile_complete || false,
-                    role: role
+                    role: role,
+                    // Map address fields
+                    cep: response.user.cep,
+                    address: response.user.address,
+                    number: response.user.number,
+                    district: response.user.district,
+                    city: response.user.city,
+                    state: response.user.state
                 };
                 setUser(sessionUser);
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser));
@@ -110,10 +118,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     picture: response.user.picture,
                     walletAddress: response.user.walletAddress,
                     profile_complete: response.user.profile_complete || false,
-                    role: role
+                    role: role,
+                    // Map address fields
+                    cep: response.user.cep,
+                    address: response.user.address,
+                    number: response.user.number,
+                    district: response.user.district,
+                    city: response.user.city,
+                    state: response.user.state
                 };
                 setUser(sessionUser);
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser));
+                // Also save to "user" key for consistency with other parts of the app
                 localStorage.setItem("user", JSON.stringify(sessionUser));
 
                 if (response.token) {
@@ -176,6 +192,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const updatedUser = { ...user, walletAddress: address };
         setUser(updatedUser);
         localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(updatedUser));
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+    }, [user]);
+
+    const updateUser = useCallback((data: Partial<User>) => {
+        if (!user) return;
+        const updatedUser = { ...user, ...data };
+        setUser(updatedUser);
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(updatedUser));
+        localStorage.setItem("user", JSON.stringify(updatedUser));
     }, [user]);
 
     return (
@@ -189,6 +214,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 googleLogin,
                 logout,
                 setWalletAddress,
+                updateUser,
             }}
         >
             {children}
