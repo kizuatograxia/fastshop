@@ -136,10 +136,12 @@ export const SupportWidget: React.FC = () => {
         }
     };
 
-    if (!isVisible) return null;
+    // Remove the early return so the component stays mounted for polling and Dialog handling
+    // if (!isVisible) return null;
 
     // --- ADMIN VIEW: DASHBOARD ---
     if (user?.role === 'admin') {
+        // Admin always visible, or we could respect isVisible if we wanted to toggle it
         return (
             <Dialog>
                 <DialogTrigger asChild>
@@ -160,15 +162,17 @@ export const SupportWidget: React.FC = () => {
     // --- USER VIEW: SIMPLE CHAT ---
     return (
         <>
-            <Button
-                onClick={() => setIsChatOpen(true)}
-                className="fixed bottom-6 left-6 z-50 rounded-full shadow-2xl h-14 w-14 p-0 bg-primary hover:bg-primary/90 hover:scale-110 transition-all animate-bounce-subtle"
-            >
-                <MessageSquare className="w-6 h-6 text-primary-foreground" />
-                {hasUnread && (
-                    <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full animate-ping" />
-                )}
-            </Button>
+            {isVisible && (
+                <Button
+                    onClick={() => setIsChatOpen(true)}
+                    className="fixed bottom-6 left-6 z-50 rounded-full shadow-2xl h-14 w-14 p-0 bg-primary hover:bg-primary/90 hover:scale-110 transition-all animate-bounce-subtle"
+                >
+                    <MessageSquare className="w-6 h-6 text-primary-foreground" />
+                    {hasUnread && (
+                        <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full animate-ping" />
+                    )}
+                </Button>
+            )}
 
             <Dialog open={isChatOpen} onOpenChange={(open) => {
                 setIsChatOpen(open);
