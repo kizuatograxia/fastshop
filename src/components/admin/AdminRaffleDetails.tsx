@@ -18,6 +18,7 @@ export function AdminRaffleDetails({ raffle, onBack, onEdit, onViewParticipants,
     const [showWinnerModal, setShowWinnerModal] = useState(false);
     const [trackingCode, setTrackingCode] = useState(raffle.trackingCode || "");
     const [carrier, setCarrier] = useState(raffle.carrier || "");
+    const [shippingStatus, setShippingStatus] = useState(raffle.shippingStatus || "preparing");
     const [isSavingTracking, setIsSavingTracking] = useState(false);
 
     const targetRevenue = (raffle.premioValor || 5000) * 1.5;
@@ -154,7 +155,7 @@ export function AdminRaffleDetails({ raffle, onBack, onEdit, onViewParticipants,
                                 <span className="text-xl">🚚</span>
                                 Rastreamento do Prêmio
                             </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-muted-foreground">Código de Rastreio</label>
                                     <input
@@ -175,6 +176,19 @@ export function AdminRaffleDetails({ raffle, onBack, onEdit, onViewParticipants,
                                         placeholder="Ex: Correios, Jadlog"
                                     />
                                 </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-muted-foreground">Status da Entrega</label>
+                                    <select
+                                        value={shippingStatus}
+                                        onChange={(e) => setShippingStatus(e.target.value)}
+                                        className="w-full bg-background border border-white/10 rounded-md p-2 text-sm text-foreground"
+                                    >
+                                        <option value="preparing">📦 Preparando</option>
+                                        <option value="shipped">🚚 Enviado</option>
+                                        <option value="in_transit">✈️ Em Trânsito</option>
+                                        <option value="delivered">✅ Entregue</option>
+                                    </select>
+                                </div>
                             </div>
                             <div className="mt-4 flex justify-end">
                                 <Button
@@ -184,7 +198,7 @@ export function AdminRaffleDetails({ raffle, onBack, onEdit, onViewParticipants,
                                         try {
                                             const { api } = await import("@/lib/api");
                                             const { toast } = await import("sonner");
-                                            await api.updateTracking(raffle.id, { trackingCode, carrier });
+                                            await api.updateTracking(raffle.id, { trackingCode, carrier, status: shippingStatus });
                                             toast.success("Rastreio atualizado com sucesso!");
                                         } catch (error) {
                                             console.error(error);
