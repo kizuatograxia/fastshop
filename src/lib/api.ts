@@ -216,7 +216,10 @@ export const api = {
                     id: ur.raffle.winner.id,
                     name: ur.raffle.winner.name,
                     picture: ur.raffle.winner.picture
-                } : undefined
+                } : undefined,
+                trackingCode: ur.raffle.tracking_code,
+                carrier: ur.raffle.carrier,
+                shippedAt: ur.raffle.shipped_at
             }
         }));
     },
