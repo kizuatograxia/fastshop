@@ -603,6 +603,46 @@ app.post('/api/coupons/validate', async (req, res) => {
     }
 });
 
+// --- NFT Catalog (Public) ---
+app.get('/api/nfts', (req, res) => {
+    // Return the server-side catalog source of truth
+    res.json(nfts);
+});
+
+// --- Notifications (User) ---
+app.get('/api/notifications', authenticateToken, async (req, res) => {
+    const userId = req.user.id;
+    try {
+        const result = await pool.query(`
+            SELECT * FROM notifications 
+            WHERE user_id = $1 
+            ORDER BY created_at DESC 
+            LIMIT 50
+        `, [userId]);
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+        res.status(500).json({ message: 'Erro ao buscar notificações' });
+    }
+});
+
+app.put('/api/notifications/:id/read', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+    try {
+        const result = await pool.query(`
+            UPDATE notifications SET read = TRUE 
+            WHERE id = $1 AND user_id = $2 
+            RETURNING *
+        `, [id, userId]);
+        if (result.rows.length === 0) return res.status(404).json({ message: 'Notificação não encontrada' });
+        res.json(result.rows[0]);
+    } catch (error) {
+        console.error('Error marking notification read:', error);
+        res.status(500).json({ message: 'Erro ao atualizar notificação' });
+    }
+});
+
 // Admin Coupon Routes
 app.get('/api/admin/coupons', async (req, res) => {
     try {
@@ -1043,9 +1083,21 @@ app.put('/api/admin/raffles/:id/tracking', async (req, res) => {
     }
 
     try {
+        // Logic to update shipped_at ONLY when status changes to 'shipped' for the first time
+        // OR we can just check if status is 'shipped' and current shipped_at is null. 
+        // Simpler: If status passed is 'shipped', update shipped_at. To avoid overwriting old date, check COALESCE or do logic.
+        // Let's do: set shipped_at to NOW() if status is 'shipped' AND (shipped_at is NULL or we want to update it).
+        // Actually, safer is to CASE WHEN behavior.
+
         const result = await pool.query(
             `UPDATE raffles 
-             SET tracking_code = $1, carrier = $2, shipping_status = $3, shipped_at = NOW() 
+             SET tracking_code = $1, 
+                 carrier = $2, 
+                 shipping_status = $3, 
+                 shipped_at = CASE 
+                    WHEN $3 = 'shipped' AND shipped_at IS NULL THEN NOW() 
+                    ELSE shipped_at 
+                 END
              WHERE id = $4 
              RETURNING *`,
             [trackingCode, carrier, status || 'preparing', id]
@@ -1560,11 +1612,14 @@ app.get('/api/user/raffles', async (req, res) => {
         const query = `
             SELECT 
                 r.*, 
-                count(t.id) as tickets_comprados
+                count(t.id) as tickets_comprados,
+                u.name as winner_name,
+                u.picture as winner_picture
             FROM tickets t
             JOIN raffles r ON t.raffle_id = r.id
+            LEFT JOIN users u ON r.winner_id = u.id
             WHERE t.user_id = $1
-            GROUP BY r.id
+            GROUP BY r.id, u.id
         `;
         const result = await pool.query(query, [userId]);
 
@@ -1583,6 +1638,11 @@ app.get('/api/user/raffles', async (req, res) => {
                 rarity: row.rarity || 'comum',
                 winner_id: row.winner_id,
                 winner_name: row.winner_name,
+                winner: row.winner_id ? {
+                    id: row.winner_id,
+                    name: row.winner_name,
+                    picture: row.winner_picture
+                } : undefined,
                 // Tracking Info
                 tracking_code: row.tracking_code,
                 carrier: row.carrier,
