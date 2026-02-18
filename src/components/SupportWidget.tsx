@@ -141,7 +141,7 @@ export const SupportWidget: React.FC = () => {
         const ADMIN_ID = 1; // Defaulting to first user/admin
 
         try {
-            await api.sendMessage(user.id, ADMIN_ID, newMessage);
+            await api.sendMessage(parseInt(user.id), ADMIN_ID, newMessage);
             setNewMessage("");
             const msgs = await api.getMessages(user.id);
             setMessages(msgs);

@@ -215,6 +215,7 @@ const initDB = async () => {
             await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS tracking_code VARCHAR(255);`);
             await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS carrier VARCHAR(100);`);
             await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS shipped_at TIMESTAMP;`);
+            await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS shipping_status VARCHAR(50) DEFAULT 'preparing';`);
             console.log('Migration: Added tracking columns to raffles');
 
             // Testimonials Table (for user reviews/depoimentos)
@@ -1009,7 +1010,7 @@ app.put('/api/raffles/:id', async (req, res) => {
 // Admin: Update Tracking Info
 app.put('/api/admin/raffles/:id/tracking', authenticateToken, async (req, res) => {
     const { id } = req.params;
-    const { trackingCode, carrier } = req.body;
+    const { trackingCode, carrier, status } = req.body;
 
     // Check admin role
     if (req.user.role !== 'admin') {
@@ -1020,10 +1021,10 @@ app.put('/api/admin/raffles/:id/tracking', authenticateToken, async (req, res) =
     try {
         const result = await pool.query(
             `UPDATE raffles 
-             SET tracking_code = $1, carrier = $2, shipped_at = NOW() 
-             WHERE id = $3 
+             SET tracking_code = $1, carrier = $2, shipping_status = $3, shipped_at = NOW() 
+             WHERE id = $4 
              RETURNING *`,
-            [trackingCode, carrier, id]
+            [trackingCode, carrier, status || 'preparing', id]
         );
 
         if (result.rows.length === 0) return res.status(404).json({ message: 'Sorteio não encontrado' });
@@ -1032,13 +1033,17 @@ app.put('/api/admin/raffles/:id/tracking', authenticateToken, async (req, res) =
 
         // Notify Winner
         if (raffle.winner_id) {
+            let message = `O status do seu prêmio mudou para: ${status}`;
+            if (status === 'shipped') message = `Seu prêmio foi enviado! 🚚 Código: ${trackingCode}`;
+            if (status === 'delivered') message = `Seu prêmio foi entregue! 🎉 Aproveite!`;
+
             await pool.query(`
                 INSERT INTO notifications (user_id, title, message)
                 VALUES ($1, $2, $3)
             `, [
                 raffle.winner_id,
-                'Seu prêmio foi enviado! 🚚',
-                `O rastreio do seu prêmio (${raffle.title}) já está disponível: ${trackingCode} (${carrier}).`
+                'Atualização de Entrega 📦',
+                message
             ]);
         }
 

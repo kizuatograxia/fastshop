@@ -36,7 +36,7 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
             return;
         }
 
-        addUserRaffle(raffle, 1, raffle.custoNFT);
+        addUserRaffle(raffle, 1, raffle.custoNFT, {});
         toast.success(`Você entrou no sorteio: ${raffle.titulo}!`, {
             description: `Custo: ${raffle.custoNFT} NFT(s)`,
         });

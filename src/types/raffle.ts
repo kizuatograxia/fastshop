@@ -26,6 +26,7 @@ export interface Raffle {
     winner?: RaffleWinner;
     trackingCode?: string;
     carrier?: string;
+    shippingStatus?: 'preparing' | 'shipped' | 'in_transit' | 'delivered';
     shippedAt?: string;
 }
 
@@ -39,6 +40,8 @@ export interface RaffleWinner {
     city?: string;
     state?: string;
     cep?: string;
+    number?: string;
+    district?: string;
 }
 
 export interface OwnedNFT extends NFT {

@@ -21,7 +21,7 @@ import {
     Zap,
 } from "lucide-react";
 
-type ViewMode = 'dashboard' | 'create' | 'participants' | 'raffles' | 'settings' | 'details' | 'reviews';
+type ViewMode = 'dashboard' | 'create' | 'participants' | 'raffles' | 'settings' | 'details' | 'reviews' | 'coupons';
 
 interface AdminSidebarProps {
     currentView: ViewMode;
