@@ -48,8 +48,16 @@ export const SupportWidget: React.FC = () => {
                 ]);
 
                 // Check messages
+                let isClosed = false;
                 if (msgs && msgs.length > 0) {
+                    const lastMsg = msgs[msgs.length - 1];
+                    if (lastMsg.content === '[SYSTEM:CHAT_CLOSED]') {
+                        isClosed = true;
+                    }
                     setMessages(msgs);
+                    if (!isClosed) {
+                        setIsVisible(true); // Allow visibility if conversation exists AND is not closed
+                    }
                 }
 
                 // Check notifications for "Ganhou" or "Won"
@@ -58,7 +66,7 @@ export const SupportWidget: React.FC = () => {
                     n.message.toLowerCase().includes('vencedor')
                 );
 
-                if (hasWon) {
+                if (hasWon && !isClosed) {
                     setIsVisible(true);
                 }
 
@@ -89,8 +97,14 @@ export const SupportWidget: React.FC = () => {
                     setMessages(msgs);
                     lastMessageCount = msgs.length;
 
-                    if (!isChatOpen && isAdminMsg) {
+                    if (newMsg.content === '[SYSTEM:CHAT_CLOSED]') {
+                        setIsVisible(false);
+                        setHasUnread(false);
+                        setIsChatOpen(false); // Close dialog if open
+                        toast.info("Atendimento encerrado pelo suporte.");
+                    } else if (!isChatOpen && isAdminMsg) {
                         setHasUnread(true);
+                        setIsVisible(true); // Ensure persistent button appears
                         toast.info("Nova mensagem do Suporte", {
                             description: newMsg.content,
                             action: {
@@ -196,22 +210,24 @@ export const SupportWidget: React.FC = () => {
                                     Inicie a conversa mandando um "Oi"!
                                 </div>
                             )}
-                            {messages.map((msg) => {
-                                const isMe = String(msg.sender_id) === String(user?.id);
-                                return (
-                                    <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`
+                            {messages
+                                .filter(msg => msg.content !== '[SYSTEM:CHAT_CLOSED]')
+                                .map((msg) => {
+                                    const isMe = String(msg.sender_id) === String(user?.id);
+                                    return (
+                                        <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                            <div className={`
                                             max-w-[85%] rounded-2xl px-3 py-2 text-sm
                                             ${isMe ? 'bg-primary text-primary-foreground rounded-tr-none' : 'bg-muted rounded-tl-none border'}
                                         `}>
-                                            <p>{msg.content}</p>
-                                            <span className="text-[10px] opacity-70 block text-right mt-1">
-                                                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
+                                                <p>{msg.content}</p>
+                                                <span className="text-[10px] opacity-70 block text-right mt-1">
+                                                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })}
                             <div ref={bottomRef} />
                         </div>
                     </ScrollArea>

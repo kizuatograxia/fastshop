@@ -148,6 +148,19 @@ export const AdminSupportDashboard: React.FC<AdminSupportDashboardProps> = ({ on
         }
     };
 
+    const handleCloseChat = async () => {
+        if (!selectedUser) return;
+        try {
+            // Send special system message to close chat
+            await api.sendMessage(1, selectedUser.userId, "[SYSTEM:CHAT_CLOSED]");
+            toast.success("Atendimento encerrado");
+            // Optionally clear selection or stay to view history
+            // handleBack(); 
+        } catch (error) {
+            toast.error("Erro ao encerrar atendimento");
+        }
+    };
+
     const handleBack = () => {
         setView('list');
         setSelectedUser(null);
@@ -230,13 +243,21 @@ export const AdminSupportDashboard: React.FC<AdminSupportDashboardProps> = ({ on
                             <AvatarImage src={selectedUser?.userAvatar} />
                             <AvatarFallback>{userDetails.name.substring(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
-                        <div>
+                        <div className="flex-1">
                             <h3 className="font-bold text-sm leading-none">{userDetails.name}</h3>
                             <p className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
                                 <Trophy className="w-3 h-3 text-primary" />
                                 {selectedUser?.raffleTitle}
                             </p>
                         </div>
+                        <Button
+                            variant="destructive"
+                            size="sm"
+                            className="h-7 text-xs px-2"
+                            onClick={handleCloseChat}
+                        >
+                            Encerrar
+                        </Button>
                     </div>
                 )}
             </div>
@@ -282,22 +303,24 @@ export const AdminSupportDashboard: React.FC<AdminSupportDashboardProps> = ({ on
                                 Nenhuma mensagem ainda. Inicie a conversa!
                             </div>
                         ) : (
-                            messages.map((msg) => {
-                                const isMe = String(msg.sender_id) === String(1); // Admin is 1
-                                return (
-                                    <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`
+                            messages
+                                .filter(msg => msg.content !== '[SYSTEM:CHAT_CLOSED]')
+                                .map((msg) => {
+                                    const isMe = String(msg.sender_id) === String(1); // Admin is 1
+                                    return (
+                                        <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                            <div className={`
                                             max-w-[85%] rounded-2xl px-3 py-2 text-sm
                                             ${isMe ? 'bg-primary text-primary-foreground rounded-tr-none' : 'bg-muted text-foreground rounded-tl-none'}
                                         `}>
-                                            <p>{msg.content}</p>
-                                            <span className={`text-[10px] block text-right mt-1 ${isMe ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                                                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
+                                                <p>{msg.content}</p>
+                                                <span className={`text-[10px] block text-right mt-1 ${isMe ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                                                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
-                                );
-                            })
+                                    );
+                                })
                         )}
                         <div ref={bottomRef} />
                     </div>
