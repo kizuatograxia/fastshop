@@ -359,7 +359,10 @@ export const api = {
                 city: r.winner_city,
                 state: r.winner_state,
                 cep: r.winner_cep
-            } : undefined
+            } : undefined,
+            trackingCode: r.tracking_code,
+            carrier: r.carrier,
+            shippedAt: r.shipped_at
         }));
     },
 
