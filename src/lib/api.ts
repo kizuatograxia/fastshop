@@ -353,7 +353,12 @@ export const api = {
             winner: r.winner_name ? {
                 id: r.winner_id,
                 name: r.winner_name,
-                picture: r.winner_picture
+                picture: r.winner_picture,
+                email: r.winner_email,
+                address: r.winner_address,
+                city: r.winner_city,
+                state: r.winner_state,
+                cep: r.winner_cep
             } : undefined
         }));
     },

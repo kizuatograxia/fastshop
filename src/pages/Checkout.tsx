@@ -43,105 +43,12 @@ const Checkout: React.FC = () => {
     const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; type: string } | null>(null);
     const [couponLoading, setCouponLoading] = useState(false);
 
-    // Shipping State
-    const [shippingOptions, setShippingOptions] = useState<any[]>([]);
-    const [selectedShipping, setSelectedShipping] = useState<any>(null);
-    const [shippingLoading, setShippingLoading] = useState(false);
-
-    // Address Edit State
-    const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
-    const [editingAddress, setEditingAddress] = useState({
-        cep: user?.cep || "",
-        address: user?.address || "",
-        city: user?.city || "",
-        state: user?.state || "",
-        number: "" // Optional
-    });
-
     const totalNFTs = getTotalNFTs();
     const totalPrice = cartItems.reduce((sum, nft) => sum + nft.preco * nft.quantidade, 0);
 
-    // Auto-calculate shipping on mount if user has CEP
-    React.useEffect(() => {
-        if (user?.cep && cartItems.length > 0) {
-            calculateShipping(user.cep);
-        }
-        // Sync editing address when user changes
-        if (user) {
-            setEditingAddress(prev => ({
-                ...prev,
-                cep: user.cep || "",
-                address: user.address || "",
-                city: user.city || "",
-                state: user.state || ""
-            }));
-        }
-    }, [user, cartItems]);
-
-    const calculateShipping = async (cep: string) => {
-        setShippingLoading(true);
-        try {
-            // Map cart items to format expected by backend
-            const items = cartItems.map(item => ({
-                id: item.id,
-                quantity: item.quantidade,
-                weight: 0.3, // Mock weight if not in item
-                price: item.preco,
-                width: 11, height: 2, length: 16 // Mock dimensions
-            }));
-
-            const options = await api.calculateShipping(cep.replace(/\D/g, ''), items);
-            setShippingOptions(options);
-
-            // Auto-select cheapest/first option
-            if (options.length > 0) {
-                // Prefer .Package (usually cheaper)
-                const preferred = options.find((o: any) => o.name.includes('.Package')) || options[0];
-                setSelectedShipping(preferred);
-            }
-        } catch (error) {
-            console.error(error);
-            // Don't toast on initial load if just checking
-        } finally {
-            setShippingLoading(false);
-        }
-    };
-
-    const handleSaveAddress = async () => {
-        if (!editingAddress.cep || editingAddress.cep.length < 8) {
-            toast({ title: "CEP Inválido", description: "Verifique o CEP digitado.", variant: "destructive" });
-            return;
-        }
-
-        try {
-            await api.updateProfile(user!.id, {
-                cep: editingAddress.cep,
-                address: editingAddress.address,
-                city: editingAddress.city,
-                state: editingAddress.state
-            });
-
-            // Refresh logic - ideally useAuth would expose a refresh or we simple update local user object context if possible
-            // For now, we manually assume success and trigger shipping calc
-            toast({ title: "Endereço atualizado!" });
-            setIsAddressModalOpen(false);
-            calculateShipping(editingAddress.cep);
-
-            // Force reload/re-fetch user profile if possible, or simple rely on the fact that we calculate shipping with the NEW cep locally
-            if (login && user) {
-                // Hack to update local context if login function supports update. 
-                // If not, we just rely on the fact we called calculateShipping with new data.
-            }
-
-        } catch (error) {
-            toast({ title: "Erro ao atualizar", variant: "destructive" });
-        }
-    };
-
     // Recalculate totals
-    const shippingCost = selectedShipping ? parseFloat(selectedShipping.price) : 0;
     const itemsTotal = appliedCoupon ? Math.max(0, totalPrice - appliedCoupon.discount) : totalPrice;
-    const finalPrice = itemsTotal + shippingCost;
+    const finalPrice = itemsTotal; // No shipping cost
 
     const handleApplyCoupon = async () => {
         if (!couponCode.trim()) return;
@@ -307,111 +214,7 @@ const Checkout: React.FC = () => {
 
                                 <Separator />
 
-                                {/* Shipping Section */}
-                                <div className="space-y-3">
-                                    <div className="flex justify-between items-center">
-                                        <Label className="text-sm font-medium">Frete</Label>
-                                        <div className="flex items-center gap-2">
-                                            {user?.cep ? (
-                                                <span className="text-xs text-muted-foreground">{user.city}/{user.state} - {user.cep}</span>
-                                            ) : (
-                                                <span className="text-xs text-red-400">Sem endereço</span>
-                                            )}
-
-                                            <Dialog open={isAddressModalOpen} onOpenChange={setIsAddressModalOpen}>
-                                                <DialogTrigger asChild>
-                                                    <Button variant="link" size="sm" className="h-auto p-0 text-primary">
-                                                        {user?.cep ? "Alterar" : "Adicionar"}
-                                                    </Button>
-                                                </DialogTrigger>
-                                                <DialogContent>
-                                                    <DialogHeader>
-                                                        <DialogTitle>Endereço de Entrega</DialogTitle>
-                                                        <DialogDescription>
-                                                            Informe seu CEP para calcular o frete.
-                                                        </DialogDescription>
-                                                    </DialogHeader>
-                                                    <div className="space-y-4 py-2">
-                                                        <div className="space-y-2">
-                                                            <Label>CEP</Label>
-                                                            <Input
-                                                                value={editingAddress.cep}
-                                                                onChange={(e) => setEditingAddress({ ...editingAddress, cep: e.target.value })}
-                                                                placeholder="00000-000"
-                                                                maxLength={9}
-                                                            />
-                                                        </div>
-                                                        <div className="grid grid-cols-2 gap-4">
-                                                            <div className="space-y-2">
-                                                                <Label>Cidade</Label>
-                                                                <Input
-                                                                    value={editingAddress.city}
-                                                                    onChange={(e) => setEditingAddress({ ...editingAddress, city: e.target.value })}
-                                                                    placeholder="São Paulo"
-                                                                />
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <Label>Estado (UF)</Label>
-                                                                <Input
-                                                                    value={editingAddress.state}
-                                                                    onChange={(e) => setEditingAddress({ ...editingAddress, state: e.target.value })}
-                                                                    placeholder="SP"
-                                                                    maxLength={2}
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <Label>Endereço</Label>
-                                                            <Input
-                                                                value={editingAddress.address}
-                                                                onChange={(e) => setEditingAddress({ ...editingAddress, address: e.target.value })}
-                                                                placeholder="Rua Exemplo, 123"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <DialogFooter>
-                                                        <Button onClick={handleSaveAddress}>Salvar e Calcular</Button>
-                                                    </DialogFooter>
-                                                </DialogContent>
-                                            </Dialog>
-                                        </div>
-                                    </div>
-
-                                    {shippingLoading ? (
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/20 p-3 rounded-lg">
-                                            <Loader2 className="w-4 h-4 animate-spin" />
-                                            Calculando melhores opções...
-                                        </div>
-                                    ) : shippingOptions.length > 0 ? (
-                                        <div className="grid gap-2">
-                                            {shippingOptions.map((option: any) => (
-                                                <div
-                                                    key={option.id}
-                                                    onClick={() => setSelectedShipping(option)}
-                                                    className={`
-                                                        flex justify-between items-center p-3 rounded-lg border cursor-pointer transition-all hover:shadow-sm
-                                                        ${selectedShipping?.id === option.id ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border bg-card hover:bg-accent'}
-                                                    `}
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-muted-foreground">
-                                                            📦
-                                                        </div>
-                                                        <div className="flex flex-col">
-                                                            <span className="font-medium text-sm">{option.name || option.company}</span>
-                                                            <span className="text-xs text-muted-foreground">{option.delivery_time} dias úteis</span>
-                                                        </div>
-                                                    </div>
-                                                    <span className="font-bold text-sm">R$ {parseFloat(option.price).toFixed(2)}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="text-sm text-muted-foreground bg-secondary/30 p-3 rounded-lg text-center border border-dashed">
-                                            {user?.cep ? "Nenhuma opção de entrega disponível para este CEP." : "Adicione um CEP para ver as opções de entrega."}
-                                        </div>
-                                    )}
-                                </div>
+                                {/* Shipping Section Removed */}
 
                                 <Separator />
 
@@ -448,10 +251,7 @@ const Checkout: React.FC = () => {
                                         <span>Subtotal</span>
                                         <span>R$ {totalPrice.toFixed(2)}</span>
                                     </div>
-                                    <div className="flex justify-between text-sm text-muted-foreground">
-                                        <span>Frete</span>
-                                        <span>R$ {shippingCost.toFixed(2)}</span>
-                                    </div>
+
                                     <div className="flex justify-between items-center text-lg font-bold pt-2">
                                         <span>Total</span>
                                         <span className={appliedCoupon ? "text-primary" : "text-gradient"}>
@@ -467,7 +267,7 @@ const Checkout: React.FC = () => {
                             className="w-full"
                             size="lg"
                             onClick={handlePayWithPix}
-                            disabled={isLoading || (!selectedShipping && shippingOptions.length > 0)}
+                            disabled={isLoading}
                         >
                             {isLoading ? (
                                 <>

@@ -1204,7 +1204,12 @@ app.get('/api/admin/raffles', async (req, res) => {
             SELECT r.*, 
                    COUNT(t.id) as tickets_sold,
                    u.name as winner_name,
-                   u.picture as winner_picture
+                   u.picture as winner_picture,
+                   u.email as winner_email,
+                   u.address as winner_address,
+                   u.city as winner_city,
+                   u.state as winner_state,
+                   u.cep as winner_cep
             FROM raffles r
             LEFT JOIN tickets t ON r.id = t.raffle_id
             LEFT JOIN users u ON r.winner_id = u.id

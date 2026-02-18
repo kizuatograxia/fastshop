@@ -34,6 +34,11 @@ export interface RaffleWinner {
     user_id?: string | number;
     name: string;
     picture?: string;
+    email?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    cep?: string;
 }
 
 export interface OwnedNFT extends NFT {

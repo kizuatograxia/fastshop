@@ -17,11 +17,14 @@ import {
     Copy,
     Check,
     LogOut,
+    MapPin,
+    Clock,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { WinnerAddressDialog } from "@/components/profile/WinnerAddressDialog";
 
 const rarityColors: Record<string, string> = {
     comum: "from-gray-400 to-gray-500",
@@ -40,6 +43,7 @@ const rarityLabels: Record<string, string> = {
 const Profile = () => {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
+    const [showAddressModal, setShowAddressModal] = useState(false);
     const { ownedNFTs, getTotalNFTs } = useWallet();
     const { userRaffles } = useUserRaffles();
     const [copied, setCopied] = useState(false);
@@ -172,163 +176,186 @@ const Profile = () => {
                     </Card>
                 </div>
 
-            </CardContent>
-        </Card>
 
-                {/* Meus Prêmios (Won Raffles with Tracking) */ }
-    {
-        userRaffles.some(ur => ur.raffle.winner_id && String(ur.raffle.winner_id) === String(user.id)) && (
-            <Card className="bg-card border-border animate-fade-in border-yellow-500/30 bg-yellow-500/5">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-yellow-500">
-                        <Trophy className="h-5 w-5" />
-                        Meus Prêmios
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                        {userRaffles
-                            .filter(ur => ur.raffle.winner_id && String(ur.raffle.winner_id) === String(user.id))
-                            .map((ur) => (
-                                <div
-                                    key={ur.raffle.id}
-                                    className="flex flex-col md:flex-row items-center gap-4 p-4 rounded-lg bg-background border border-yellow-500/20"
-                                >
-                                    <img
-                                        src={ur.raffle.imagem}
-                                        alt={ur.raffle.titulo}
-                                        className="w-20 h-20 rounded-lg object-cover"
-                                    />
-                                    <div className="flex-1 min-w-0 text-center md:text-left">
-                                        <h4 className="font-bold text-foreground truncate text-lg">
-                                            {ur.raffle.titulo}
-                                        </h4>
-                                        <p className="text-yellow-500 font-medium">Você ganhou este prêmio!</p>
 
-                                        {ur.raffle.trackingCode ? (
-                                            <div className="mt-2 flex flex-col md:flex-row gap-2 md:items-center">
-                                                <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/30 gap-1 w-fit mx-auto md:mx-0">
-                                                    <span>🚚 Enviado</span>
-                                                </Badge>
-                                                <span className="text-sm text-muted-foreground">
-                                                    {ur.raffle.carrier}: <span className="font-mono text-foreground select-all">{ur.raffle.trackingCode}</span>
-                                                </span>
-                                                <Button
-                                                    variant="link"
-                                                    size="sm"
-                                                    className="h-auto p-0 text-primary"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        const url = ur.raffle.carrier?.toLowerCase().includes('correios')
-                                                            ? `https://rastreamento.correios.com.br/app/index.php?objeto=${ur.raffle.trackingCode}`
-                                                            : `https://www.google.com/search?q=rastreio+${ur.raffle.trackingCode}`;
-                                                        window.open(url, '_blank');
-                                                    }}
-                                                >
-                                                    Rastrear
+                {/* Meus Prêmios (Won Raffles with Tracking) */}
+                {
+                    userRaffles.some(ur => ur.raffle.winner_id && String(ur.raffle.winner_id) === String(user.id)) && (
+                        <Card className="bg-card border-border animate-fade-in border-yellow-500/30 bg-yellow-500/5">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-yellow-500">
+                                    <Trophy className="h-5 w-5" />
+                                    Meus Prêmios
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    {userRaffles
+                                        .filter(ur => ur.raffle.winner_id && String(ur.raffle.winner_id) === String(user.id))
+                                        .map((ur) => (
+                                            <div
+                                                key={ur.raffle.id}
+                                                className="flex flex-col md:flex-row items-center gap-4 p-4 rounded-lg bg-background border border-yellow-500/20"
+                                            >
+                                                <img
+                                                    src={ur.raffle.imagem}
+                                                    alt={ur.raffle.titulo}
+                                                    className="w-20 h-20 rounded-lg object-cover"
+                                                />
+                                                <div className="flex-1 min-w-0 text-center md:text-left">
+                                                    <h4 className="font-bold text-foreground truncate text-lg">
+                                                        {ur.raffle.titulo}
+                                                    </h4>
+                                                    <p className="text-yellow-500 font-medium">Você ganhou este prêmio!</p>
+
+                                                    <div className="mt-3 space-y-3">
+                                                        {/* Delivery Address Status */}
+                                                        <div className="bg-secondary/30 rounded-lg p-3 text-sm">
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <span className="font-semibold flex items-center gap-2 text-muted-foreground">
+                                                                    <MapPin className="w-4 h-4 text-primary" />
+                                                                    Entrega
+                                                                </span>
+                                                                <Button variant="link" size="sm" className="h-auto p-0 text-primary" onClick={(e) => { e.stopPropagation(); setShowAddressModal(true); }}>
+                                                                    {user.address ? "Alterar" : "Cadastrar"}
+                                                                </Button>
+                                                            </div>
+                                                            {user.address ? (
+                                                                <div className="space-y-1">
+                                                                    <p className="text-foreground font-medium">{user.address}, {user.number || 'S/N'}</p>
+                                                                    <p className="text-muted-foreground text-xs">{user.city}/{user.state} - {user.cep}</p>
+                                                                </div>
+                                                            ) : (
+                                                                <p className="text-yellow-500 font-medium animate-pulse">Endereço não cadastrado!</p>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Tracking Status */}
+                                                        {ur.raffle.trackingCode ? (
+                                                            <div className="flex flex-col md:flex-row gap-2 md:items-center bg-green-500/10 p-3 rounded-lg border border-green-500/20">
+                                                                <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/30 gap-1 w-fit">
+                                                                    <span>🚚 Enviado</span>
+                                                                </Badge>
+                                                                <span className="text-sm text-foreground">
+                                                                    {ur.raffle.carrier}: <span className="font-mono select-all">{ur.raffle.trackingCode}</span>
+                                                                </span>
+                                                                <Button
+                                                                    variant="link"
+                                                                    size="sm"
+                                                                    className="h-auto p-0 text-primary ml-auto"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        const url = ur.raffle.carrier?.toLowerCase().includes('correios')
+                                                                            ? `https://rastreamento.correios.com.br/app/index.php?objeto=${ur.raffle.trackingCode}`
+                                                                            : `https://www.google.com/search?q=rastreio+${ur.raffle.trackingCode}`;
+                                                                        window.open(url, '_blank');
+                                                                    }}
+                                                                >
+                                                                    Rastrear
+                                                                </Button>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/30 p-3 rounded-lg">
+                                                                <Clock className="w-4 h-4" />
+                                                                {user.address ? "Aguardando envio..." : "Cadastre seu endereço para o envio."}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <Button variant="outline" onClick={() => navigate(`/raffle/${ur.raffle.id}`)}>
+                                                    Ver Detalhes
                                                 </Button>
                                             </div>
-                                        ) : (
-                                            <div className="mt-2 text-sm text-muted-foreground flex items-center justify-center md:justify-start gap-2">
-                                                <Clock className="w-4 h-4" />
-                                                Aguardando envio...
-                                            </div>
-                                        )}
-                                    </div>
-                                    <Button variant="outline" onClick={() => navigate(`/raffle/${ur.raffle.id}`)}>
-                                        Ver Detalhes
-                                    </Button>
+                                        ))}
                                 </div>
-                            ))}
-                    </div>
-                </CardContent>
-            </Card>
-        )
-    }
+                            </CardContent>
+                        </Card>
+                    )
+                }
 
-    {/* My Raffles Section */ }
-    <Card className="bg-card border-border">
-        <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-                <Ticket className="h-5 w-5 text-primary" />
-                Meus Sorteios
-            </CardTitle>
-        </CardHeader>
-        <CardContent>
-            {userRaffles.length === 0 ? (
-                <div className="text-center py-8">
-                    <Trophy className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">
-                        Você ainda não participa de nenhum sorteio
-                    </p>
-                    <Button
-                        variant="default"
-                        className="mt-4 bg-gradient-primary"
-                        onClick={() => navigate("/")}
-                    >
-                        Explorar Sorteios
-                    </Button>
-                </div>
-            ) : (
-                <div className="space-y-4">
-                    {userRaffles.map((ur) => {
-                        const isActive = ur.raffle.status === 'ativo';
-                        return (
-                            <div
-                                key={ur.raffle.id}
-                                onClick={() => navigate(`/raffle/${ur.raffle.id}`)}
-                                className="flex items-center gap-4 p-4 rounded-lg bg-secondary/50 border border-border cursor-pointer hover:bg-secondary/70 transition-colors"
-                            >
-                                <img
-                                    src={ur.raffle.imagem}
-                                    alt={ur.raffle.titulo}
-                                    className="w-16 h-16 rounded-lg object-cover"
-                                />
-                                <div className="flex-1 min-w-0">
-                                    <h4 className="font-semibold text-foreground truncate">
-                                        {ur.raffle.titulo}
-                                    </h4>
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Calendar className="h-3 w-3" />
-                                        <span>
-                                            Termina em{" "}
-                                            {format(new Date(ur.raffle.dataFim), "dd/MM/yyyy", {
-                                                locale: ptBR,
-                                            })}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="text-right flex flex-col items-end gap-2">
-                                    <div className="flex gap-2">
-                                        <Badge
-                                            variant={isActive ? "default" : "secondary"}
-                                            className={isActive ? "bg-primary text-primary-foreground" : ""}
-                                        >
-                                            {isActive ? "Ativo" : "Encerrado"}
-                                        </Badge>
-
-                                        {/* Winner Badge */}
-                                        {!isActive && ur.raffle.winner_id && String(ur.raffle.winner_id) === String(user.id) && (
-                                            <Badge className="bg-yellow-500 text-black border-yellow-600 animate-pulse">
-                                                🏆 Você Ganhou!
-                                            </Badge>
-                                        )}
-                                    </div>
-                                    <p className="text-sm text-muted-foreground">
-                                        {ur.ticketsComprados} ticket
-                                        {ur.ticketsComprados > 1 ? "s" : ""}
-                                    </p>
-                                </div>
+                {/* My Raffles Section */}
+                <Card className="bg-card border-border">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Ticket className="h-5 w-5 text-primary" />
+                            Meus Sorteios
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {userRaffles.length === 0 ? (
+                            <div className="text-center py-8">
+                                <Trophy className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                                <p className="text-muted-foreground">
+                                    Você ainda não participa de nenhum sorteio
+                                </p>
+                                <Button
+                                    variant="default"
+                                    className="mt-4 bg-gradient-primary"
+                                    onClick={() => navigate("/")}
+                                >
+                                    Explorar Sorteios
+                                </Button>
                             </div>
-                        );
-                    })}
-                </div>
-            )}
-        </CardContent>
-    </Card>
+                        ) : (
+                            <div className="space-y-4">
+                                {userRaffles.map((ur) => {
+                                    const isActive = ur.raffle.status === 'ativo';
+                                    return (
+                                        <div
+                                            key={ur.raffle.id}
+                                            onClick={() => navigate(`/raffle/${ur.raffle.id}`)}
+                                            className="flex items-center gap-4 p-4 rounded-lg bg-secondary/50 border border-border cursor-pointer hover:bg-secondary/70 transition-colors"
+                                        >
+                                            <img
+                                                src={ur.raffle.imagem}
+                                                alt={ur.raffle.titulo}
+                                                className="w-16 h-16 rounded-lg object-cover"
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-semibold text-foreground truncate">
+                                                    {ur.raffle.titulo}
+                                                </h4>
+                                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                    <Calendar className="h-3 w-3" />
+                                                    <span>
+                                                        Termina em{" "}
+                                                        {format(new Date(ur.raffle.dataFim), "dd/MM/yyyy", {
+                                                            locale: ptBR,
+                                                        })}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="text-right flex flex-col items-end gap-2">
+                                                <div className="flex gap-2">
+                                                    <Badge
+                                                        variant={isActive ? "default" : "secondary"}
+                                                        className={isActive ? "bg-primary text-primary-foreground" : ""}
+                                                    >
+                                                        {isActive ? "Ativo" : "Encerrado"}
+                                                    </Badge>
 
-    {/* My NFTs Section */ }
-    <Card className="bg-card border-border">
+                                                    {/* Winner Badge */}
+                                                    {!isActive && ur.raffle.winner_id && String(ur.raffle.winner_id) === String(user.id) && (
+                                                        <Badge className="bg-yellow-500 text-black border-yellow-600 animate-pulse">
+                                                            🏆 Você Ganhou!
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                                <p className="text-sm text-muted-foreground">
+                                                    {ur.ticketsComprados} ticket
+                                                    {ur.ticketsComprados > 1 ? "s" : ""}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* My NFTs Section */}
+                <Card className="bg-card border-border">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <span className="text-xl">🎨</span>
@@ -378,43 +405,48 @@ const Profile = () => {
                     </CardContent>
                 </Card>
 
-    <Separator className="bg-border" />
+                <Separator className="bg-border" />
 
-    {/* Account Settings */ }
-    <Card className="bg-card border-border">
-        <CardHeader>
-            <CardTitle>Configurações da Conta</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50 border border-border">
-                <div>
-                    <p className="font-medium text-foreground">ID do Usuário</p>
-                    <p className="text-sm text-muted-foreground font-mono">
-                        {user.id.slice(0, 8)}...
-                    </p>
-                </div>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                        navigator.clipboard.writeText(user.id);
-                    }}
-                >
-                    <Copy className="h-4 w-4" />
-                </Button>
-            </div>
+                {/* Account Settings */}
+                <Card className="bg-card border-border">
+                    <CardHeader>
+                        <CardTitle>Configurações da Conta</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50 border border-border">
+                            <div>
+                                <p className="font-medium text-foreground">ID do Usuário</p>
+                                <p className="text-sm text-muted-foreground font-mono">
+                                    {user.id.slice(0, 8)}...
+                                </p>
+                            </div>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    navigator.clipboard.writeText(user.id);
+                                }}
+                            >
+                                <Copy className="h-4 w-4" />
+                            </Button>
+                        </div>
 
-            <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50 border border-border">
-                <div>
-                    <p className="font-medium text-foreground">Membro desde</p>
-                    <p className="text-sm text-muted-foreground">Janeiro 2026</p>
-                </div>
-                <Calendar className="h-5 w-5 text-muted-foreground" />
+                        <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/50 border border-border">
+                            <div>
+                                <p className="font-medium text-foreground">Membro desde</p>
+                                <p className="text-sm text-muted-foreground">Janeiro 2026</p>
+                            </div>
+                            <Calendar className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                    </CardContent>
+                </Card>
+                <WinnerAddressDialog
+                    isOpen={showAddressModal}
+                    onOpenChange={setShowAddressModal}
+                    onSuccess={() => { }}
+                />
             </div>
-        </CardContent>
-    </Card>
-            </div >
-        </div >
+        </div>
     );
 };
 
