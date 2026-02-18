@@ -380,14 +380,24 @@ export const api = {
     },
 
     getNotifications: async (userId: number | string) => {
-        const res = await fetch(`${API_URL}/notifications?userId=${userId}`);
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch(`${API_URL}/notifications?userId=${userId}`, {
+            headers: {
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            }
+        });
         if (!res.ok) throw new Error("Failed to fetch notifications");
         return res.json();
     },
 
     markNotificationRead: async (id: number) => {
+        const token = localStorage.getItem('auth_token');
         const res = await fetch(`${API_URL}/notifications/${id}/read`, {
             method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            },
         });
         if (!res.ok) throw new Error("Failed to mark notification read");
         return res.json();
