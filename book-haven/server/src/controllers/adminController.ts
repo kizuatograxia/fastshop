@@ -117,7 +117,7 @@ export const createBook = (req: Request, res: Response) => {
             rating: 5,
             reviewCount: 0,
             format: ['ebook'],
-            genre: 'Fiction',
+            genre: body.genre || 'Fiction',
             releaseDate: new Date().toISOString().split('T')[0],
             language: 'English',
             isbn: '978-' + Math.floor(Math.random() * 10000000000),

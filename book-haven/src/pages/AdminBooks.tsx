@@ -51,7 +51,8 @@ const AdminBooks = () => {
         description: '',
         coverImageUrl: '', // fallback or manually entered
         isFeatured: false,
-        status: 'PUBLISHED'
+        status: 'PUBLISHED',
+        genre: 'Fiction'
     });
 
     const fetchBooks = async () => {
@@ -206,6 +207,7 @@ const AdminBooks = () => {
             data.append('coverImageUrl', formData.coverImageUrl);
             data.append('isFeatured', String(formData.isFeatured));
             data.append('status', formData.status);
+            data.append('genre', formData.genre);
 
             if (selectedFile) {
                 data.append('bookFile', selectedFile);
@@ -229,7 +231,7 @@ const AdminBooks = () => {
                 fetchBooks();
                 // Reset form
                 setFormData({
-                    title: '', authorName: '', price: '0', description: '', coverImageUrl: '', isFeatured: false, status: 'PUBLISHED'
+                    title: '', authorName: '', price: '0', description: '', coverImageUrl: '', isFeatured: false, status: 'PUBLISHED', genre: 'Fiction'
                 });
                 setSelectedFile(null);
                 setExtractedCover(null);
@@ -339,6 +341,31 @@ const AdminBooks = () => {
                                     <Label htmlFor="coverImageUrl">Cover Image URL (Optional override)</Label>
                                     <Input id="coverImageUrl" value={formData.coverImageUrl} onChange={handleInputChange} placeholder="https://..." />
                                 </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="genre">Genre</Label>
+                                    <select
+                                        id="genre"
+                                        value={formData.genre}
+                                        onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        <option value="Fiction">Fiction</option>
+                                        <option value="Non-Fiction">Non-Fiction</option>
+                                        <option value="Mystery">Mystery</option>
+                                        <option value="Thriller">Thriller</option>
+                                        <option value="Romance">Romance</option>
+                                        <option value="Science Fiction">Science Fiction</option>
+                                        <option value="Fantasy">Fantasy</option>
+                                        <option value="Historical Fiction">Historical Fiction</option>
+                                        <option value="Biography">Biography</option>
+                                        <option value="Self-Help">Self-Help</option>
+                                        <option value="Business">Business</option>
+                                        <option value="Children's">Children's</option>
+                                        <option value="Young Adult">Young Adult</option>
+                                        <option value="Horror">Horror</option>
+                                        <option value="Poetry">Poetry</option>
+                                    </select>
+                                </div>
                                 <div className="space-y-2 col-span-2">
                                     <Label htmlFor="description">Description</Label>
                                     <Textarea id="description" value={formData.description} onChange={handleInputChange} placeholder="Book summary..." className="min-h-[100px]" />
@@ -374,6 +401,7 @@ const AdminBooks = () => {
                                 <TableHead>Author</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead>Price</TableHead>
+                                <TableHead>Genre</TableHead>
                                 <TableHead>File Type</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
@@ -410,6 +438,7 @@ const AdminBooks = () => {
                                         <TableCell>{book.author?.name}</TableCell>
                                         <TableCell><Badge variant="outline" className={`border-0 ${getStatusColor(book.status)}`}>{book.status}</Badge></TableCell>
                                         <TableCell>${Number(book.price).toFixed(2)}</TableCell>
+                                        <TableCell><Badge variant="outline">{book.genre}</Badge></TableCell>
                                         <TableCell>
                                             <Badge variant="secondary" className="font-mono text-xs">
                                                 {book.hasEbook ? 'EPUB/FILE' : 'NO FILE'}
