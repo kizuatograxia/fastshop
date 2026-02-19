@@ -37,7 +37,7 @@ export const getCart = async (req: Request, res: Response) => {
                     subtotal: 0,
                     totalAmount: 0,
                 },
-                include: { items: { include: { book: true } } },
+                include: { items: true },
             });
         }
 
@@ -107,7 +107,7 @@ export const addToCart = async (req: Request, res: Response) => {
 export const removeFromCart = async (req: Request, res: Response) => {
     // @ts-ignore
     const userId = req.user?.userId;
-    const { itemId } = req.params as { itemId: string };
+    const { itemId } = req.params;
 
     try {
         const cart = await prisma.order.findFirst({ where: { userId, status: 'PENDING' } });

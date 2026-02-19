@@ -9,12 +9,7 @@ const createOrderSchema = z.object({
 
 export const createOrder = async (req: Request, res: Response) => {
     // @ts-ignore
-    const user = (req as any).user;
-    const userId = user?.userId;
-
-    if (!userId || typeof userId !== 'string') {
-        return res.status(401).json({ error: 'Unauthorized: Invalid user ID' });
-    }
+    const userId = req.user?.userId;
 
     try {
         const { paymentMethod } = createOrderSchema.parse(req.body);

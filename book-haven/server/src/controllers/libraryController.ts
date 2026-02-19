@@ -16,7 +16,7 @@ export const getLibrary = async (req: Request, res: Response) => {
                     }
                 }
             },
-            orderBy: { purchaseDate: 'desc' }
+            orderBy: { acquiredAt: 'desc' }
         });
 
         // Transform for frontend if necessary, or send as is

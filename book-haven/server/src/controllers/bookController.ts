@@ -7,15 +7,13 @@ const bookSchema = z.object({
     title: z.string().min(1),
     authorName: z.string().min(1),
     description: z.string().optional(),
-    genre: z.string().optional(),
     price: z.string().transform((val) => parseFloat(val)),
-    stock: z.string().default('0').transform((val) => parseInt(val)), // Keep for backward compat but effectively ignored for digital
+    stock: z.string().transform((val) => parseInt(val)).optional().default('0'), // Keep for backward compat but effectively ignored for digital
     status: z.enum(['PUBLISHED', 'DRAFT', 'ARCHIVED']).default('DRAFT'),
     isFeatured: z.string().transform((val) => val === 'true').optional(),
     coverImageUrl: z.string().optional(),
 });
 
-// Public: Only Published
 export const getBooks = async (req: Request, res: Response) => {
     try {
         const { featured, limit } = req.query;
@@ -41,24 +39,11 @@ export const getBooks = async (req: Request, res: Response) => {
     }
 };
 
-// Admin: All Books
-export const getAllBooks = async (req: Request, res: Response) => {
-    try {
-        const books = await prisma.book.findMany({
-            orderBy: { createdAt: 'desc' },
-            include: { author: true }
-        });
-        res.json(books);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch all books' });
-    }
-};
-
 export const getBook = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         const book = await prisma.book.findUnique({
-            where: { id: id as string },
+            where: { id },
             include: { author: true }
         });
 
@@ -108,7 +93,6 @@ export const createBook = async (req: Request, res: Response) => {
                 title: data.title,
                 slug,
                 description: data.description,
-                genre: data.genre,
                 price: data.price,
                 coverImageUrl: finalCoverUrl,
                 hasEbook: !!ebookFileUrl,
@@ -123,11 +107,9 @@ export const createBook = async (req: Request, res: Response) => {
         });
 
         res.status(201).json(book);
-    } catch (error: any) {
-        console.error("❌ Create Book Error:", error);
-        console.error("Error details:", error.message);
-        console.error("Stack:", error.stack);
-        res.status(500).json({ error: 'Failed to create book', details: error.message });
+    } catch (error) {
+        console.error("Create Book Error:", error);
+        res.status(400).json({ error: 'Failed to create book', details: error });
     }
 };
 
@@ -137,7 +119,7 @@ export const updateBook = async (req: Request, res: Response) => {
         const data = bookSchema.partial().parse(req.body);
 
         const book = await prisma.book.update({
-            where: { id: id as string },
+            where: { id },
             data: {
                 ...data,
                 status: data.status as any
@@ -153,7 +135,7 @@ export const updateBook = async (req: Request, res: Response) => {
 export const deleteBook = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        await prisma.book.delete({ where: { id: id as string } });
+        await prisma.book.delete({ where: { id } });
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete book' });

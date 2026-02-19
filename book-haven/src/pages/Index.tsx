@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
 import { FeaturedSlider } from '@/components/books/FeaturedSlider';
@@ -11,17 +12,56 @@ import { AppPromo } from '@/components/home/AppPromo';
 import { Testimonials } from '@/components/home/Testimonials';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { getRecentReleases, books } from '@/lib/mockData';
+import { getRecentReleases, books as mockBooks } from '@/lib/mockData';
 
 const Index = () => {
-  const recentReleases = getRecentReleases();
-  const editorsPicksBooks = books.slice(0, 4);
-  const spotlightBooks = books.slice(0, 5);
+  const [recentReleases, setRecentReleases] = useState<any[]>([]);
+  const [featuredBooks, setFeaturedBooks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchHomeContent = async () => {
+      try {
+        // Fetch recent books
+        const resentResponse = await fetch('http://localhost:3000/api/books?limit=4');
+        const recentData = await resentResponse.json();
+
+        // Fetch featured books
+        const featuredResponse = await fetch('http://localhost:3000/api/books?featured=true&limit=5');
+        const featuredData = await featuredResponse.json();
+
+        if (recentData.length > 0) setRecentReleases(recentData);
+        else setRecentReleases(getRecentReleases()); // Fallback
+
+        if (featuredData.length > 0) setFeaturedBooks(featuredData);
+        else setFeaturedBooks(mockBooks.slice(0, 5)); // Fallback
+
+      } catch (error) {
+        console.error("Failed to load home content, using mocks");
+        setRecentReleases(getRecentReleases());
+        setFeaturedBooks(mockBooks.slice(0, 5));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHomeContent();
+  }, []);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="animate-spin h-8 w-8 text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
       {/* Featured Books Slider */}
-      <FeaturedSlider />
+      <FeaturedSlider books={featuredBooks} />
 
       {/* Recent Releases */}
       <section className="py-16 md:py-24">
@@ -64,39 +104,7 @@ const Index = () => {
       {/* Featured Author */}
       <FeaturedAuthor />
 
-      {/* Editor's Picks */}
-      <section className="py-16 md:py-24 bg-secondary/30">
-        <div className="container">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10"
-          >
-            <div>
-              <Badge variant="secondary" className="mb-2">Curated</Badge>
-              <h2 className="text-2xl md:text-3xl font-bold">Editor's Picks</h2>
-              <p className="text-muted-foreground mt-1">
-                Hand-selected titles by our editorial team
-              </p>
-            </div>
-            <Link to="/store">
-              <Button variant="outline" className="gap-2">
-                Browse All
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            {editorsPicksBooks.map((book) => (
-              <BookCard key={book.id} book={book} variant="detailed" />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Spotlight */}
+      {/* Spotlight - Using Featured Books for now as well or could fetch differently */}
       <section className="py-16 md:py-24">
         <div className="container">
           <motion.div
@@ -113,7 +121,7 @@ const Index = () => {
           </motion.div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-6">
-            {spotlightBooks.map((book) => (
+            {featuredBooks.map((book) => (
               <BookCard key={book.id} book={book} />
             ))}
           </div>

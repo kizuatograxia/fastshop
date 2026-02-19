@@ -46,7 +46,6 @@ model Book {
   asin            String?   @db.VarChar(20)
   description     String?   @db.Text
   shortDescription String?  @map("short_description") @db.VarChar(500)
-  genre           String?   @db.VarChar(100)
   coverImageUrl   String?   @map("cover_image_url") @db.VarChar(500)
   releaseDate     DateTime? @map("release_date") @db.Date
   language        String    @default("en") @db.VarChar(10)
