@@ -170,6 +170,8 @@ const initDB = async () => {
             await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS prize_value DECIMAL(10,2) DEFAULT 0;`);
             await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS category VARCHAR(50) DEFAULT 'tech';`);
             await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS rarity VARCHAR(50) DEFAULT 'comum';`);
+            // Fix: Add shipping_status column if missing (Tracking Feature)
+            await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS shipping_status VARCHAR(50) DEFAULT 'preparing';`);
 
             // Fix for Winner ID - Handle potential FK issues or missing column
             await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS winner_id INTEGER;`);
