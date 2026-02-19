@@ -1159,7 +1159,7 @@ app.put('/api/admin/raffles/:id/tracking', async (req, res) => {
         res.json({ success: true, raffle });
     } catch (error) {
         console.error('Error updating tracking:', error);
-        res.status(500).json({ message: 'Erro ao atualizar rastreio' });
+        res.status(500).json({ message: `Erro ao atualizar rastreio: ${error.message}` });
     }
 });
 
