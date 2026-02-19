@@ -10,7 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { books as initialMockBooks, genres } from '@/lib/mockData';
+import { Input } from '@/components/ui/input';
+import { books as initialMockBooks, genres as mockGenres } from '@/lib/mockData';
 import { useEffect } from 'react';
 
 const sortOptions = [
@@ -29,9 +30,34 @@ const Store = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [priceRange, setPriceRange] = useState([0, 50]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  // Dynamically calculate the maximum price and genres from the current books array
+  const { maxPrice, availableGenres } = useMemo(() => {
+    if (!books || books.length === 0) return { maxPrice: 50, availableGenres: [] };
+
+    let max = 0;
+    const genresSet = new Set<string>();
+
+    books.forEach(book => {
+      const price = book.salePrice || book.price || 0;
+      if (price > max) max = price;
+      if (book.genre) genresSet.add(book.genre);
+    });
+
+    return {
+      maxPrice: Math.ceil(max),
+      availableGenres: Array.from(genresSet).sort()
+    };
+  }, [books]);
+
+  // Adjust price range if maxPrice changes
+  useEffect(() => {
+    setPriceRange(prev => [prev[0], Math.max(prev[1], maxPrice)]);
+  }, [maxPrice]);
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -63,6 +89,15 @@ const Store = () => {
 
   const sortedBooks = useMemo(() => {
     let result = [...books];
+
+    // Filter by search query
+    if (searchQuery.trim() !== '') {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(book =>
+        book.title.toLowerCase().includes(query) ||
+        (book.author?.name || book.authorName || '').toLowerCase().includes(query)
+      );
+    }
 
     // Filter by format
     if (selectedFormats.length > 0) {
@@ -107,7 +142,7 @@ const Store = () => {
     }
 
     return result;
-  }, [books, sortBy, selectedFormats, selectedGenres, priceRange]);
+  }, [books, sortBy, selectedFormats, selectedGenres, priceRange, searchQuery]);
 
   const handleSortChange = (value: string) => {
     setSearchParams({ sort: value });
@@ -128,10 +163,11 @@ const Store = () => {
   const clearFilters = () => {
     setSelectedFormats([]);
     setSelectedGenres([]);
-    setPriceRange([0, 50]);
+    setPriceRange([0, maxPrice]);
+    setSearchQuery('');
   };
 
-  const activeFilterCount = selectedFormats.length + selectedGenres.length + (priceRange[0] > 0 || priceRange[1] < 50 ? 1 : 0);
+  const activeFilterCount = selectedFormats.length + selectedGenres.length + (priceRange[0] > 0 || priceRange[1] < maxPrice ? 1 : 0) + (searchQuery ? 1 : 0);
 
   const FilterContent = () => (
     <div className="space-y-6">
@@ -154,8 +190,8 @@ const Store = () => {
       {/* Genre */}
       <div>
         <h4 className="font-semibold mb-3">Genre</h4>
-        <div className="space-y-2 max-h-64 overflow-y-auto">
-          {genres.slice(0, 10).map((genre) => (
+        <div className="space-y-2 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+          {availableGenres.length > 0 ? availableGenres.map((genre) => (
             <label key={genre} className="flex items-center gap-3 cursor-pointer">
               <Checkbox
                 checked={selectedGenres.includes(genre)}
@@ -163,7 +199,9 @@ const Store = () => {
               />
               <span className="text-sm">{genre}</span>
             </label>
-          ))}
+          )) : (
+            <p className="text-sm text-muted-foreground">No genres found.</p>
+          )}
         </div>
       </div>
 
@@ -175,13 +213,13 @@ const Store = () => {
             value={priceRange}
             onValueChange={setPriceRange}
             min={0}
-            max={50}
+            max={maxPrice > 0 ? maxPrice : 50}
             step={1}
             className="mb-3"
           />
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>${priceRange[0]}</span>
-            <span>${priceRange[1]}+</span>
+            <span>${priceRange[1]}{priceRange[1] === maxPrice ? '+' : ''}</span>
           </div>
         </div>
       </div>
@@ -230,11 +268,11 @@ const Store = () => {
           <div className="flex-1 min-w-0">
             {/* Toolbar */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6 p-4 bg-card rounded-xl border border-border">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-1 max-w-sm">
                 {/* Mobile Filter Button */}
                 <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
                   <SheetTrigger asChild>
-                    <Button variant="outline" size="sm" className="lg:hidden gap-2">
+                    <Button variant="outline" size="sm" className="lg:hidden gap-2 shrink-0">
                       <SlidersHorizontal className="h-4 w-4" />
                       Filters
                       {activeFilterCount > 0 && (
@@ -254,7 +292,16 @@ const Store = () => {
                   </SheetContent>
                 </Sheet>
 
-                <span className="text-sm text-muted-foreground">
+                {/* Search Bar */}
+                <Input
+                  type="search"
+                  placeholder="Search titles, authors..."
+                  className="h-9"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+
+                <span className="text-sm text-muted-foreground whitespace-nowrap hidden sm:inline-block ml-2">
                   {sortedBooks.length} results
                 </span>
               </div>
@@ -299,6 +346,14 @@ const Store = () => {
             {/* Active Filters */}
             {activeFilterCount > 0 && (
               <div className="flex flex-wrap gap-2 mb-6">
+                {searchQuery && (
+                  <Badge variant="secondary" className="gap-1 pr-1">
+                    Search: {searchQuery}
+                    <button onClick={() => setSearchQuery('')} className="ml-1 hover:bg-secondary-foreground/10 rounded">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                )}
                 {selectedFormats.map((format) => (
                   <Badge key={format} variant="secondary" className="gap-1 pr-1">
                     {format}
@@ -315,10 +370,10 @@ const Store = () => {
                     </button>
                   </Badge>
                 ))}
-                {(priceRange[0] > 0 || priceRange[1] < 50) && (
+                {(priceRange[0] > 0 || priceRange[1] < maxPrice) && (
                   <Badge variant="secondary" className="gap-1 pr-1">
                     ${priceRange[0]} - ${priceRange[1]}
-                    <button onClick={() => setPriceRange([0, 50])} className="ml-1 hover:bg-secondary-foreground/10 rounded">
+                    <button onClick={() => setPriceRange([0, maxPrice])} className="ml-1 hover:bg-secondary-foreground/10 rounded">
                       <X className="h-3 w-3" />
                     </button>
                   </Badge>
