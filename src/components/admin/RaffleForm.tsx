@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RefreshCw, Plus, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Raffle } from "@/types/raffle";
+import { categories } from "@/data/raffles";
 
 // Define the shape of the form data
 export interface CreateRaffleDTO {
@@ -226,11 +227,9 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                                 className="w-full h-10 px-3 rounded-md border border-input bg-background/50 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
-                                <option value="tech">Tech & Eletrônicos</option>
-                                <option value="giftcard">Gift Cards & Vouchers</option>
-                                <option value="games">Games & Consoles</option>
-                                <option value="viagens">Viagens & Experiências</option>
-                                <option value="outros">Outros</option>
+                                {categories.filter(c => c.id !== "todos").map(cat => (
+                                    <option key={cat.id} value={cat.id}>{cat.emoji} {cat.nome}</option>
+                                ))}
                             </select>
                         </div>
                         <div className="space-y-2">
