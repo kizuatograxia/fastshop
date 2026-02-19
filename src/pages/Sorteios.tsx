@@ -26,19 +26,11 @@ import {
 import { api } from "@/lib/api";
 import { Raffle } from "@/types/raffle";
 import { toast } from "sonner";
-
-const categories = [
-  { id: "all", label: "Todos", icon: Sparkles },
-  { id: "tech", label: "Tech", icon: null },
-  { id: "gaming", label: "Gaming", icon: null },
-  { id: "lifestyle", label: "Lifestyle", icon: null },
-  { id: "pix", label: "PIX", icon: null },
-  { id: "rare", label: "Raros", icon: Trophy },
-];
+import { categories as sharedCategories } from "@/data/raffles";
 
 const Sorteios: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [activeCategory, setActiveCategory] = useState("todos");
   const [sortBy, setSortBy] = useState<"price" | "ending" | "popular">("ending");
   const [raffles, setRaffles] = useState<Raffle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,7 +64,7 @@ const Sorteios: React.FC = () => {
     }
 
     // Filter by category
-    if (activeCategory !== "all") {
+    if (activeCategory !== "todos") {
       result = result.filter(r => r.categoria === activeCategory);
     }
 
@@ -172,7 +164,7 @@ const Sorteios: React.FC = () => {
 
           {/* Category Pills */}
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {categories.map((cat) => (
+            {sharedCategories.map((cat) => (
               <Button
                 key={cat.id}
                 variant={activeCategory === cat.id ? "default" : "outline"}
@@ -183,8 +175,8 @@ const Sorteios: React.FC = () => {
                   : "bg-card border-border hover:border-primary/50"
                   }`}
               >
-                {cat.icon && <cat.icon className="h-4 w-4" />}
-                {cat.label}
+                <span>{cat.emoji}</span>
+                {cat.nome}
               </Button>
             ))}
           </div>
@@ -303,7 +295,7 @@ const Sorteios: React.FC = () => {
             </p>
             <Button variant="outline" onClick={() => {
               setSearchQuery("");
-              setActiveCategory("all");
+              setActiveCategory("todos");
             }}>
               Limpar filtros
             </Button>
