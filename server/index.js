@@ -1126,9 +1126,9 @@ app.put('/api/admin/raffles/:id/tracking', async (req, res) => {
             `UPDATE raffles 
              SET tracking_code = $1, 
                  carrier = $2, 
-                 shipping_status = $3, 
+                 shipping_status = $3::varchar, 
                  shipped_at = CASE 
-                    WHEN $3::text = 'shipped' AND shipped_at IS NULL THEN NOW() 
+                    WHEN $3::varchar = 'shipped' AND shipped_at IS NULL THEN NOW() 
                     ELSE shipped_at 
                  END
              WHERE id = $4 
