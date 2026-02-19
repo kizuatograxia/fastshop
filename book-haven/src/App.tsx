@@ -1,5 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { CartProvider } from "@/contexts/CartContext";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -26,43 +27,45 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/store" element={<Store />} />
-          <Route path="/books" element={<Store />} />
-          <Route path="/book/:slug" element={<BookDetail />} />
-          <Route path="/authors" element={<Authors />} />
-          <Route path="/author/:slug" element={<AuthorDetail />} />
-          <Route path="/about" element={<About />} />
+    <CartProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/store" element={<Store />} />
+            <Route path="/books" element={<Store />} />
+            <Route path="/book/:slug" element={<BookDetail />} />
+            <Route path="/authors" element={<Authors />} />
+            <Route path="/author/:slug" element={<AuthorDetail />} />
+            <Route path="/about" element={<About />} />
 
-          {/* Protected/User Routes */}
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/library" element={<MyLibrary />} />
-          <Route path="/read/:bookId" element={<Reader />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/order/success" element={<OrderSuccess />} />
+            {/* Protected/User Routes */}
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/library" element={<MyLibrary />} />
+            <Route path="/read/:bookId" element={<Reader />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order/success" element={<OrderSuccess />} />
 
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="books" element={<AdminBooks />} />
-            <Route path="users" element={<div>Users Management (Coming Soon)</div>} />
-            <Route path="orders" element={<div>Orders Management (Coming Soon)</div>} />
-          </Route>
+            {/* Admin Routes */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="books" element={<AdminBooks />} />
+              <Route path="users" element={<div>Users Management (Coming Soon)</div>} />
+              <Route path="orders" element={<div>Orders Management (Coming Soon)</div>} />
+            </Route>
 
-          {/* Catch-all */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+            {/* Catch-all */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </CartProvider>
   </QueryClientProvider>
 );
 

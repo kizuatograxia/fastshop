@@ -6,7 +6,6 @@ import { Layout } from '@/components/layout/Layout';
 import { FeaturedSlider } from '@/components/books/FeaturedSlider';
 import { BookCard } from '@/components/books/BookCard';
 import { BestsellerTable } from '@/components/books/BestsellerTable';
-import { FeaturedAuthor } from '@/components/home/FeaturedAuthor';
 import { WhatIsSection } from '@/components/home/WhatIsSection';
 import { AppPromo } from '@/components/home/AppPromo';
 import { Testimonials } from '@/components/home/Testimonials';
@@ -100,33 +99,6 @@ const Index = () => {
 
       {/* Bestseller Rankings */}
       <BestsellerTable />
-
-      {/* Featured Author */}
-      <FeaturedAuthor />
-
-      {/* Spotlight - Using Featured Books for now as well or could fetch differently */}
-      <section className="py-16 md:py-24">
-        <div className="container">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-10"
-          >
-            <Badge variant="secondary" className="mb-2">Spotlight</Badge>
-            <h2 className="text-2xl md:text-3xl font-bold">Media We Think Are Cool</h2>
-            <p className="text-muted-foreground mt-1">
-              Discover trending and critically acclaimed titles
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-6">
-            {featuredBooks.map((book) => (
-              <BookCard key={book.id} book={book} />
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* App Promo */}
       <AppPromo />

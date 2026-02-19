@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { Book } from '@/lib/mockData';
+import { useCart } from '@/contexts/CartContext';
 
 interface BookCardProps {
   book: Book;
@@ -12,6 +13,7 @@ interface BookCardProps {
 }
 
 export function BookCard({ book, variant = 'compact' }: BookCardProps) {
+  const { addToCart } = useCart();
   const hasDiscount = book.salePrice && book.salePrice < book.price;
   const displayPrice = book.salePrice || book.price;
 
@@ -35,7 +37,7 @@ export function BookCard({ book, variant = 'compact' }: BookCardProps) {
             </Badge>
           )}
         </Link>
-        
+
         <div className="flex flex-col flex-1 min-w-0">
           <div className="flex flex-wrap gap-2 mb-2">
             {book.format.map((f) => (
@@ -48,17 +50,17 @@ export function BookCard({ book, variant = 'compact' }: BookCardProps) {
               </Badge>
             ))}
           </div>
-          
+
           <Link to={`/book/${book.slug}`}>
             <h3 className="font-bold text-lg leading-tight hover:text-primary transition-colors line-clamp-2">
               {book.title}
             </h3>
           </Link>
-          
+
           <Link to={`/author/${book.author.slug}`} className="text-sm text-muted-foreground hover:text-primary mt-1">
             by {book.author.name}
           </Link>
-          
+
           <div className="flex items-center gap-2 mt-2">
             <div className="flex items-center gap-1">
               <Star className="h-4 w-4 fill-warning text-warning" />
@@ -66,11 +68,11 @@ export function BookCard({ book, variant = 'compact' }: BookCardProps) {
             </div>
             <span className="text-sm text-muted-foreground">({book.reviewCount.toLocaleString()} reviews)</span>
           </div>
-          
+
           <p className="text-sm text-muted-foreground mt-3 line-clamp-2">
             {book.shortDescription}
           </p>
-          
+
           <div className="mt-auto pt-4 flex items-center justify-between">
             <div className="flex items-baseline gap-2">
               <span className="text-xl font-bold text-primary">${displayPrice.toFixed(2)}</span>
@@ -82,7 +84,7 @@ export function BookCard({ book, variant = 'compact' }: BookCardProps) {
               <Button size="sm" variant="outline">
                 <Heart className="h-4 w-4" />
               </Button>
-              <Button size="sm">
+              <Button size="sm" onClick={(e) => { e.preventDefault(); addToCart(book); }}>
                 <ShoppingCart className="h-4 w-4 mr-2" />
                 Add
               </Button>
@@ -108,7 +110,7 @@ export function BookCard({ book, variant = 'compact' }: BookCardProps) {
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          
+
           {/* Badges */}
           <div className="absolute top-2 left-2 flex flex-col gap-1">
             {hasDiscount && (
@@ -136,17 +138,17 @@ export function BookCard({ book, variant = 'compact' }: BookCardProps) {
               </div>
             )}
           </div>
-          
+
           {/* Quick Add Button */}
           <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <Button size="sm" className="w-full gap-2">
+            <Button size="sm" className="w-full gap-2" onClick={(e) => { e.preventDefault(); addToCart(book); }}>
               <ShoppingCart className="h-4 w-4" />
               Add to Cart
             </Button>
           </div>
         </div>
       </Link>
-      
+
       <div className="mt-3">
         <Link to={`/book/${book.slug}`}>
           <h3 className="font-semibold leading-tight hover:text-primary transition-colors line-clamp-2">

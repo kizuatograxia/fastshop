@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 
 
+import apiRoutes from './routes/apiRoutes';
 
 dotenv.config();
 
@@ -19,10 +20,8 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Serve Frontend
 app.use(express.static(path.join(__dirname, '../../dist')));
 
-// API Routes (Disabled for Facade Deployment without DB)
-// app.use('/api/auth', authRoutes);
-// app.use('/api/admin', adminRoutes);
-// app.use('/api', apiRoutes);
+// API Routes
+app.use('/api', apiRoutes);
 
 app.get('/api/health', (req: Request, res: Response) => {
     res.json({ status: "ok", mode: "facade" });

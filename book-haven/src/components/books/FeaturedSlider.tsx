@@ -6,9 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getFeaturedBooks } from '@/lib/mockData';
 
-export function FeaturedSlider() {
+interface FeaturedSliderProps {
+  books: any[];
+}
+
+export function FeaturedSlider({ books }: FeaturedSliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const featuredBooks = getFeaturedBooks();
+  const featuredBooks = books.length > 0 ? books : getFeaturedBooks();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -61,7 +65,7 @@ export function FeaturedSlider() {
               <Badge className="bg-accent text-accent-foreground mb-4">
                 Featured
               </Badge>
-              
+
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -70,7 +74,7 @@ export function FeaturedSlider() {
               >
                 {currentBook.title}
               </motion.h1>
-              
+
               {currentBook.subtitle && (
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
@@ -81,7 +85,7 @@ export function FeaturedSlider() {
                   {currentBook.subtitle}
                 </motion.p>
               )}
-              
+
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -90,7 +94,7 @@ export function FeaturedSlider() {
               >
                 by <span className="text-accent font-semibold">{currentBook.author.name}</span>
               </motion.p>
-              
+
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -107,7 +111,7 @@ export function FeaturedSlider() {
                 </div>
                 <span className="text-white/80">{currentBook.rating} ({currentBook.reviewCount.toLocaleString()} reviews)</span>
               </motion.div>
-              
+
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -116,7 +120,7 @@ export function FeaturedSlider() {
               >
                 {currentBook.shortDescription}
               </motion.p>
-              
+
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -165,9 +169,8 @@ export function FeaturedSlider() {
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                index === currentIndex ? 'w-8 bg-accent' : 'w-2 bg-white/30 hover:bg-white/50'
-              }`}
+              className={`h-2 rounded-full transition-all duration-300 ${index === currentIndex ? 'w-8 bg-accent' : 'w-2 bg-white/30 hover:bg-white/50'
+                }`}
             />
           ))}
         </div>
