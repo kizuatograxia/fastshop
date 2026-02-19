@@ -22,11 +22,11 @@ const Index = () => {
     const fetchHomeContent = async () => {
       try {
         // Fetch recent books
-        const resentResponse = await fetch('http://localhost:3000/api/books?limit=4');
+        const resentResponse = await fetch('/api/books?limit=4');
         const recentData = await resentResponse.json();
 
         // Fetch featured books
-        const featuredResponse = await fetch('http://localhost:3000/api/books?featured=true&limit=5');
+        const featuredResponse = await fetch('/api/books?featured=true&limit=5');
         const featuredData = await featuredResponse.json();
 
         if (recentData.length > 0) setRecentReleases(recentData);
