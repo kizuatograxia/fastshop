@@ -11,22 +11,26 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-import path from 'path';
-
-// ...
-app.use(cors());
 app.use(express.json());
 
 // Serve uploaded files statically
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-app.use('/api/auth', authRoutes);
-// ...
-app.use('/api/admin', adminRoutes);
-app.use('/api', apiRoutes);
+// Serve Frontend
+app.use(express.static(path.join(__dirname, '../../dist')));
 
-app.get('/', (req, res) => {
-    res.json({ message: 'Book Haven API is running' });
+// API Routes (Disabled for Facade Deployment without DB)
+// app.use('/api/auth', authRoutes);
+// app.use('/api/admin', adminRoutes);
+// app.use('/api', apiRoutes);
+
+app.get('/api/health', (req, res) => {
+    res.json({ status: "ok", mode: "facade" });
+});
+
+// Catch-all handler for SPA
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../dist/index.html'));
 });
 
 app.listen(PORT, () => {
