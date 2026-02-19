@@ -9,7 +9,7 @@ const bookSchema = z.object({
     description: z.string().optional(),
     genre: z.string().optional(),
     price: z.string().transform((val) => parseFloat(val)),
-    stock: z.string().transform((val) => parseInt(val)).optional().default('0'), // Keep for backward compat but effectively ignored for digital
+    stock: z.string().default('0').transform((val) => parseInt(val)), // Keep for backward compat but effectively ignored for digital
     status: z.enum(['PUBLISHED', 'DRAFT', 'ARCHIVED']).default('DRAFT'),
     isFeatured: z.string().transform((val) => val === 'true').optional(),
     coverImageUrl: z.string().optional(),
