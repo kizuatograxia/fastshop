@@ -273,13 +273,23 @@ export const api = {
 
     // Admin Users & Chat
     getAdminUserDetails: async (userId: number | string) => {
-        const res = await fetch(`${API_URL}/admin/users/${userId}`);
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch(`${API_URL}/admin/users/${userId}`, {
+            headers: {
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            }
+        });
         if (!res.ok) throw new Error("Falha ao buscar detalhes do usuário");
         return res.json();
     },
 
     getMessages: async (userId: number | string) => {
-        const res = await fetch(`${API_URL}/chat/${userId}`);
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch(`${API_URL}/chat/${userId}`, {
+            headers: {
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            }
+        });
         if (!res.ok) throw new Error("Falha ao carregar mensagens");
         return res.json();
     },
