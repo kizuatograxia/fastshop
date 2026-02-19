@@ -1086,7 +1086,6 @@ app.put('/api/admin/raffles/:id/tracking', async (req, res) => {
     const { trackingCode, carrier, status, password } = req.body;
 
     // Auth: accept password OR JWT
-    // Auth: accept password OR JWT
     let isAuthenticated = false;
 
     // 1. Check Admin Password
@@ -1095,22 +1094,17 @@ app.put('/api/admin/raffles/:id/tracking', async (req, res) => {
     }
 
     // 2. Check JWT if password failed/missing
-    if (!isAuthenticated && req.headers.authorization) {
-        const token = req.headers.authorization.split(' ')[1];
-        if (token) {
-            try {
-                const decoded = jwt.verify(token, JWT_SECRET);
-                // Ideally check if user is admin, but for now finding a valid token is "better" than before
-                // Assuming only admins call this or we trust the valid token + role check if we had it.
-                // For safety, let's assume valid token is enough for now given previous code was 'any string'.
-                // But we should really inspect decoded.role if it existed.
-                // Since this is "Admin Update", we should ensure it's not a regular user.
-                // But we don't have roles in token always? 
-                // Login puts: { id, email }. Admin users are just users with 'admin' role in DB? 
-                // Let's at least verify signature.
-                isAuthenticated = true;
-            } catch (err) {
-                console.warn("Invalid token in tracking update:", err.message);
+    if (!isAuthenticated) {
+        const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+        if (authHeader) {
+            const token = authHeader.split(' ')[1];
+            if (token) {
+                try {
+                    jwt.verify(token, JWT_SECRET);
+                    isAuthenticated = true;
+                } catch (err) {
+                    console.warn("Invalid token in tracking update:", err.message);
+                }
             }
         }
     }
