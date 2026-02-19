@@ -217,9 +217,9 @@ const NFTs: React.FC = () => {
 
               {/* Info */}
               <div className="flex-1 text-center md:text-left">
-                <Badge className={`${rarityConfig[currentFeatured.rarity].badge} mb-3`}>
+                <Badge className={`${(rarityConfig[currentFeatured.rarity] || rarityConfig.comum).badge} mb-3`}>
                   <Star className="h-3 w-3 mr-1 fill-current" />
-                  {rarityConfig[currentFeatured.rarity].label}
+                  {(rarityConfig[currentFeatured.rarity] || rarityConfig.comum).label}
                 </Badge>
                 <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
                   {currentFeatured.name}
@@ -285,9 +285,11 @@ const NFTs: React.FC = () => {
                 <Card className="group bg-card border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-glow hover:-translate-y-1">
                   {/* Rarity Badge */}
                   <div className="absolute top-2 left-2 z-10">
-                    <Badge className={`${rarityConfig[nft.rarity].badge} text-xs`}>
-                      {rarityConfig[nft.rarity].label}
-                    </Badge>
+                    <div className="absolute top-2 left-2 z-10">
+                      <Badge className={`${(rarityConfig[nft.rarity] || rarityConfig.comum).badge} text-xs`}>
+                        {(rarityConfig[nft.rarity] || rarityConfig.comum).label}
+                      </Badge>
+                    </div>
                   </div>
 
                   {/* NFT Display */}
