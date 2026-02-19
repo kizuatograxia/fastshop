@@ -191,7 +191,12 @@ export const api = {
     },
 
     getUserRaffles: async (userId: number | string) => {
-        const res = await fetch(`${API_URL}/user/raffles?userId=${userId}`);
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch(`${API_URL}/user/raffles?userId=${userId}`, {
+            headers: {
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            }
+        });
         if (!res.ok) throw new Error("Failed to fetch user raffles");
         const data = await res.json();
         // Ensure IDs are strings to match frontend types
@@ -248,15 +253,24 @@ export const api = {
 
     // Admin Coupons
     getCoupons: async () => {
-        const res = await fetch(`${API_URL}/admin/coupons`);
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch(`${API_URL}/admin/coupons`, {
+            headers: {
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            }
+        });
         if (!res.ok) throw new Error("Falha ao buscar cupons");
         return res.json();
     },
 
     createCoupon: async (coupon: any) => {
+        const token = localStorage.getItem('auth_token');
         const res = await fetch(`${API_URL}/admin/coupons`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            },
             body: JSON.stringify(coupon),
         });
         if (!res.ok) throw new Error((await res.json()).message || "Falha ao criar cupom");
@@ -264,8 +278,12 @@ export const api = {
     },
 
     deleteCoupon: async (id: number | string) => {
+        const token = localStorage.getItem('auth_token');
         const res = await fetch(`${API_URL}/admin/coupons/${id}`, {
             method: "DELETE",
+            headers: {
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            }
         });
         if (!res.ok) throw new Error("Falha ao deletar cupom");
         return res.json();
@@ -350,7 +368,12 @@ export const api = {
     },
 
     getAdminRaffles: async () => {
-        const res = await fetch(`${API_URL}/admin/raffles`);
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch(`${API_URL}/admin/raffles`, {
+            headers: {
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            }
+        });
         if (!res.ok) throw new Error("Falha ao buscar sorteios");
         const data = await res.json();
         // Map fields

@@ -646,7 +646,8 @@ app.put('/api/notifications/:id/read', authenticateToken, async (req, res) => {
 });
 
 // Admin Coupon Routes
-app.get('/api/admin/coupons', async (req, res) => {
+app.get('/api/admin/coupons', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Acesso negado' });
     try {
         const result = await pool.query('SELECT * FROM coupons ORDER BY created_at DESC');
         res.json(result.rows);
@@ -655,7 +656,8 @@ app.get('/api/admin/coupons', async (req, res) => {
     }
 });
 
-app.post('/api/admin/coupons', async (req, res) => {
+app.post('/api/admin/coupons', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Acesso negado' });
     const { code, type, value, min_purchase, usage_limit, expires_at } = req.body;
     try {
         await pool.query(
@@ -670,7 +672,8 @@ app.post('/api/admin/coupons', async (req, res) => {
     }
 });
 
-app.delete('/api/admin/coupons/:id', async (req, res) => {
+app.delete('/api/admin/coupons/:id', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Acesso negado' });
     const { id } = req.params;
     try {
         await pool.query('DELETE FROM coupons WHERE id = $1', [id]);
@@ -1317,7 +1320,8 @@ app.put('/api/winners/:id/reject', async (req, res) => {
 });
 
 // Admin: Get All Raffles (Active + Completed)
-app.get('/api/admin/raffles', async (req, res) => {
+app.get('/api/admin/raffles', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Acesso negado' });
     try {
         const query = `
             SELECT r.*, 
@@ -1655,8 +1659,16 @@ app.post('/api/raffles/:id/draw', async (req, res) => {
 });
 
 // Get User Raffles
-app.get('/api/user/raffles', async (req, res) => {
+app.get('/api/user/raffles', authenticateToken, async (req, res) => {
     const userId = parseInt(req.query.userId);
+    const requesterId = req.user.id;
+    const requesterRole = req.user.role;
+
+    // Allow if requester is the user OR is admin
+    if (Number(requesterId) !== Number(userId) && requesterRole !== 'admin') {
+        return res.status(403).json({ message: 'Acesso negado' });
+    }
+
     if (!userId) return res.status(400).json({ message: 'UserId required' });
 
     try {
