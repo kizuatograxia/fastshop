@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { GoogleLogin } from "@react-oauth/google";
 import { api } from "@/lib/api";
+import { CPFGate } from "@/components/gate/CPFGate";
 import mascotZe from "@/assets/mascot-ze.png";
 
 // ─── Types ──────────────────────────────────────────────
@@ -611,6 +612,13 @@ const Register: React.FC = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-background p-4 font-sans">
+            {/* CPF Gate only for Registration */}
+            {view === 'register' && (
+                <CPFGate>
+                    <></>
+                </CPFGate>
+            )}
+
             <div className="w-full max-w-md">
                 {/* Stepper (only for wizard steps and IF in register view) */}
                 {view === 'register' && step >= 0 && <Stepper current={step} />}

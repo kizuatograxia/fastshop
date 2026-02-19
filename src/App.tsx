@@ -24,7 +24,6 @@ import ComoFunciona from "./pages/ComoFunciona";
 import NotFound from "./pages/NotFound";
 import RegisterPage from "./pages/Register";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import { CPFGate } from "@/components/gate/CPFGate";
 
 const queryClient = new QueryClient();
 
