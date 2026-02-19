@@ -349,8 +349,8 @@ const NFTs: React.FC = () => {
               <Card className="group bg-card border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-glow hover:-translate-y-1">
                 {/* Rarity Badge */}
                 <div className="absolute top-2 left-2 z-10">
-                  <Badge className={`${rarityConfig[nft.rarity].badge} text-xs`}>
-                    {rarityConfig[nft.rarity].label}
+                  <Badge className={`${(rarityConfig[nft.rarity] || rarityConfig.comum).badge} text-xs`}>
+                    {(rarityConfig[nft.rarity] || rarityConfig.comum).label}
                   </Badge>
                 </div>
 
