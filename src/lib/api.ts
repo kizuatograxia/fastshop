@@ -401,6 +401,11 @@ export const api = {
                 state: r.winner_state,
                 cep: r.winner_cep
             } : undefined,
+            recipient_name: r.recipient_name,
+            recipient_cpf: r.recipient_cpf,
+            recipient_email: r.recipient_email,
+
+            // Shipping
             trackingCode: r.tracking_code,
             carrier: r.carrier,
             shippingStatus: r.shipping_status,

@@ -719,6 +719,40 @@ app.post('/api/shipping/calculate', async (req, res) => {
 });
 
 // POST /api/shop/buy - Purchase with Coupon Support
+app.get('/api/nfts', (req, res) => {
+    res.json(nfts);
+});
+
+// Notifications
+app.get('/api/notifications', authenticateToken, async (req, res) => {
+    const userId = req.user.id;
+    try {
+        const result = await pool.query(
+            `SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50`,
+            [userId]
+        );
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+        res.status(500).json({ message: 'Erro ao buscar notificações' });
+    }
+});
+
+app.put('/api/notifications/:id/read', authenticateToken, async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+    try {
+        await pool.query(
+            `UPDATE notifications SET read = TRUE WHERE id = $1 AND user_id = $2`,
+            [id, userId]
+        );
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
+        res.status(500).json({ message: 'Erro ao atualizar notificação' });
+    }
+});
+
 app.post('/api/shop/buy', authenticateToken, async (req, res) => {
     const { items, couponCode } = req.body; // items: [{ id, quantity }]
     const userId = req.user.id;
@@ -1552,14 +1586,10 @@ cron.schedule('* * * * *', async () => {
 });
 
 // ADMIN: Get User Details (Protected)
-app.get('/api/admin/users/:id', async (req, res) => {
-    // Ideally this should be protected by middleware checking for 'admin' role
-    // For now, we rely on the frontend knowing who is admin, or we check the caller's token role
-    // const { role } = req.user; if (role !== 'admin') ...
+// ADMIN: Get User Details (Protected)
+app.get('/api/admin/users/:id', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') return res.status(403).json({ message: 'Acesso negado' });
 
-    // We will trust the "admin_key" or "auth_token" with admin role checks
-    // Since we are implementing RBAC, let's verify via header token if possible in future
-    // For now, open it up but in prod use `authenticateToken` + role check
     const { id } = req.params;
     try {
         const result = await pool.query(`
