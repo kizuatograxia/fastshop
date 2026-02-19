@@ -312,7 +312,10 @@ export const api = {
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ ...trackingData, password }),
         });
-        if (!res.ok) throw new Error('Failed to update tracking');
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({ message: 'Failed to update tracking' }));
+            throw new Error(errorData.message || 'Failed to update tracking');
+        }
         return res.json();
     },
 
