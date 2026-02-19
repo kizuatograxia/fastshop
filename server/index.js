@@ -360,12 +360,12 @@ app.post('/api/register', async (req, res) => {
         }
 
         const newUserResult = await pool.query(
-            'INSERT INTO users (email, password) VALUES ($1, $2) RETURNING id, email',
-            [email, password]
+            'INSERT INTO users (email, password, role) VALUES ($1, $2, $3) RETURNING id, email, role',
+            [email, password, 'user']
         );
         const newUser = newUserResult.rows[0];
 
-        const token = jwt.sign({ id: newUser.id, email: newUser.email }, JWT_SECRET, { expiresIn: '24h' });
+        const token = jwt.sign({ id: newUser.id, email: newUser.email, role: newUser.role }, JWT_SECRET, { expiresIn: '24h' });
 
         console.log('User registered:', email);
         res.json({ message: 'Usuário criado com sucesso', user: newUser, token });
@@ -387,7 +387,7 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ message: 'Credenciais inválidas' });
         }
 
-        const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
+        const token = jwt.sign({ id: user.id, email: user.email, role: user.role || 'user' }, JWT_SECRET, { expiresIn: '24h' });
 
         console.log('User logged in:', email);
         res.json({
@@ -462,7 +462,7 @@ app.post('/api/auth/google', async (req, res) => {
             user.picture = picture;
         }
 
-        const sessionToken = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
+        const sessionToken = jwt.sign({ id: user.id, email: user.email, role: user.role || 'user' }, JWT_SECRET, { expiresIn: '24h' });
 
         console.log('Backend: User logged in via Google:', email);
         res.json({
@@ -1571,15 +1571,18 @@ app.get('/api/admin/users/:id', async (req, res) => {
 });
 
 // CHAT: Get Messages (Between Admin/System and User)
-app.get('/api/chat/:userId', async (req, res) => {
+app.get('/api/chat/:userId', authenticateToken, async (req, res) => {
     const { userId } = req.params;
-    try {
-        // Fetch conversation where either sender or receiver is the userId
-        // And the other party is implicitly the "Admin" or another user?
-        // Usually Admin Chat is centralized. Let's assume Admin ID is 1 or we act as system.
-        // For simplicity: Admin views messages for a specific user ID.
-        // Or if it's User viewing, success.
+    const requesterId = req.user.id;
+    const requesterRole = req.user.role;
 
+    // Allow if requester is the user OR is admin
+    if (String(requesterId) !== String(userId) && requesterRole !== 'admin') {
+        return res.status(403).json({ message: 'Acesso negado' });
+    }
+
+    try {
+        // ... (existing query)
         const result = await pool.query(`
             SELECT m.*, u.name as sender_name, u.picture as sender_picture 
             FROM messages m
@@ -1596,8 +1599,23 @@ app.get('/api/chat/:userId', async (req, res) => {
 });
 
 // CHAT: Send Message
-app.post('/api/chat/send', async (req, res) => {
+app.post('/api/chat/send', authenticateToken, async (req, res) => {
     const { sender_id, receiver_id, content } = req.body;
+    const requesterId = req.user.id;
+    const requesterRole = req.user.role;
+
+    // Verify sender identity
+    if (String(sender_id) !== String(requesterId)) {
+        // If sender is NOT the requester, allow ONLY if requester is admin (sending ON BEHALF of system/admin?)
+        // Usually admin sends with their own ID or a SYSTEM ID. 
+        // If admin wants to send as "System" (id=null? or id=1?), they might pass a different sender_id.
+        // But for now, let's enforce: You can only send messages where YOU are the sender, 
+        // UNLESS you are admin replyin. 
+        // Actually, standard chat: I send message, sender_id = ME.
+        if (requesterRole !== 'admin') {
+            return res.status(403).json({ message: 'Você só pode enviar mensagens como você mesmo.' });
+        }
+    }
     try {
         const result = await pool.query(`
             INSERT INTO messages (sender_id, receiver_id, content)
