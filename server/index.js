@@ -1128,7 +1128,7 @@ app.put('/api/admin/raffles/:id/tracking', async (req, res) => {
                  carrier = $2, 
                  shipping_status = $3, 
                  shipped_at = CASE 
-                    WHEN $3 = 'shipped' AND shipped_at IS NULL THEN NOW() 
+                    WHEN $3::text = 'shipped' AND shipped_at IS NULL THEN NOW() 
                     ELSE shipped_at 
                  END
              WHERE id = $4 
