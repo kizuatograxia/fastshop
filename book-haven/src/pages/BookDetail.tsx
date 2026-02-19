@@ -1,9 +1,8 @@
 import { useParams, Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import {
-  Star, Heart, Share2, ShoppingCart, BookOpen, Headphones,
-  Clock, Calendar, Globe, ChevronRight, ThumbsUp, ThumbsDown, Loader2
+import { 
+  Star, Heart, Share2, ShoppingCart, BookOpen, Headphones, 
+  Clock, Calendar, Globe, ChevronRight, ThumbsUp, ThumbsDown 
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { BookCard } from '@/components/books/BookCard';
@@ -16,74 +15,23 @@ import { getBookBySlug, getReviewsByBook, books } from '@/lib/mockData';
 
 const BookDetail = () => {
   const { slug } = useParams();
-  const [book, setBook] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [relatedBooks, setRelatedBooks] = useState<any[]>([]);
-
-  useEffect(() => {
-    const fetchBook = async () => {
-      try {
-        // Try to fetch from API first
-        const response = await fetch(`http://localhost:3000/api/books?slug=${slug}`);
-        const data = await response.json();
-
-        if (data.length > 0) {
-          setBook(data[0]);
-          // Fetch related books by genre
-          if (data[0].genre) {
-            const relatedResponse = await fetch(`http://localhost:3000/api/books`);
-            const allBooks = await relatedResponse.json();
-            const related = allBooks.filter((b: any) => b.genre === data[0].genre && b.id !== data[0].id).slice(0, 4);
-            setRelatedBooks(related);
-          }
-        } else {
-          // Fallback to mock data
-          const mockBook = getBookBySlug(slug || '');
-          setBook(mockBook);
-          if (mockBook) {
-            setRelatedBooks(books.filter((b) => b.genre === mockBook.genre && b.id !== mockBook.id).slice(0, 4));
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch book:', error);
-        // Fallback to mock data
-        const mockBook = getBookBySlug(slug || '');
-        setBook(mockBook);
-        if (mockBook) {
-          setRelatedBooks(books.filter((b) => b.genre === mockBook.genre && b.id !== mockBook.id).slice(0, 4));
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBook();
-  }, [slug]);
-
-  if (loading) {
-    return (
-      <Layout>
-        <div className="container py-16 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </Layout>
-    );
-  }
-
+  const book = getBookBySlug(slug || '');
+  
   if (!book) {
     return (
       <Layout>
         <div className="container py-16 text-center">
-          <h1 className="text-2xl font-bold">Livro não encontrado</h1>
+          <h1 className="text-2xl font-bold">Book not found</h1>
           <Link to="/store">
-            <Button className="mt-4">Explorar Livros</Button>
+            <Button className="mt-4">Browse Books</Button>
           </Link>
         </div>
       </Layout>
     );
   }
 
-  const reviews = book.id ? getReviewsByBook(book.id) : [];
+  const reviews = getReviewsByBook(book.id);
+  const relatedBooks = books.filter((b) => b.genre === book.genre && b.id !== book.id).slice(0, 4);
   const hasDiscount = book.salePrice && book.salePrice < book.price;
 
   // Rating breakdown mock data
@@ -323,7 +271,7 @@ const BookDetail = () => {
         {/* Reviews Section */}
         <section className="mt-16">
           <h2 className="text-2xl font-bold mb-8">Customer Reviews</h2>
-
+          
           <div className="grid md:grid-cols-3 gap-8">
             {/* Rating Summary */}
             <div className="bg-card rounded-xl border border-border p-6">

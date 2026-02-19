@@ -6,10 +6,10 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
-  { href: '/', label: 'Início' },
-  { href: '/store', label: 'Loja' },
-  { href: '/authors', label: 'Autores' },
-  { href: '/about', label: 'Sobre' },
+  { href: '/', label: 'Home' },
+  { href: '/store', label: 'Store' },
+  { href: '/authors', label: 'Authors' },
+  { href: '/about', label: 'About' },
 ];
 
 export function Header() {

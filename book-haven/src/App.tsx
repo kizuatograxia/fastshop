@@ -2,37 +2,15 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
-import LandingPage from "./pages/LandingPage";
 import Store from "./pages/Store";
 import BookDetail from "./pages/BookDetail";
 import Authors from "./pages/Authors";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
-import AdminLayout from "./layouts/AdminLayout";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminBooks from "./pages/AdminBooks";
-import Cart from "./pages/Cart";
-import Notifications from "./pages/Notifications";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Checkout from "./pages/Checkout";
-import OrderSuccess from "./pages/OrderSuccess";
-import AuthorDetail from "./pages/AuthorDetail";
-import MyLibrary from "./pages/MyLibrary";
-import Reader from "./pages/Reader";
 
 const queryClient = new QueryClient();
-
-// Simple Protected Route wrapper to ensure /dashboard is only for logged users
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
-  return <>{children}</>;
-};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -41,40 +19,13 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          {/* Public Facade Route */}
-          <Route path="/" element={<LandingPage />} />
-
-          {/* Public Auth Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-
-          {/* App/Dashboard Routes (Protected or Public depending on business logic, but conceptually "inside" the app) */}
-          <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-
+          <Route path="/" element={<Index />} />
           <Route path="/store" element={<Store />} />
           <Route path="/books" element={<Store />} />
           <Route path="/book/:slug" element={<BookDetail />} />
           <Route path="/authors" element={<Authors />} />
-          <Route path="/author/:slug" element={<AuthorDetail />} />
           <Route path="/about" element={<About />} />
-
-          {/* Protected/User Routes */}
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/library" element={<MyLibrary />} />
-          <Route path="/read/:bookId" element={<Reader />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/order/success" element={<OrderSuccess />} />
-
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="books" element={<AdminBooks />} />
-            <Route path="users" element={<div>Users Management (Coming Soon)</div>} />
-            <Route path="orders" element={<div>Orders Management (Coming Soon)</div>} />
-          </Route>
-
-          {/* Catch-all */}
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

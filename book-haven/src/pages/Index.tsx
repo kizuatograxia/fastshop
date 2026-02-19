@@ -1,68 +1,27 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Layout } from '@/components/layout/Layout';
 import { FeaturedSlider } from '@/components/books/FeaturedSlider';
 import { BookCard } from '@/components/books/BookCard';
 import { BestsellerTable } from '@/components/books/BestsellerTable';
-
+import { FeaturedAuthor } from '@/components/home/FeaturedAuthor';
 import { WhatIsSection } from '@/components/home/WhatIsSection';
 import { AppPromo } from '@/components/home/AppPromo';
 import { Testimonials } from '@/components/home/Testimonials';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { getRecentReleases, books as mockBooks } from '@/lib/mockData';
+import { getRecentReleases, books } from '@/lib/mockData';
 
 const Index = () => {
-  const [recentReleases, setRecentReleases] = useState<any[]>([]);
-  const [featuredBooks, setFeaturedBooks] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchHomeContent = async () => {
-      try {
-        // Fetch all books from API
-        const response = await fetch('http://localhost:3000/api/books');
-        const allBooks = await response.json();
-
-        if (allBooks.length > 0) {
-          // Use first 5 for featured carousel
-          setFeaturedBooks(allBooks.slice(0, 5));
-          // Use next 4 for recent releases
-          setRecentReleases(allBooks.slice(5, 9).length > 0 ? allBooks.slice(5, 9) : allBooks.slice(0, 4));
-        } else {
-          // Fallback to mock data if no books
-          setRecentReleases(getRecentReleases());
-          setFeaturedBooks(mockBooks.slice(0, 5));
-        }
-
-      } catch (error) {
-        console.error("Failed to load home content, using mocks");
-        setRecentReleases(getRecentReleases());
-        setFeaturedBooks(mockBooks.slice(0, 5));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHomeContent();
-  }, []);
-
-  if (loading) {
-    return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <Loader2 className="animate-spin h-8 w-8 text-primary" />
-        </div>
-      </Layout>
-    );
-  }
+  const recentReleases = getRecentReleases();
+  const editorsPicksBooks = books.slice(0, 4);
+  const spotlightBooks = books.slice(0, 5);
 
   return (
     <Layout>
       {/* Featured Books Slider */}
-      <FeaturedSlider books={featuredBooks} />
+      <FeaturedSlider />
 
       {/* Recent Releases */}
       <section className="py-16 md:py-24">
@@ -74,15 +33,15 @@ const Index = () => {
             className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10"
           >
             <div>
-              <Badge variant="secondary" className="mb-2">Novidades</Badge>
-              <h2 className="text-2xl md:text-3xl font-bold">Lançamentos Recentes</h2>
+              <Badge variant="secondary" className="mb-2">Fresh Arrivals</Badge>
+              <h2 className="text-2xl md:text-3xl font-bold">Recent Releases</h2>
               <p className="text-muted-foreground mt-1">
-                Estes livros acabaram de ser lançados, pegue um antes que esgotem!
+                These books just got released, get one before they sell out!
               </p>
             </div>
             <Link to="/store?sort=newest">
               <Button variant="outline" className="gap-2">
-                Ver Todos
+                View All
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
@@ -102,9 +61,42 @@ const Index = () => {
       {/* Bestseller Rankings */}
       <BestsellerTable />
 
+      {/* Featured Author */}
+      <FeaturedAuthor />
 
+      {/* Editor's Picks */}
+      <section className="py-16 md:py-24 bg-secondary/30">
+        <div className="container">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-10"
+          >
+            <div>
+              <Badge variant="secondary" className="mb-2">Curated</Badge>
+              <h2 className="text-2xl md:text-3xl font-bold">Editor's Picks</h2>
+              <p className="text-muted-foreground mt-1">
+                Hand-selected titles by our editorial team
+              </p>
+            </div>
+            <Link to="/store">
+              <Button variant="outline" className="gap-2">
+                Browse All
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </motion.div>
 
-      {/* Spotlight - Using Featured Books for now as well or could fetch differently */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {editorsPicksBooks.map((book) => (
+              <BookCard key={book.id} book={book} variant="detailed" />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Spotlight */}
       <section className="py-16 md:py-24">
         <div className="container">
           <motion.div
@@ -113,15 +105,15 @@ const Index = () => {
             viewport={{ once: true }}
             className="text-center mb-10"
           >
-            <Badge variant="secondary" className="mb-2">Destaques</Badge>
-            <h2 className="text-2xl md:text-3xl font-bold">Livros que Achamos Incríveis</h2>
+            <Badge variant="secondary" className="mb-2">Spotlight</Badge>
+            <h2 className="text-2xl md:text-3xl font-bold">Media We Think Are Cool</h2>
             <p className="text-muted-foreground mt-1">
-              Descubra títulos em alta e aclamados pela crítica
+              Discover trending and critically acclaimed titles
             </p>
           </motion.div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-6">
-            {featuredBooks.map((book) => (
+            {spotlightBooks.map((book) => (
               <BookCard key={book.id} book={book} />
             ))}
           </div>
@@ -144,22 +136,22 @@ const Index = () => {
             className="max-w-2xl mx-auto text-center"
           >
             <Badge variant="secondary" className="mb-4">Newsletter</Badge>
-            <h2 className="text-2xl md:text-3xl font-bold">Fique por Dentro</h2>
+            <h2 className="text-2xl md:text-3xl font-bold">Stay in the Loop</h2>
             <p className="text-muted-foreground mt-2">
-              Receba atualizações semanais sobre novos lançamentos, entrevistas com autores e ofertas exclusivas.
+              Get weekly updates on new releases, author interviews, and exclusive deals.
             </p>
             <form className="flex flex-col sm:flex-row gap-3 mt-8 max-w-md mx-auto">
               <input
                 type="email"
-                placeholder="Digite seu e-mail"
+                placeholder="Enter your email"
                 className="flex-1 h-12 px-4 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <Button size="lg" className="h-12">
-                Inscrever-se
+                Subscribe
               </Button>
             </form>
             <p className="text-xs text-muted-foreground mt-4">
-              Ao se inscrever, você concorda com nossa Política de Privacidade e Termos de Serviço.
+              By subscribing, you agree to our Privacy Policy and Terms of Service.
             </p>
           </motion.div>
         </div>

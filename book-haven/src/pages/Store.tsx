@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Filter, Grid3X3, List, SlidersHorizontal, X } from 'lucide-react';
@@ -10,7 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { genres } from '@/lib/mockData';
+import { books, genres } from '@/lib/mockData';
 
 const sortOptions = [
   { value: 'newest', label: 'Newest First' },
@@ -30,26 +30,8 @@ const Store = () => {
   const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [books, setBooks] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const sortBy = searchParams.get('sort') || 'newest';
-
-  // Fetch books from API
-  useEffect(() => {
-    const fetchBooks = async () => {
-      try {
-        const response = await fetch('http://localhost:3000/api/books');
-        const data = await response.json();
-        setBooks(data);
-      } catch (error) {
-        console.error('Failed to fetch books:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBooks();
-  }, []);
 
   const sortedBooks = useMemo(() => {
     let result = [...books];
@@ -58,32 +40,38 @@ const Store = () => {
     if (selectedFormats.length > 0) {
       result = result.filter((book) =>
         selectedFormats.some((format) =>
-          format === 'eBook' ? book.hasEbook : book.hasAudiobook
+          format === 'eBook' ? book.format.includes('ebook') : book.format.includes('audiobook')
         )
       );
     }
 
     // Filter by genre
     if (selectedGenres.length > 0) {
-      result = result.filter((book) => book.genre && selectedGenres.includes(book.genre));
+      result = result.filter((book) => selectedGenres.includes(book.genre));
     }
 
     // Filter by price
     result = result.filter((book) => {
-      const price = Number(book.salePrice || book.price);
+      const price = book.salePrice || book.price;
       return price >= priceRange[0] && price <= priceRange[1];
     });
 
     // Sort
     switch (sortBy) {
       case 'newest':
-        result.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        result.sort((a, b) => new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime());
+        break;
+      case 'bestselling':
+        result.sort((a, b) => b.weeklySales - a.weeklySales);
         break;
       case 'price-low':
-        result.sort((a, b) => Number(a.salePrice || a.price) - Number(b.salePrice || b.price));
+        result.sort((a, b) => (a.salePrice || a.price) - (b.salePrice || b.price));
         break;
       case 'price-high':
-        result.sort((a, b) => Number(b.salePrice || b.price) - Number(a.salePrice || a.price));
+        result.sort((a, b) => (b.salePrice || b.price) - (a.salePrice || a.price));
+        break;
+      case 'rating':
+        result.sort((a, b) => b.rating - a.rating);
         break;
       case 'title':
         result.sort((a, b) => a.title.localeCompare(b.title));
@@ -121,7 +109,7 @@ const Store = () => {
     <div className="space-y-6">
       {/* Format */}
       <div>
-        <h4 className="font-semibold mb-3">Formato</h4>
+        <h4 className="font-semibold mb-3">Format</h4>
         <div className="space-y-2">
           {formats.map((format) => (
             <label key={format} className="flex items-center gap-3 cursor-pointer">
@@ -137,7 +125,7 @@ const Store = () => {
 
       {/* Genre */}
       <div>
-        <h4 className="font-semibold mb-3">Gênero</h4>
+        <h4 className="font-semibold mb-3">Genre</h4>
         <div className="space-y-2 max-h-64 overflow-y-auto">
           {genres.slice(0, 10).map((genre) => (
             <label key={genre} className="flex items-center gap-3 cursor-pointer">
@@ -153,7 +141,7 @@ const Store = () => {
 
       {/* Price Range */}
       <div>
-        <h4 className="font-semibold mb-3">Faixa de Preço</h4>
+        <h4 className="font-semibold mb-3">Price Range</h4>
         <div className="px-2">
           <Slider
             value={priceRange}
@@ -172,7 +160,7 @@ const Store = () => {
 
       {activeFilterCount > 0 && (
         <Button variant="outline" onClick={clearFilters} className="w-full">
-          Limpar Todos os Filtros
+          Clear All Filters
         </Button>
       )}
     </div>
@@ -187,9 +175,9 @@ const Store = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl md:text-4xl font-bold">Explorar Livros</h1>
+          <h1 className="text-3xl md:text-4xl font-bold">Browse Books</h1>
           <p className="text-muted-foreground mt-2">
-            Descubra sua próxima leitura favorita em nossa coleção de {books.length}+ títulos
+            Discover your next favorite read from our collection of {books.length}+ titles
           </p>
         </motion.div>
 
@@ -200,7 +188,7 @@ const Store = () => {
               <div className="flex items-center justify-between mb-6">
                 <h3 className="font-semibold flex items-center gap-2">
                   <Filter className="h-4 w-4" />
-                  Filtros
+                  Filters
                 </h3>
                 {activeFilterCount > 0 && (
                   <Badge variant="secondary">{activeFilterCount}</Badge>
@@ -312,23 +300,23 @@ const Store = () => {
 
             {/* Books Grid/List */}
             {sortedBooks.length > 0 ? (
-              <div className={viewMode === 'grid'
+              <div className={viewMode === 'grid' 
                 ? "grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-6"
                 : "flex flex-col gap-4"
               }>
                 {sortedBooks.map((book) => (
-                  <BookCard
-                    key={book.id}
-                    book={book}
-                    variant={viewMode === 'list' ? 'detailed' : 'compact'}
+                  <BookCard 
+                    key={book.id} 
+                    book={book} 
+                    variant={viewMode === 'list' ? 'detailed' : 'compact'} 
                   />
                 ))}
               </div>
             ) : (
               <div className="text-center py-16">
-                <p className="text-muted-foreground">Nenhum livro corresponde aos seus filtros.</p>
+                <p className="text-muted-foreground">No books match your filters.</p>
                 <Button variant="outline" onClick={clearFilters} className="mt-4">
-                  Limpar Filtros
+                  Clear Filters
                 </Button>
               </div>
             )}

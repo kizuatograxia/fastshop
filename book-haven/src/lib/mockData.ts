@@ -7,7 +7,7 @@ export interface Book {
   slug: string;
   author: Author;
   publisher: Publisher;
-  coverImageUrl: string;
+  coverImage: string;
   description: string;
   shortDescription: string;
   price: number;
@@ -112,7 +112,7 @@ export const books: Book[] = [
     slug: 'the-midnight-library',
     author: authors[0],
     publisher: publishers[0],
-    coverImageUrl: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=600&fit=crop',
+    coverImage: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=600&fit=crop',
     description: 'Between life and death there is a library, and within that library, the shelves go on forever. Every book provides a chance to try another life you could have lived. To see how things would be if you had made other choices... Would you have done anything different, if you had the chance to undo your regrets? A dazzling novel about all the choices that go into a life well lived.',
     shortDescription: 'A magical story about second chances and finding meaning in life.',
     price: 14.99,
@@ -136,7 +136,7 @@ export const books: Book[] = [
     slug: 'echoes-of-tomorrow',
     author: authors[1],
     publisher: publishers[1],
-    coverImageUrl: 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop',
+    coverImage: 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=600&fit=crop',
     description: 'In a world where time travel is possible but forbidden, one scientist risks everything to change the past. A thrilling journey through time that questions the very nature of destiny and free will.',
     shortDescription: 'A mind-bending sci-fi thriller about time travel and destiny.',
     price: 12.99,
@@ -160,7 +160,7 @@ export const books: Book[] = [
     slug: 'hearts-unbound',
     author: authors[2],
     publisher: publishers[2],
-    coverImageUrl: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop',
+    coverImage: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=600&fit=crop',
     description: 'When two strangers meet on a rainy night in Paris, they never expect their lives to become intertwined forever. A sweeping romance that spans continents and decades.',
     shortDescription: 'A sweeping romance that will capture your heart.',
     price: 11.99,
@@ -183,7 +183,7 @@ export const books: Book[] = [
     slug: 'the-last-empire',
     author: authors[3],
     publisher: publishers[3],
-    coverImageUrl: 'https://images.unsplash.com/photo-1589998059171-988d887df646?w=400&h=600&fit=crop',
+    coverImage: 'https://images.unsplash.com/photo-1589998059171-988d887df646?w=400&h=600&fit=crop',
     description: 'A sweeping historical epic that chronicles the fall of ancient civilizations and the rise of new powers. Based on extensive historical research.',
     shortDescription: 'An epic tale of empires rising and falling.',
     price: 16.99,
@@ -205,7 +205,7 @@ export const books: Book[] = [
     slug: 'whispers-in-the-dark',
     author: authors[0],
     publisher: publishers[0],
-    coverImageUrl: 'https://images.unsplash.com/photo-1531988042231-d39a9cc12a9a?w=400&h=600&fit=crop',
+    coverImage: 'https://images.unsplash.com/photo-1531988042231-d39a9cc12a9a?w=400&h=600&fit=crop',
     description: 'A chilling psychological thriller that will keep you guessing until the very last page. When secrets from the past resurface, nothing is as it seems.',
     shortDescription: 'A gripping thriller that will keep you on edge.',
     price: 13.99,
@@ -229,7 +229,7 @@ export const books: Book[] = [
     slug: 'the-quantum-paradox',
     author: authors[1],
     publisher: publishers[1],
-    coverImageUrl: 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=400&h=600&fit=crop',
+    coverImage: 'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=400&h=600&fit=crop',
     description: 'A groundbreaking science fiction novel that explores parallel universes and the nature of consciousness. Winner of multiple literary awards.',
     shortDescription: 'Explore the mysteries of parallel universes.',
     price: 15.99,
@@ -252,7 +252,7 @@ export const books: Book[] = [
     slug: 'summers-promise',
     author: authors[2],
     publisher: publishers[2],
-    coverImageUrl: 'https://images.unsplash.com/photo-1476275466078-4007374efbbe?w=400&h=600&fit=crop',
+    coverImage: 'https://images.unsplash.com/photo-1476275466078-4007374efbbe?w=400&h=600&fit=crop',
     description: 'A heartwarming story of love, loss, and second chances set against the backdrop of a small coastal town.',
     shortDescription: 'A touching story of love and second chances.',
     price: 10.99,
@@ -275,7 +275,7 @@ export const books: Book[] = [
     slug: 'code-of-shadows',
     author: authors[0],
     publisher: publishers[3],
-    coverImageUrl: 'https://images.unsplash.com/photo-1509266272358-7701da638078?w=400&h=600&fit=crop',
+    coverImage: 'https://images.unsplash.com/photo-1509266272358-7701da638078?w=400&h=600&fit=crop',
     description: 'A cyber thriller that takes you deep into the world of hackers and digital espionage. Nothing online is safe.',
     shortDescription: 'A pulse-pounding cyber thriller.',
     price: 14.99,
@@ -356,7 +356,7 @@ export const reviews: Review[] = [
 export const featuredAuthor = authors[0];
 
 export const getFeaturedBooks = () => books.filter(book => book.isFeatured);
-export const getRecentReleases = () => [...books].sort((a, b) =>
+export const getRecentReleases = () => [...books].sort((a, b) => 
   new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
 ).slice(0, 4);
 export const getBestsellers = () => [...books].sort((a, b) => b.weeklySales - a.weeklySales).slice(0, 10);

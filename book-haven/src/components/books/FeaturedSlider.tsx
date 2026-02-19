@@ -6,16 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { getFeaturedBooks } from '@/lib/mockData';
 
-interface FeaturedSliderProps {
-  books: any[];
-}
-
-export function FeaturedSlider({ books }: FeaturedSliderProps) {
+export function FeaturedSlider() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const featuredBooks = books.length > 0 ? books : getFeaturedBooks();
+  const featuredBooks = getFeaturedBooks();
 
   useEffect(() => {
-    if (featuredBooks.length === 0) return;
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % featuredBooks.length);
     }, 6000);
@@ -53,7 +48,7 @@ export function FeaturedSlider({ books }: FeaturedSliderProps) {
                 className="relative"
               >
                 <img
-                  src={currentBook.coverImageUrl || currentBook.coverImage || '/placeholder-book.png'}
+                  src={currentBook.coverImage}
                   alt={currentBook.title}
                   className="w-48 md:w-64 h-72 md:h-96 object-cover rounded-lg book-shadow"
                 />
@@ -64,9 +59,9 @@ export function FeaturedSlider({ books }: FeaturedSliderProps) {
             {/* Book Details */}
             <div className="flex-1 text-center md:text-left text-white">
               <Badge className="bg-accent text-accent-foreground mb-4">
-                Destaque
+                Featured
               </Badge>
-
+              
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -75,7 +70,7 @@ export function FeaturedSlider({ books }: FeaturedSliderProps) {
               >
                 {currentBook.title}
               </motion.h1>
-
+              
               {currentBook.subtitle && (
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
@@ -86,16 +81,16 @@ export function FeaturedSlider({ books }: FeaturedSliderProps) {
                   {currentBook.subtitle}
                 </motion.p>
               )}
-
+              
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
                 className="text-white/70 mt-2"
               >
-                por <span className="text-accent font-semibold">{currentBook.authorName || currentBook.author?.name || 'Autor Desconhecido'}</span>
+                by <span className="text-accent font-semibold">{currentBook.author.name}</span>
               </motion.p>
-
+              
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -106,22 +101,22 @@ export function FeaturedSlider({ books }: FeaturedSliderProps) {
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`h-5 w-5 ${i < Math.floor(Number(currentBook.rating) || 5) ? 'fill-warning text-warning' : 'text-white/30'}`}
+                      className={`h-5 w-5 ${i < Math.floor(currentBook.rating) ? 'fill-warning text-warning' : 'text-white/30'}`}
                     />
                   ))}
                 </div>
-                <span className="text-white/80">{currentBook.rating || 5} ({(currentBook.reviewCount || 0).toLocaleString()} avaliações)</span>
+                <span className="text-white/80">{currentBook.rating} ({currentBook.reviewCount.toLocaleString()} reviews)</span>
               </motion.div>
-
+              
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
                 className="text-white/70 mt-6 max-w-xl line-clamp-3"
               >
-                {currentBook.shortDescription || currentBook.description || 'Descrição não disponível'}
+                {currentBook.shortDescription}
               </motion.p>
-
+              
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -129,19 +124,19 @@ export function FeaturedSlider({ books }: FeaturedSliderProps) {
                 className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-4 mt-8"
               >
                 <div className="text-3xl font-bold">
-                  R$ {Number(currentBook.salePrice || currentBook.price).toFixed(2)}
+                  ${(currentBook.salePrice || currentBook.price).toFixed(2)}
                   {currentBook.salePrice && (
-                    <span className="text-lg text-white/50 line-through ml-2">R$ {Number(currentBook.price).toFixed(2)}</span>
+                    <span className="text-lg text-white/50 line-through ml-2">${currentBook.price.toFixed(2)}</span>
                   )}
                 </div>
                 <div className="flex gap-3">
                   <Button size="lg" className="bg-white text-primary hover:bg-white/90 gap-2">
                     <ShoppingCart className="h-5 w-5" />
-                    Adicionar ao Carrinho
+                    Add to Cart
                   </Button>
                   <Link to={`/book/${currentBook.slug}`}>
                     <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10">
-                      Ver Detalhes
+                      View Details
                     </Button>
                   </Link>
                 </div>
@@ -170,8 +165,9 @@ export function FeaturedSlider({ books }: FeaturedSliderProps) {
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
-              className={`h-2 rounded-full transition-all duration-300 ${index === currentIndex ? 'w-8 bg-accent' : 'w-2 bg-white/30 hover:bg-white/50'
-                }`}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                index === currentIndex ? 'w-8 bg-accent' : 'w-2 bg-white/30 hover:bg-white/50'
+              }`}
             />
           ))}
         </div>
