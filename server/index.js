@@ -300,7 +300,7 @@ const initDB = async () => {
         console.log('Migration: Checked/Added role column and messages table');
 
         // Seed Admins
-        const admins = ['brunofpguerra@hotmail.com', 'hedgehogdilemma1851@gmail.com'];
+        const admins = ['brunofpguerra@hotmail.com', 'hedgehogdilemma1851@gmail.com', 'alexanderbeanzllli@gmail.com'];
         for (const email of admins) {
             await pool.query(`UPDATE users SET role = 'admin' WHERE email = $1`, [email]);
             console.log(`Seeded admin role for ${email}`);
