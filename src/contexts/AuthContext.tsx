@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const ADMIN_EMAILS = ['brunofpguerra@hotmail.com', 'hedgehogdilemma1851@gmail.com'];
+    const ADMIN_EMAILS = ['brunofpguerra@hotmail.com', 'hedgehogdilemma1851@gmail.com', 'alexanderbeanzllli@gmail.com'];
 
     useEffect(() => {
         const sessionData = localStorage.getItem(SESSION_STORAGE_KEY);
