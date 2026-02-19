@@ -82,12 +82,31 @@ export const createBook = (req: Request, res: Response) => {
         const newBook = {
             id: Date.now().toString(),
             title: body.title,
-            author: { name: body.authorName || 'Unknown' }, // Match frontend expectation
+            slug: (body.title || '').toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
+            author: {
+                name: body.authorName || 'Unknown',
+                slug: (body.authorName || 'unknown').toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, ''),
+                photo: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100',
+                bio: 'Author bio coming soon.',
+                bookCount: 1,
+                genres: ['Fiction']
+            },
+            publisher: { id: '1', name: 'BookVault Publishing', slug: 'bookvault-publishing', logo: '' },
             price: parseFloat(body.price) || 0,
             description: body.description,
-            coverImageUrl: body.coverImageUrl || '',
+            shortDescription: body.description ? body.description.substring(0, 100) : '',
+            coverImage: body.coverImageUrl || 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400',
+            rating: 5,
+            reviewCount: 0,
+            format: ['ebook'],
+            genre: 'Fiction',
+            releaseDate: new Date().toISOString().split('T')[0],
+            language: 'English',
+            isbn: '978-' + Math.floor(Math.random() * 10000000000),
+            status: 'available',
             isFeatured: body.isFeatured === 'true',
-            status: body.status || 'DRAFT',
+            totalSales: 0,
+            weeklySales: 0,
             hasEbook: false,
             bookFilePath: '',
             createdAt: new Date().toISOString()
@@ -97,13 +116,12 @@ export const createBook = (req: Request, res: Response) => {
         if (files) {
             if (files.coverImage && files.coverImage[0]) {
                 // Construct URL based on static serve Config
-                // server.ts serves /uploads -> uploads/
-                newBook.coverImageUrl = `http://localhost:3000/uploads/covers/${files.coverImage[0].filename}`;
+                newBook.coverImage = `/uploads/covers/${files.coverImage[0].filename}`;
             }
 
             if (files.bookFile && files.bookFile[0]) {
                 newBook.hasEbook = true;
-                newBook.bookFilePath = `http://localhost:3000/uploads/books/${files.bookFile[0].filename}`;
+                newBook.bookFilePath = `/uploads/books/${files.bookFile[0].filename}`;
             }
         }
 

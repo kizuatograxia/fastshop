@@ -66,7 +66,7 @@ export function BookCard({ book, variant = 'compact' }: BookCardProps) {
               <Star className="h-4 w-4 fill-warning text-warning" />
               <span className="text-sm font-medium">{book.rating}</span>
             </div>
-            <span className="text-sm text-muted-foreground">({book.reviewCount.toLocaleString()} reviews)</span>
+            <span className="text-sm text-muted-foreground">({(book.reviewCount || 0).toLocaleString()} reviews)</span>
           </div>
 
           <p className="text-sm text-muted-foreground mt-3 line-clamp-2">
@@ -132,7 +132,7 @@ export function BookCard({ book, variant = 'compact' }: BookCardProps) {
 
           {/* Format Badges */}
           <div className="absolute top-2 right-2 flex flex-col gap-1">
-            {book.format.includes('audiobook') && (
+            {book.format?.includes('audiobook') && (
               <div className="h-7 w-7 rounded-full bg-background/90 flex items-center justify-center">
                 <Headphones className="h-3.5 w-3.5" />
               </div>

@@ -40,7 +40,7 @@ const Store = () => {
     if (selectedFormats.length > 0) {
       result = result.filter((book) =>
         selectedFormats.some((format) =>
-          format === 'eBook' ? book.format.includes('ebook') : book.format.includes('audiobook')
+          format === 'eBook' ? book.format?.includes('ebook') : book.format?.includes('audiobook')
         )
       );
     }
@@ -300,15 +300,15 @@ const Store = () => {
 
             {/* Books Grid/List */}
             {sortedBooks.length > 0 ? (
-              <div className={viewMode === 'grid' 
+              <div className={viewMode === 'grid'
                 ? "grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-6"
                 : "flex flex-col gap-4"
               }>
                 {sortedBooks.map((book) => (
-                  <BookCard 
-                    key={book.id} 
-                    book={book} 
-                    variant={viewMode === 'list' ? 'detailed' : 'compact'} 
+                  <BookCard
+                    key={book.id}
+                    book={book}
+                    variant={viewMode === 'list' ? 'detailed' : 'compact'}
                   />
                 ))}
               </div>

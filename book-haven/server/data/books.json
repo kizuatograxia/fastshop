@@ -2,14 +2,42 @@
     {
         "id": "1",
         "title": "The Midnight Library",
+        "slug": "the-midnight-library",
         "author": {
-            "name": "Matt Haig"
+            "id": "1",
+            "name": "Matt Haig",
+            "slug": "matt-haig",
+            "photo": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100",
+            "bio": "Author of several bestsellers.",
+            "bookCount": 10,
+            "genres": [
+                "Fiction"
+            ]
+        },
+        "publisher": {
+            "id": "1",
+            "name": "Penguin Random House",
+            "slug": "penguin",
+            "logo": ""
         },
         "price": 14.99,
+        "rating": 4.8,
+        "reviewCount": 2847,
         "description": "Between life and death there is a library...",
-        "coverImageUrl": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400",
+        "shortDescription": "A dazzling novel about all the choices that go into a life well lived.",
+        "coverImage": "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=600",
+        "format": [
+            "ebook",
+            "audiobook"
+        ],
+        "genre": "Fiction",
+        "releaseDate": "2024-01-15",
+        "language": "English",
+        "isbn": "978-0525559474",
+        "status": "available",
         "isFeatured": true,
-        "status": "AVAILABLE",
+        "totalSales": 45000,
+        "weeklySales": 1500,
         "hasEbook": true,
         "createdAt": "2024-01-15T00:00:00.000Z"
     }

@@ -109,7 +109,7 @@ export function FeaturedSlider({ books }: FeaturedSliderProps) {
                     />
                   ))}
                 </div>
-                <span className="text-white/80">{currentBook.rating} ({currentBook.reviewCount.toLocaleString()} reviews)</span>
+                <span className="text-white/80">{currentBook.rating} ({(currentBook.reviewCount || 0).toLocaleString()} reviews)</span>
               </motion.div>
 
               <motion.p
