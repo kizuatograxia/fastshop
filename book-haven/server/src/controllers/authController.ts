@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 const USERS_FILE = path.join(__dirname, '../../data/users.json');
 const JWT_SECRET = process.env.JWT_SECRET || 'bookhaven-secret-key-999';
