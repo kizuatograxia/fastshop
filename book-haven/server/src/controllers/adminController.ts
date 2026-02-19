@@ -70,7 +70,25 @@ export const upload = multer({ storage: storage });
 // --- Controllers ---
 
 export const getBooks = (req: Request, res: Response) => {
-    const books = loadBooks();
+    let books = loadBooks();
+    const { featured, genre, limit, sort } = req.query;
+
+    if (featured === 'true') {
+        books = books.filter(b => b.isFeatured);
+    }
+
+    if (genre) {
+        books = books.filter(b => b.genre === genre);
+    }
+
+    if (sort === 'newest') {
+        books.sort((a, b) => new Date(b.createdAt || b.releaseDate).getTime() - new Date(a.createdAt || a.releaseDate).getTime());
+    }
+
+    if (limit) {
+        books = books.slice(0, parseInt(limit as string));
+    }
+
     res.json(books);
 };
 
@@ -133,5 +151,20 @@ export const createBook = (req: Request, res: Response) => {
     } catch (error) {
         console.error("Create Book Error:", error);
         res.status(500).json({ error: "Failed to create book" });
+    }
+};
+export const getBookBySlug = (req: Request, res: Response) => {
+    try {
+        const { slug } = req.params;
+        const books = loadBooks();
+        const book = books.find(b => b.slug === slug);
+
+        if (!book) {
+            return res.status(404).json({ error: "Book not found" });
+        }
+
+        res.json(book);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch book details" });
     }
 };

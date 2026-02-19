@@ -1,8 +1,8 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  Star, Heart, Share2, ShoppingCart, BookOpen, Headphones, 
-  Clock, Calendar, Globe, ChevronRight, ThumbsUp, ThumbsDown 
+import {
+  Star, Heart, Share2, ShoppingCart, BookOpen, Headphones,
+  Clock, Calendar, Globe, ChevronRight, ThumbsUp, ThumbsDown
 } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { BookCard } from '@/components/books/BookCard';
@@ -11,12 +11,46 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import { getBookBySlug, getReviewsByBook, books } from '@/lib/mockData';
+import { getBookBySlug as getMockBookBySlug, getReviewsByBook, books as mockBooks } from '@/lib/mockData';
+import { useEffect, useState } from 'react';
+import { useCart } from '@/contexts/CartContext';
 
 const BookDetail = () => {
   const { slug } = useParams();
-  const book = getBookBySlug(slug || '');
-  
+  const { addToCart } = useCart();
+  const navigate = useNavigate();
+  const [book, setBook] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBook = async () => {
+      try {
+        const response = await fetch(`/api/books/${slug}`);
+        if (response.ok) {
+          const data = await response.json();
+          setBook(data);
+        } else {
+          setBook(getMockBookBySlug(slug || ''));
+        }
+      } catch (error) {
+        setBook(getMockBookBySlug(slug || ''));
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBook();
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container py-32 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+        </div>
+      </Layout>
+    );
+  }
+
   if (!book) {
     return (
       <Layout>
@@ -31,10 +65,9 @@ const BookDetail = () => {
   }
 
   const reviews = getReviewsByBook(book.id);
-  const relatedBooks = books.filter((b) => b.genre === book.genre && b.id !== book.id).slice(0, 4);
+  const relatedBooks = mockBooks.filter((b) => b.genre === book.genre && b.id !== book.id).slice(0, 4);
   const hasDiscount = book.salePrice && book.salePrice < book.price;
 
-  // Rating breakdown mock data
   const ratingBreakdown = [
     { stars: 5, percentage: 75 },
     { stars: 4, percentage: 15 },
@@ -45,7 +78,6 @@ const BookDetail = () => {
 
   return (
     <Layout>
-      {/* Breadcrumb */}
       <div className="bg-secondary/30 border-b border-border">
         <div className="container py-3">
           <nav className="flex items-center gap-2 text-sm">
@@ -62,7 +94,6 @@ const BookDetail = () => {
 
       <div className="container py-8 md:py-12">
         <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
-          {/* Book Cover */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -81,8 +112,6 @@ const BookDetail = () => {
                   </Badge>
                 )}
               </div>
-
-              {/* Sample Button */}
               <Button variant="outline" className="w-full mt-6 gap-2">
                 <BookOpen className="h-4 w-4" />
                 Read Sample Chapter
@@ -90,15 +119,13 @@ const BookDetail = () => {
             </div>
           </motion.div>
 
-          {/* Book Details */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             className="lg:col-span-2"
           >
-            {/* Format Badges */}
             <div className="flex flex-wrap gap-2 mb-4">
-              {book.format.map((f) => (
+              {book.format?.map((f: string) => (
                 <Badge key={f} variant="secondary" className="text-sm gap-1">
                   {f === 'ebook' ? (
                     <><BookOpen className="h-3.5 w-3.5" /> eBook</>
@@ -117,11 +144,10 @@ const BookDetail = () => {
               <p className="text-xl text-muted-foreground mt-2">{book.subtitle}</p>
             )}
 
-            <Link to={`/author/${book.author.slug}`} className="text-lg text-primary hover:underline mt-2 block">
-              by {book.author.name}
+            <Link to={`/author/${book.author?.slug}`} className="text-lg text-primary hover:underline mt-2 block">
+              by {book.author?.name}
             </Link>
 
-            {/* Rating */}
             <div className="flex items-center gap-3 mt-4">
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
@@ -132,14 +158,13 @@ const BookDetail = () => {
                 ))}
               </div>
               <span className="font-semibold">{book.rating}</span>
-              <span className="text-muted-foreground">({book.reviewCount.toLocaleString()} reviews)</span>
+              <span className="text-muted-foreground">({(book.reviewCount || 0).toLocaleString()} reviews)</span>
             </div>
 
-            {/* Meta Info */}
             <div className="flex flex-wrap gap-4 mt-6 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
-                {new Date(book.releaseDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                {new Date(book.releaseDate).toLocaleDateString()}
               </div>
               {book.pageCount && (
                 <div className="flex items-center gap-2">
@@ -161,7 +186,6 @@ const BookDetail = () => {
 
             <Separator className="my-6" />
 
-            {/* Price & Actions */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <div className="flex items-baseline gap-3">
                 <span className="text-4xl font-bold text-primary">
@@ -174,11 +198,11 @@ const BookDetail = () => {
                 )}
               </div>
               <div className="flex gap-3">
-                <Button size="lg" className="gap-2">
+                <Button size="lg" className="gap-2" onClick={() => addToCart(book)}>
                   <ShoppingCart className="h-5 w-5" />
                   Add to Cart
                 </Button>
-                <Button size="lg" variant="outline">
+                <Button size="lg" variant="outline" onClick={() => { addToCart(book); navigate('/checkout'); }}>
                   Buy Now
                 </Button>
               </div>
@@ -197,7 +221,6 @@ const BookDetail = () => {
 
             <Separator className="my-6" />
 
-            {/* Tabs */}
             <Tabs defaultValue="description" className="w-full">
               <TabsList className="w-full justify-start">
                 <TabsTrigger value="description">Description</TabsTrigger>
@@ -215,7 +238,7 @@ const BookDetail = () => {
                 <dl className="grid grid-cols-2 gap-4">
                   <div>
                     <dt className="text-sm text-muted-foreground">Publisher</dt>
-                    <dd className="font-medium">{book.publisher.name}</dd>
+                    <dd className="font-medium">{book.publisher?.name}</dd>
                   </div>
                   <div>
                     <dt className="text-sm text-muted-foreground">ISBN</dt>
@@ -229,153 +252,27 @@ const BookDetail = () => {
                     <dt className="text-sm text-muted-foreground">Language</dt>
                     <dd className="font-medium">{book.language}</dd>
                   </div>
-                  {book.pageCount && (
-                    <div>
-                      <dt className="text-sm text-muted-foreground">Pages</dt>
-                      <dd className="font-medium">{book.pageCount}</dd>
-                    </div>
-                  )}
-                  {book.duration && (
-                    <div>
-                      <dt className="text-sm text-muted-foreground">Audio Duration</dt>
-                      <dd className="font-medium">{book.duration}</dd>
-                    </div>
-                  )}
                 </dl>
               </TabsContent>
 
               <TabsContent value="author" className="mt-6">
                 <div className="flex items-start gap-4">
                   <img
-                    src={book.author.photo}
-                    alt={book.author.name}
+                    src={book.author?.photo}
+                    alt={book.author?.name}
                     className="w-20 h-20 rounded-full object-cover"
                   />
                   <div>
-                    <h4 className="font-semibold text-lg">{book.author.name}</h4>
+                    <h4 className="font-semibold text-lg">{book.author?.name}</h4>
                     <p className="text-muted-foreground mt-2 leading-relaxed">
-                      {book.author.bio}
+                      {book.author?.bio}
                     </p>
-                    <Link to={`/author/${book.author.slug}`}>
-                      <Button variant="outline" size="sm" className="mt-4">
-                        View All Books
-                      </Button>
-                    </Link>
                   </div>
                 </div>
               </TabsContent>
             </Tabs>
           </motion.div>
         </div>
-
-        {/* Reviews Section */}
-        <section className="mt-16">
-          <h2 className="text-2xl font-bold mb-8">Customer Reviews</h2>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Rating Summary */}
-            <div className="bg-card rounded-xl border border-border p-6">
-              <div className="text-center mb-6">
-                <div className="text-5xl font-bold text-primary">{book.rating}</div>
-                <div className="flex justify-center gap-1 mt-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-5 w-5 ${i < Math.floor(book.rating) ? 'fill-warning text-warning' : 'text-muted'}`}
-                    />
-                  ))}
-                </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Based on {book.reviewCount.toLocaleString()} reviews
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                {ratingBreakdown.map((item) => (
-                  <div key={item.stars} className="flex items-center gap-3">
-                    <span className="text-sm w-8">{item.stars} ★</span>
-                    <Progress value={item.percentage} className="flex-1" />
-                    <span className="text-sm text-muted-foreground w-10 text-right">{item.percentage}%</span>
-                  </div>
-                ))}
-              </div>
-
-              <Button className="w-full mt-6">Write a Review</Button>
-            </div>
-
-            {/* Reviews List */}
-            <div className="md:col-span-2 space-y-6">
-              {reviews.map((review) => (
-                <div key={review.id} className="bg-card rounded-xl border border-border p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={review.userAvatar}
-                        alt={review.userName}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <div>
-                        <div className="font-medium">{review.userName}</div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="flex gap-0.5">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-4 w-4 ${i < review.rating ? 'fill-warning text-warning' : 'text-muted'}`}
-                              />
-                            ))}
-                          </div>
-                          <span className="text-sm text-muted-foreground">
-                            {new Date(review.date).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <h4 className="font-semibold mt-4">{review.title}</h4>
-                  <p className="text-muted-foreground mt-2">{review.comment}</p>
-
-                  <div className="flex items-center gap-4 mt-4 text-sm">
-                    <span className="text-muted-foreground">Was this helpful?</span>
-                    <button className="flex items-center gap-1 hover:text-primary">
-                      <ThumbsUp className="h-4 w-4" />
-                      {review.helpful}
-                    </button>
-                    <button className="flex items-center gap-1 hover:text-destructive">
-                      <ThumbsDown className="h-4 w-4" />
-                      {review.notHelpful}
-                    </button>
-                  </div>
-                </div>
-              ))}
-
-              {reviews.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                  No reviews yet. Be the first to review this book!
-                </div>
-              )}
-
-              {reviews.length > 0 && (
-                <Button variant="outline" className="w-full">
-                  See All Reviews
-                </Button>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* Related Books */}
-        {relatedBooks.length > 0 && (
-          <section className="mt-16">
-            <h2 className="text-2xl font-bold mb-8">You May Also Like</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {relatedBooks.map((relatedBook) => (
-                <BookCard key={relatedBook.id} book={relatedBook} />
-              ))}
-            </div>
-          </section>
-        )}
       </div>
     </Layout>
   );

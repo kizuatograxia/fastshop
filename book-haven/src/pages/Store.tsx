@@ -10,7 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { books, genres } from '@/lib/mockData';
+import { books as initialMockBooks, genres } from '@/lib/mockData';
+import { useEffect } from 'react';
 
 const sortOptions = [
   { value: 'newest', label: 'Newest First' },
@@ -24,12 +25,39 @@ const sortOptions = [
 const formats = ['eBook', 'Audiobook'];
 
 const Store = () => {
+  const [books, setBooks] = useState<any[]>(initialMockBooks);
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [priceRange, setPriceRange] = useState([0, 50]);
   const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const response = await fetch('/api/books');
+        if (response.ok) {
+          const apiBooks = await response.json();
+          if (apiBooks.length > 0) {
+            // Merge with mocks, removing duplicates by ID
+            setBooks(prev => {
+              const combined = [...apiBooks];
+              initialMockBooks.forEach(mockBook => {
+                if (!combined.find(b => b.id === mockBook.id)) {
+                  combined.push(mockBook);
+                }
+              });
+              return combined;
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch books from API, using mocks");
+      }
+    };
+    fetchBooks();
+  }, []);
 
   const sortBy = searchParams.get('sort') || 'newest';
 
