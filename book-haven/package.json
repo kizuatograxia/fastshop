@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "npm run build && cd server && npm install && npm run build && npm start",
+    "start": "cd server && npm start",
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && cd server && npm install && npm run build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
