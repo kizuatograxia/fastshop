@@ -4,8 +4,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 
 // import authRoutes from './routes/authRoutes';
-import adminRoutes from './routes/adminRoutes';
-import apiRoutes from './routes/apiRoutes';
+// import adminRoutes from './routes/adminRoutes';
+// import apiRoutes from './routes/apiRoutes';
 
 dotenv.config();
 
