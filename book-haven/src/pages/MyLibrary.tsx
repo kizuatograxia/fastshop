@@ -61,7 +61,7 @@ const MyLibrary = () => {
             }
 
             try {
-                const response = await fetch('http://localhost:3000/api/library', {
+                const response = await fetch('/api/library', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 

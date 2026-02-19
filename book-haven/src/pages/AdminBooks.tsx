@@ -56,7 +56,7 @@ const AdminBooks = () => {
 
     const fetchBooks = async () => {
         try {
-            const response = await fetch('http://localhost:3000/api/books');
+            const response = await fetch('/api/books');
             const data = await response.json();
             setBooks(data);
         } catch (error) {
@@ -215,7 +215,7 @@ const AdminBooks = () => {
                 data.append('coverImage', extractedCover);
             }
 
-            const response = await fetch('http://localhost:3000/api/books', {
+            const response = await fetch('/api/books', {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
