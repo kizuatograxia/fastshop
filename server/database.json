@@ -1,0 +1,17 @@
+{
+  "users": [],
+  "wallets": {
+    "1768251988529": [
+      {
+        "id": "nft-4",
+        "nome": "Phoenix Rising",
+        "emoji": "🦅",
+        "preco": 199.9,
+        "raridade": "lendario",
+        "descricao": "A fênix renascida das cinzas douradas",
+        "cor": "from-yellow-400 to-red-500",
+        "quantidade": 3
+      }
+    ]
+  }
+}

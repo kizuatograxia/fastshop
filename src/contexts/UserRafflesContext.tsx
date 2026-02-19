@@ -13,11 +13,12 @@ interface UserRaffle {
 
 interface UserRafflesContextType {
     userRaffles: UserRaffle[];
-    addUserRaffle: (raffle: Raffle, tickets: number, value: number) => Promise<void>;
+    addUserRaffle: (raffle: Raffle, tickets: number, value: number, nfts: Record<string, number>) => Promise<void>;
     removeUserRaffle: (raffleId: string) => void;
     isParticipating: (raffleId: string) => boolean;
     getTicketCount: (raffleId: string) => number;
     getUserValue: (raffleId: string) => number;
+    getWonRaffles: () => UserRaffle[];
 }
 
 const UserRafflesContext = createContext<UserRafflesContextType | undefined>(undefined);
@@ -46,7 +47,7 @@ export const UserRafflesProvider: React.FC<{ children: React.ReactNode }> = ({ c
         fetchUserRaffles();
     }, [fetchUserRaffles]);
 
-    const addUserRaffle = useCallback(async (raffle: Raffle, tickets: number, value: number) => {
+    const addUserRaffle = useCallback(async (raffle: Raffle, tickets: number, value: number, nfts: Record<string, number>) => {
         if (!user) return;
         try {
             // Optimistic update
@@ -81,8 +82,8 @@ export const UserRafflesProvider: React.FC<{ children: React.ReactNode }> = ({ c
             if (isNaN(rId)) throw new Error("ID do sorteio inválido");
             if (isNaN(uId)) throw new Error("ID do usuário inválido");
 
-            // Call API
-            await api.joinRaffle(rId, uId, tickets);
+            // Call API with NFTs
+            await api.joinRaffle(rId, uId, nfts, tickets);
 
             // Refresh to ensure sync with backend
             await fetchUserRaffles();
@@ -94,6 +95,7 @@ export const UserRafflesProvider: React.FC<{ children: React.ReactNode }> = ({ c
             // Revert optimistic update
             fetchUserRaffles();
             toast.error(error.message || "Erro ao registrar participação");
+            throw error; // Re-throw to handle in UI
         }
     }, [user, fetchUserRaffles]);
 
@@ -116,6 +118,15 @@ export const UserRafflesProvider: React.FC<{ children: React.ReactNode }> = ({ c
         return ur?.totalValueContributed ?? 0;
     }, [userRaffles]);
 
+    const getWonRaffles = useCallback(() => {
+        if (!user) return [];
+        return userRaffles.filter(ur =>
+            // Check if raffle has a winner and that winner ID matches current user ID
+            // We need to handle type mismatch (string vs number) robustly
+            ur.raffle.winner_id && String(ur.raffle.winner_id) === String(user.id)
+        );
+    }, [userRaffles, user]);
+
     return (
         <UserRafflesContext.Provider
             value={{
@@ -125,6 +136,7 @@ export const UserRafflesProvider: React.FC<{ children: React.ReactNode }> = ({ c
                 isParticipating,
                 getTicketCount,
                 getUserValue,
+                getWonRaffles,
             }}
         >
             {children}

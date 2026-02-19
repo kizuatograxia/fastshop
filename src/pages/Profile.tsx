@@ -17,11 +17,15 @@ import {
     Copy,
     Check,
     LogOut,
+    MapPin,
+    Clock,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { WinnerAddressDialog } from "@/components/profile/WinnerAddressDialog";
+import DeliveryProgress from "@/components/DeliveryProgress";
 
 const rarityColors: Record<string, string> = {
     comum: "from-gray-400 to-gray-500",
@@ -40,6 +44,7 @@ const rarityLabels: Record<string, string> = {
 const Profile = () => {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
+    const [showAddressModal, setShowAddressModal] = useState(false);
     const { ownedNFTs, getTotalNFTs } = useWallet();
     const { userRaffles } = useUserRaffles();
     const [copied, setCopied] = useState(false);
@@ -48,7 +53,7 @@ const Profile = () => {
 
     useEffect(() => {
         if (!isAuthenticated) {
-            navigate("/auth");
+            navigate("/register");
         }
     }, [isAuthenticated, navigate]);
 
@@ -171,6 +176,87 @@ const Profile = () => {
                         </CardContent>
                     </Card>
                 </div>
+
+
+
+                {/* Meus Prêmios (Won Raffles with Tracking) */}
+                {
+                    userRaffles.some(ur => ur.raffle.winner_id && String(ur.raffle.winner_id) === String(user.id)) && (
+                        <Card className="bg-card border-border animate-fade-in border-yellow-500/30 bg-yellow-500/5">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-yellow-500">
+                                    <Trophy className="h-5 w-5" />
+                                    Meus Prêmios
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    {userRaffles
+                                        .filter(ur => ur.raffle.winner_id && String(ur.raffle.winner_id) === String(user.id))
+                                        .map((ur) => (
+                                            <div
+                                                key={ur.raffle.id}
+                                                className="flex flex-col md:flex-row items-center gap-4 p-4 rounded-lg bg-background border border-yellow-500/20"
+                                            >
+                                                <img
+                                                    src={ur.raffle.imagem}
+                                                    alt={ur.raffle.titulo}
+                                                    className="w-20 h-20 rounded-lg object-cover"
+                                                />
+                                                <div className="flex-1 min-w-0 text-center md:text-left">
+                                                    <h4 className="font-bold text-foreground truncate text-lg">
+                                                        {ur.raffle.titulo}
+                                                    </h4>
+                                                    <p className="text-yellow-500 font-medium">Você ganhou este prêmio!</p>
+
+                                                    <div className="mt-3 space-y-3">
+                                                        {/* Delivery Address Status */}
+                                                        <div className="bg-secondary/30 rounded-lg p-3 text-sm">
+                                                            <div className="flex items-center justify-between mb-2">
+                                                                <span className="font-semibold flex items-center gap-2 text-muted-foreground">
+                                                                    <MapPin className="w-4 h-4 text-primary" />
+                                                                    Entrega
+                                                                </span>
+                                                                <Button variant="link" size="sm" className="h-auto p-0 text-primary" onClick={(e) => { e.stopPropagation(); setShowAddressModal(true); }}>
+                                                                    {user.address ? "Alterar" : "Cadastrar"}
+                                                                </Button>
+                                                            </div>
+                                                            {user.address ? (
+                                                                <div className="space-y-1">
+                                                                    <p className="text-foreground font-medium">{user.address}, {user.number || 'S/N'}</p>
+                                                                    <p className="text-muted-foreground text-xs">{user.city}/{user.state} - {user.cep}</p>
+                                                                </div>
+                                                            ) : (
+                                                                <p className="text-yellow-500 font-medium animate-pulse">Endereço não cadastrado!</p>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Tracking Status */}
+                                                        {ur.raffle.trackingCode ? (
+                                                            <DeliveryProgress
+                                                                status={ur.raffle.shippingStatus || 'shipped'}
+                                                                trackingCode={ur.raffle.trackingCode}
+                                                                carrier={ur.raffle.carrier}
+                                                                shippedAt={ur.raffle.shippedAt}
+                                                            />
+                                                        ) : (
+                                                            <div className="flex items-center gap-2 text-sm text-muted-foreground bg-secondary/30 p-3 rounded-lg">
+                                                                <Clock className="w-4 h-4" />
+                                                                {user.address ? "Aguardando envio..." : "Cadastre seu endereço para o envio."}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <Button variant="outline" onClick={() => navigate(`/raffle/${ur.raffle.id}`)}>
+                                                    Ver Detalhes
+                                                </Button>
+                                            </div>
+                                        ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )
+                }
 
                 {/* My Raffles Section */}
                 <Card className="bg-card border-border">
@@ -339,6 +425,11 @@ const Profile = () => {
                         </div>
                     </CardContent>
                 </Card>
+                <WinnerAddressDialog
+                    isOpen={showAddressModal}
+                    onOpenChange={setShowAddressModal}
+                    onSuccess={() => { }}
+                />
             </div>
         </div>
     );

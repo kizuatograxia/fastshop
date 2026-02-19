@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RefreshCw, Plus, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Raffle } from "@/types/raffle";
+import { categories } from "@/data/raffles";
 
 // Define the shape of the form data
 export interface CreateRaffleDTO {
@@ -172,25 +173,46 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label>Data e Hora do Sorteio</Label>
+                            <Label>Data e Hora do Sorteio (Seu Horário Local)</Label>
                             <div className="flex gap-2">
                                 <Input
                                     type="date"
-                                    value={formData.draw_date ? formData.draw_date.split('T')[0] : ''}
+                                    value={formData.draw_date ? new Date(formData.draw_date).toLocaleDateString('en-CA') : ''} // YYYY-MM-DD
                                     onChange={(e) => {
-                                        const newDate = e.target.value;
-                                        const currentTime = formData.draw_date ? formData.draw_date.split('T')[1]?.split('.')[0] || '00:00:00' : '00:00:00';
-                                        setFormData({ ...formData, draw_date: `${newDate}T${currentTime}` });
+                                        const dateStr = e.target.value;
+                                        if (!dateStr) return;
+
+                                        const current = formData.draw_date ? new Date(formData.draw_date) : new Date();
+                                        const [year, month, day] = dateStr.split('-').map(Number);
+
+                                        // Create Date object keeping the current time but changing date
+                                        const newDate = new Date(current);
+                                        newDate.setFullYear(year);
+                                        newDate.setMonth(month - 1);
+                                        newDate.setDate(day);
+
+                                        setFormData({ ...formData, draw_date: newDate.toISOString() });
                                     }}
                                     className="bg-background/50 flex-1"
                                 />
                                 <Input
                                     type="time"
-                                    value={formData.draw_date ? formData.draw_date.split('T')[1]?.substring(0, 5) : '00:00'}
+                                    value={formData.draw_date ? new Date(formData.draw_date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '00:00'}
                                     onChange={(e) => {
-                                        const newTime = e.target.value; // HH:mm
-                                        const currentDate = formData.draw_date ? formData.draw_date.split('T')[0] : new Date().toISOString().split('T')[0];
-                                        setFormData({ ...formData, draw_date: `${currentDate}T${newTime}:00.000Z` });
+                                        const timeStr = e.target.value;
+                                        if (!timeStr) return;
+
+                                        const [hours, minutes] = timeStr.split(':').map(Number);
+                                        const current = formData.draw_date ? new Date(formData.draw_date) : new Date();
+
+                                        // Create Date object keeping the current date but changing time
+                                        const newDate = new Date(current);
+                                        newDate.setHours(hours);
+                                        newDate.setMinutes(minutes);
+                                        newDate.setSeconds(0);
+                                        newDate.setMilliseconds(0);
+
+                                        setFormData({ ...formData, draw_date: newDate.toISOString() });
                                     }}
                                     className="bg-background/50 w-32"
                                 />
@@ -205,11 +227,9 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                                 className="w-full h-10 px-3 rounded-md border border-input bg-background/50 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             >
-                                <option value="tech">Tech & Eletrônicos</option>
-                                <option value="giftcard">Gift Cards & Vouchers</option>
-                                <option value="games">Games & Consoles</option>
-                                <option value="viagens">Viagens & Experiências</option>
-                                <option value="outros">Outros</option>
+                                {categories.filter(c => c.id !== "todos").map(cat => (
+                                    <option key={cat.id} value={cat.id}>{cat.emoji} {cat.nome}</option>
+                                ))}
                             </select>
                         </div>
                         <div className="space-y-2">
@@ -235,11 +255,78 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                 </div>
             </div>
 
-            {/* Preview Card could go here */}
+            {/* Live Preview Card */}
             <div className="hidden lg:block space-y-4">
                 <p className="text-muted-foreground font-medium text-center">Preview em Tempo Real</p>
-                <div className="opacity-80 pointer-events-none transform scale-90 origin-top">
-                    {/* Placeholder for dynamic preview if I had RaffleCard accessible easily without props drilling mess or context */}
+                <div className="transform scale-90 origin-top">
+                    <article className="group relative bg-card rounded-2xl border border-border overflow-hidden shadow-elevated">
+                        {/* Status Badge */}
+                        <div className="absolute top-4 left-4 z-10">
+                            <span className="bg-green-500/90 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1 rounded-full">
+                                🟢 Ativo
+                            </span>
+                        </div>
+
+                        {/* Prize Value Badge */}
+                        <div className="absolute top-4 right-4 z-10 bg-background/80 backdrop-blur-sm text-foreground px-2 py-1 rounded-lg text-xs font-bold border border-border">
+                            R$ {(formData.prize_value || 0).toLocaleString("pt-BR")}
+                        </div>
+
+                        {/* Image */}
+                        <div className="relative aspect-square overflow-hidden bg-secondary/30">
+                            {formData.image_url ? (
+                                <img
+                                    src={formData.image_url}
+                                    alt="Preview"
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        e.currentTarget.src = "https://images.unsplash.com/photo-1635326444826-06c8f8d2e61d?w=800&q=80";
+                                    }}
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                    <span className="text-4xl">📷</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-4 space-y-3">
+                            <h3 className="font-bold text-lg text-foreground leading-tight">
+                                {formData.title || "Título do Prêmio"}
+                            </h3>
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                                {formData.description || "Descrição do prêmio aparecerá aqui..."}
+                            </p>
+
+                            {/* Progress Bar */}
+                            <div className="space-y-1">
+                                <div className="flex justify-between text-xs text-muted-foreground">
+                                    <span className="flex items-center gap-1">👥 0 bilhetes vendidos</span>
+                                    <span>0%</span>
+                                </div>
+                                <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                                    <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full w-0" />
+                                </div>
+                            </div>
+
+                            {/* NFT Cost */}
+                            <div className="flex items-center justify-between py-2 px-3 bg-secondary/50 rounded-lg">
+                                <span className="text-xs text-muted-foreground">Custo para participar</span>
+                                <span className="font-bold text-primary">{formData.ticket_price || 0} NFT</span>
+                            </div>
+
+                            {/* Fake Buttons */}
+                            <div className="flex gap-2">
+                                <div className="flex-1 h-10 rounded-md border border-border flex items-center justify-center text-sm text-muted-foreground">
+                                    ℹ️ Mais informações
+                                </div>
+                                <div className="flex-1 h-10 rounded-md bg-gradient-to-r from-primary to-accent flex items-center justify-center text-sm text-white font-medium">
+                                    🎫 Participar
+                                </div>
+                            </div>
+                        </div>
+                    </article>
                 </div>
             </div>
         </div>

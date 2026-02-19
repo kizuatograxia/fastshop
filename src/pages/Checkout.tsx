@@ -7,7 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useWallet } from "@/contexts/WalletContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 const rarityColors: Record<string, string> = {
     comum: "from-gray-400 to-gray-500",
@@ -27,86 +30,113 @@ interface PixPayment {
 
 const Checkout: React.FC = () => {
     const navigate = useNavigate();
-    const { cartItems, getTotalNFTs, addNFT, clearCart, ownedNFTs } = useWallet();
+    const { cartItems, getTotalNFTs, addNFT, buyNFTs, clearCart, ownedNFTs } = useWallet();
     const { toast } = useToast();
+    const { user, login } = useAuth(); // Need login to refresh user data if profile updates
 
     const [isLoading, setIsLoading] = useState(false);
     const [pixData, setPixData] = useState<PixPayment | null>(null);
     const [copied, setCopied] = useState(false);
 
+    // Coupon State (Restored)
+    const [couponCode, setCouponCode] = useState("");
+    const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; type: string } | null>(null);
+    const [couponLoading, setCouponLoading] = useState(false);
+
     const totalNFTs = getTotalNFTs();
     const totalPrice = cartItems.reduce((sum, nft) => sum + nft.preco * nft.quantidade, 0);
-    const totalPriceInBRL = totalPrice; // Valor já está em BRL
+
+    // Recalculate totals
+    const itemsTotal = appliedCoupon ? Math.max(0, totalPrice - appliedCoupon.discount) : totalPrice;
+    const finalPrice = itemsTotal; // No shipping cost
+
+    const handleApplyCoupon = async () => {
+        if (!couponCode.trim()) return;
+        setCouponLoading(true);
+        try {
+            const res = await api.validateCoupon(couponCode, totalPrice);
+            setAppliedCoupon({
+                code: res.coupon.code,
+                discount: res.discount,
+                type: res.coupon.type
+            });
+            toast({
+                title: "Cupom aplicado!",
+                description: `Desconto de R$ ${res.discount.toFixed(2)}`,
+            });
+        } catch (error: any) {
+            setAppliedCoupon(null);
+            toast({
+                title: "Erro no cupom",
+                description: error.message || "Cupom inválido",
+                variant: "destructive"
+            });
+        } finally {
+            setCouponLoading(false);
+        }
+    };
 
     const handlePayWithPix = async () => {
+        if (!user) {
+            toast({ title: "Login necessário", description: "Faça login para continuar.", variant: "destructive" });
+            navigate("/login");
+            return;
+        }
+
         setIsLoading(true);
 
-        // TODO: Integrar com API do Pagar.me
-        // const response = await fetch('/api/pagarme/create-pix', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({
-        //     amount: Math.round(totalPriceInBRL * 100),
-        //     items: cartItems.map(nft => ({
-        //       id: nft.id,
-        //       title: nft.nome,
-        //       quantity: nft.quantidade,
-        //       unit_price: Math.round(nft.preco * 100),
-        //     })),
-        //   }),
-        // });
+        try {
+            const itemsToBuy = cartItems.map(item => ({ id: item.id, quantity: item.quantidade }));
 
-        // Simulação de resposta
-        setTimeout(async () => {
+            // Call Backend to Generate Pix
+            // We pass 'itemsToBuy' as 'realItems' for internal tracking
+            const data = await api.createPayment(user.id, finalPrice, itemsToBuy);
+
             setPixData({
-                qrCode: "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=00020126580014br.gov.bcb.pix0136exemplo-pix-luckynft5204000053039865802BR5913LUCKYNFT6008SAOPAULO62070503***6304ABCD",
-                qrCodeBase64: "",
-                copyPasteCode: "00020126580014br.gov.bcb.pix0136exemplo-pix-luckynft5204000053039865802BR5913LUCKYNFT6008SAOPAULO62070503***6304ABCD",
-                expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-                transactionId: `txn_${Date.now()}`,
+                qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.qrCode)}`, // Generate visual QR from code if base64 missing, or use base64
+                qrCodeBase64: data.qrCodeBase64,
+                copyPasteCode: data.copyPaste,
+                expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 mins expiry default
+                transactionId: data.transactionId,
             });
+
+            toast({
+                title: "PIX Gerado!",
+                description: "Escaneie o QR Code ou use o Copia e Cola.",
+            });
+
+        } catch (error) {
+            console.error("Payment Error:", error);
+            toast({
+                title: "Erro no Pagamento",
+                description: "Não foi possível gerar o PIX. Tente novamente.",
+                variant: "destructive"
+            });
+        } finally {
             setIsLoading(false);
+        }
+    };
 
-            // Processar a compra (adcionar ao backend)
-            // Na vida real isso seria feito via webhook após confirmação do pagamento
-            // Aqui simulamos a confirmação imediata
-            for (const item of cartItems) {
-                // Adcionamos item por item ou criamos endpoint de checkou em massa
-                // Para simplificar, vou iterar e chamar addNFT, mas idealmente seria um bulk insert
-                // Como addNFT adiciona +1, preciso chamar N vezes ou ajustar addNFT.
-                // Vou ajustar para chamar uma vez e assumir que o backend soma a quantidade ou chamar num loop se necessário.
-                // O addNFT original adiciona 1 unidade.
-                // Mas o contexto de 'comprar' do carrinho pode ser mover o item.
-                // Vou assumir addNFT lida com 1.
-                // Se cartItems tem quantidade > 1, preciso chamar varias vezes ou atualizar a API.
-
-                // Simulando apenas adicionar 1 de cada por enquanto ou loop
-                for (let i = 0; i < item.quantidade; i++) {
-                    await addNFT(item);
-                }
-            }
+    // Função de teste para simular o callback de sucesso
+    const simulateSuccessfulPayment = async () => {
+        try {
+            const itemsToBuy = cartItems.map(item => ({ id: item.id, quantity: item.quantidade }));
+            // Pass couponCode if applied
+            await buyNFTs(itemsToBuy, appliedCoupon?.code);
 
             clearCart();
-
             toast({
                 title: "Compra realizada com sucesso!",
                 description: "Seus NFTs foram adicionados à sua carteira.",
             });
-
-            // Redirecionar ou manter na tela?
-            // Se manter, mostrar sucesso. O código abaixo mostra o PIX.
-            // Se pagou, deveria ir para uma tela de sucesso ou limpar o estado de PIX e mostrar sucesso?
-            // A logica original mostrava o PIX gerado.
-            // Se eu limpar o carrinho agora, o usuario perde a referencia do que comprou na tela se eu nao guardar?
-            // O render original usa ownedNFTs para mostrar o resumo. Se eu mudar pra cartItems e limpar, some.
-
-            // Melhor: Gerar o PIX não limpa o carrinho. O pagamento CONFIRMADO limpa.
-            // Como não tenho confirmação de verdade, vou simular que ao "Gerar PIX" o processo iniciou.
-            // Mas o cliente pediu "apenas depois de ocorrer a autenticação ele pode liberar".
-            // Vou manter o PIX gerado. Onde simulo o "Pagamento Confirmado"?
-            // Vou adicionar um botão de "Simular Pagamento" no estado de PIX gerado para fechar o ciclo.
-
-        }, 1500);
+            navigate("/profile");
+        } catch (error) {
+            toast({
+                title: "Erro na compra",
+                description: "Não foi possível finalizar a compra. Tente novamente.",
+                variant: "destructive"
+            });
+        }
     };
 
     const handleCopyPixCode = () => {
@@ -195,9 +225,50 @@ const Checkout: React.FC = () => {
 
                                 <Separator />
 
-                                <div className="flex justify-between items-center text-lg font-bold">
-                                    <span>Total</span>
-                                    <span className="text-gradient">R$ {totalPriceInBRL.toFixed(2)}</span>
+                                {/* Shipping Section Removed */}
+
+                                <Separator />
+
+                                {/* Coupon Input */}
+                                <div className="flex gap-2">
+                                    <Input
+                                        placeholder="Cupom de desconto"
+                                        value={couponCode}
+                                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                        disabled={!!appliedCoupon || isLoading || !!pixData}
+                                    />
+                                    {appliedCoupon ? (
+                                        <Button variant="destructive" onClick={() => { setAppliedCoupon(null); setCouponCode(""); }}>
+                                            Remover
+                                        </Button>
+                                    ) : (
+                                        <Button onClick={handleApplyCoupon} disabled={!couponCode || couponLoading || !!pixData}>
+                                            {couponLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Aplicar"}
+                                        </Button>
+                                    )}
+                                </div>
+
+                                {appliedCoupon && (
+                                    <div className="flex justify-between text-green-400 font-medium text-sm">
+                                        <span>Desconto ({appliedCoupon.code})</span>
+                                        <span>- R$ {appliedCoupon.discount.toFixed(2)}</span>
+                                    </div>
+                                )}
+
+                                <Separator className="bg-white/10" />
+
+                                <div className="space-y-1">
+                                    <div className="flex justify-between text-sm text-muted-foreground">
+                                        <span>Subtotal</span>
+                                        <span>R$ {totalPrice.toFixed(2)}</span>
+                                    </div>
+
+                                    <div className="flex justify-between items-center text-lg font-bold pt-2">
+                                        <span>Total</span>
+                                        <span className={appliedCoupon ? "text-primary" : "text-gradient"}>
+                                            R$ {finalPrice.toFixed(2)}
+                                        </span>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
@@ -242,20 +313,17 @@ const Checkout: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Código Copia e Cola */}
                             <div className="space-y-2">
-                                <Label>Código Copia e Cola</Label>
+                                <label className="text-sm font-medium text-muted-foreground">
+                                    Copia e Cola
+                                </label>
                                 <div className="flex gap-2">
                                     <Input
                                         value={pixData.copyPasteCode}
                                         readOnly
-                                        className="font-mono text-xs"
+                                        className="bg-secondary/50 font-mono text-xs"
                                     />
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={handleCopyPixCode}
-                                    >
+                                    <Button size="icon" variant="outline" onClick={handleCopyPixCode}>
                                         {copied ? (
                                             <Check className="h-4 w-4 text-green-500" />
                                         ) : (
@@ -268,7 +336,7 @@ const Checkout: React.FC = () => {
                             {/* Info */}
                             <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
                                 <p className="text-muted-foreground">
-                                    <strong className="text-foreground">Valor:</strong> R$ {totalPriceInBRL.toFixed(2)}
+                                    <strong className="text-foreground">Valor:</strong> R$ {finalPrice.toFixed(2)}
                                 </p>
                                 <p className="text-muted-foreground">
                                     <strong className="text-foreground">Validade:</strong> 30 minutos
@@ -282,6 +350,16 @@ const Checkout: React.FC = () => {
                                 <p>Aguardando confirmação do pagamento...</p>
                                 <Loader2 className="h-5 w-5 animate-spin mx-auto mt-2 text-primary" />
                             </div>
+
+                            <Separator />
+
+                            <Button
+                                variant="outline"
+                                className="w-full border-dashed"
+                                onClick={simulateSuccessfulPayment}
+                            >
+                                Simular Pagamento Confirmado (Teste)
+                            </Button>
                         </CardContent>
                     </Card>
                 )}

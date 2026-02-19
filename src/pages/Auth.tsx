@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, Eye, EyeOff, Sparkles, ArrowLeft, Wallet, Loader2 } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Sparkles, ArrowLeft, Wallet, Loader2, ChevronRight, LogIn, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,27 @@ import { GoogleLogin } from "@react-oauth/google";
 interface AuthProps {
     defaultTab?: "login" | "register";
 }
+
+// ─── Input component helper (extracted from Register.tsx) ───────────
+const Field: React.FC<{
+    icon: React.ReactNode; label: string; id: string; placeholder: string;
+    value: string; onChange: (v: string) => void; type?: string; rightIcon?: React.ReactNode;
+    autoComplete?: string;
+}> = ({ icon, label, id, placeholder, value, onChange, type = "text", rightIcon, autoComplete }) => (
+    <div className="space-y-1.5">
+        <Label htmlFor={id} className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">{label}</Label>
+        <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">{icon}</span>
+            <input
+                id={id} type={type} placeholder={placeholder} value={value}
+                onChange={e => onChange(e.target.value)}
+                autoComplete={autoComplete}
+                className="w-full h-12 pl-11 pr-4 rounded-xl border border-input bg-background/50 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm font-medium"
+            />
+            {rightIcon && <span className="absolute right-3 top-1/2 -translate-y-1/2">{rightIcon}</span>}
+        </div>
+    </div>
+);
 
 const Auth: React.FC<AuthProps> = ({ defaultTab = "login" }) => {
     const [isLogin, setIsLogin] = useState(defaultTab === "login");
@@ -45,7 +66,6 @@ const Auth: React.FC<AuthProps> = ({ defaultTab = "login" }) => {
             }
         } catch (error) {
             console.error("AuthPage: Login error", error);
-            // Error is handled in context toast
         }
     };
 
@@ -78,9 +98,7 @@ const Auth: React.FC<AuthProps> = ({ defaultTab = "login" }) => {
                 if (!isLogin) {
                     setShowWalletConnect(true);
                 }
-                // If login, context effect will redirect
             } else {
-                // Context shows toast for specific errors usually, but we can ensure it here
                 if (!result.error) toast.error("Ocorreu um erro", { description: "Tente novamente." });
             }
         } finally {
@@ -98,46 +116,43 @@ const Auth: React.FC<AuthProps> = ({ defaultTab = "login" }) => {
 
     if (showWalletConnect) {
         return (
-            <div className="min-h-screen bg-background flex flex-col">
-                <div className="bg-gradient-hero absolute inset-0 opacity-50" />
+            <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 font-sans">
+                <div className="bg-gradient-hero absolute inset-0 opacity-20 pointer-events-none" />
 
-                <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-4">
-                    <div className="w-full max-w-md">
-                        <div className="text-center mb-8">
-                            <div className="flex items-center justify-center gap-2 mb-4">
-                                <Sparkles className="h-6 w-6 text-primary animate-pulse" />
-                            </div>
-                            <h1 className="text-2xl font-bold text-foreground mb-2">
-                                Conecte sua Carteira Digital
-                            </h1>
-                            <p className="text-muted-foreground">
-                                Para armazenar seus NFTs, conecte ou crie uma carteira digital
+                <div className="w-full max-w-md relative z-10">
+                    <div className="text-center mb-8 space-y-2">
+                        <div className="flex items-center justify-center gap-2 mb-4">
+                            <Sparkles className="h-8 w-8 text-primary animate-pulse" />
+                        </div>
+                        <h1 className="text-2xl font-extrabold text-foreground tracking-tight">
+                            Conecte sua Carteira Digital
+                        </h1>
+                        <p className="text-muted-foreground text-sm">
+                            Para armazenar seus NFTs, conecte ou crie uma carteira digital
+                        </p>
+                    </div>
+
+                    <div className="bg-card/50 backdrop-blur-sm rounded-2xl shadow-lg border border-border p-6 sm:p-8">
+                        <div className="flex items-center gap-3 mb-6 p-4 bg-primary/10 rounded-xl border border-primary/20">
+                            <Wallet className="h-5 w-5 text-primary" />
+                            <p className="text-sm text-primary font-medium">
+                                Uma carteira será criada automaticamente para você
                             </p>
                         </div>
 
-                        <div className="bg-card border border-border rounded-xl p-6 shadow-elevated">
-                            <div className="flex items-center gap-3 mb-6 p-4 bg-secondary/50 rounded-lg">
-                                <Wallet className="h-5 w-5 text-primary" />
-                                <p className="text-sm text-muted-foreground">
-                                    Uma carteira será criada automaticamente para você
-                                </p>
-                            </div>
+                        <ConnectEmbed
+                            client={thirdwebClient}
+                            modalSize="compact"
+                            theme="dark"
+                            style={{ width: "100%", borderRadius: "12px", overflow: "hidden" }}
+                        />
 
-                            <ConnectEmbed
-                                client={thirdwebClient}
-                                modalSize="compact"
-                                theme="dark"
-                                style={{ width: "100%" }}
-                            />
-
-                            <Button
-                                variant="ghost"
-                                className="w-full mt-4"
-                                onClick={() => navigate("/")}
-                            >
-                                Pular por enquanto
-                            </Button>
-                        </div>
+                        <button
+                            onClick={() => navigate("/")}
+                            className="w-full mt-6 text-sm text-muted-foreground hover:text-foreground font-medium py-2 transition-colors border-b border-transparent hover:border-foreground/20"
+                        >
+                            Pular por enquanto
+                        </button>
                     </div>
                 </div>
             </div>
@@ -145,152 +160,141 @@ const Auth: React.FC<AuthProps> = ({ defaultTab = "login" }) => {
     }
 
     return (
-        <div className="min-h-screen bg-background flex flex-col">
-            <div className="bg-gradient-hero absolute inset-0 opacity-50" />
+        <div className="min-h-screen bg-background flex flex-col font-sans">
+            <div className="bg-gradient-hero absolute inset-0 opacity-20 pointer-events-none" />
 
-            <div className="relative z-10 p-4">
-                <Button
-                    variant="ghost"
-                    size="sm"
+            {/* Back Button */}
+            <div className="relative z-10 p-6">
+                <button
                     onClick={() => navigate("/")}
-                    className="gap-2"
+                    className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors text-sm font-medium bg-card/50 px-4 py-2 rounded-full border border-border hover:bg-accent/10"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Voltar
-                </Button>
+                </button>
             </div>
 
-            <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-4">
+            <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-4 -mt-16">
                 <div className="w-full max-w-md">
-                    <div className="text-center mb-8">
-                        <div className="flex items-center justify-center gap-2 mb-4">
-                            <Sparkles className="h-6 w-6 text-primary animate-pulse" />
-                        </div>
-                        <h1 className="text-3xl font-black text-gradient mb-2">MundoPix</h1>
-                        <p className="text-muted-foreground">
+                    {/* Header */}
+                    <div className="text-center mb-8 space-y-2">
+                        <h1 className="text-3xl font-black text-foreground tracking-tight">Mission Gear Hub</h1>
+                        <p className="text-muted-foreground text-sm font-medium">
                             {isLogin
                                 ? "Bem-vindo de volta! Entre na sua conta"
                                 : "Crie sua conta e ganhe uma carteira digital"}
                         </p>
                     </div>
 
-                    <div className="bg-card border border-border rounded-xl p-6 shadow-elevated">
-                        <div className="flex gap-2 mb-6">
-                            <Button
-                                variant={isLogin ? "default" : "ghost"}
-                                className="flex-1"
+                    {/* Card */}
+                    <div className="bg-card/50 backdrop-blur-sm rounded-2xl shadow-lg border border-border p-6 sm:p-8">
+                        {/* Tabs */}
+                        <div className="flex gap-2 mb-8 p-1 bg-background/50 rounded-xl border border-input">
+                            <button
                                 onClick={() => setIsLogin(true)}
+                                className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${isLogin
+                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-accent/10"
+                                    }`}
                             >
-                                Entrar
-                            </Button>
-                            <Button
-                                variant={!isLogin ? "default" : "ghost"}
-                                className="flex-1"
+                                <LogIn className="w-4 h-4" /> Entrar
+                            </button>
+                            <button
                                 onClick={() => setIsLogin(false)}
+                                className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${!isLogin
+                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-accent/10"
+                                    }`}
                             >
-                                Cadastrar
-                            </Button>
+                                <UserPlus className="w-4 h-4" /> Cadastrar
+                            </button>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Email</Label>
-                                <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        placeholder="seu@email.com"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="pl-10"
-                                        required
-                                    />
-                                </div>
-                            </div>
+                            <Field
+                                icon={<Mail className="w-4 h-4" />}
+                                label="Email"
+                                id="email"
+                                placeholder="seu@email.com"
+                                value={email}
+                                onChange={setEmail}
+                                type="email"
+                                autoComplete="username"
+                            />
 
-                            <div className="space-y-2">
-                                <Label htmlFor="password">Senha</Label>
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        id="password"
-                                        type={showPassword ? "text" : "password"}
-                                        placeholder="••••••••"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="pl-10 pr-10"
-                                        required
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                                    >
-                                        {showPassword ? (
-                                            <EyeOff className="h-4 w-4" />
-                                        ) : (
-                                            <Eye className="h-4 w-4" />
-                                        )}
+                            <Field
+                                icon={<Lock className="w-4 h-4" />}
+                                label="Senha"
+                                id="password"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={setPassword}
+                                type={showPassword ? "text" : "password"}
+                                autoComplete={isLogin ? "current-password" : "new-password"}
+                                rightIcon={
+                                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-muted-foreground hover:text-foreground transition-colors">
+                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                     </button>
-                                </div>
-                            </div>
+                                }
+                            />
 
                             {!isLogin && (
-                                <div className="space-y-2">
-                                    <Label htmlFor="confirmPassword">Confirmar Senha</Label>
-                                    <div className="relative">
-                                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            id="confirmPassword"
-                                            type={showPassword ? "text" : "password"}
-                                            placeholder="••••••••"
-                                            value={confirmPassword}
-                                            onChange={(e) => setConfirmPassword(e.target.value)}
-                                            className="pl-10"
-                                            required
-                                        />
-                                    </div>
-                                </div>
+                                <Field
+                                    icon={<Lock className="w-4 h-4" />}
+                                    label="Confirmar Senha"
+                                    id="confirmPassword"
+                                    placeholder="••••••••"
+                                    value={confirmPassword}
+                                    onChange={setConfirmPassword}
+                                    type={showPassword ? "text" : "password"}
+                                />
                             )}
 
-                            <Button
-                                type="submit"
-                                className="w-full"
-                                disabled={isSubmitting}
-                            >
-                                {isSubmitting ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Aguarde...
-                                    </>
-                                ) : isLogin ? (
-                                    "Entrar"
-                                ) : (
-                                    "Criar Conta"
-                                )}
-                            </Button>
+                            <div className="pt-4">
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="w-full h-13 rounded-xl bg-primary text-primary-foreground font-extrabold text-sm uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-primary/90 active:scale-[0.98] transition-all shadow-glow disabled:opacity-50 py-3.5"
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                            Aguarde...
+                                        </>
+                                    ) : isLogin ? (
+                                        <>ENTRAR AGORA <ChevronRight className="w-4 h-4" /></>
+                                    ) : (
+                                        <>CRIAR CONTA GRÁTIS <Sparkles className="w-4 h-4" /></>
+                                    )}
+                                </button>
+                            </div>
                         </form>
 
-                        <div className="relative my-4">
+                        <div className="relative my-6">
                             <div className="absolute inset-0 flex items-center">
-                                <span className="w-full border-t" />
+                                <span className="w-full border-t border-border" />
                             </div>
                             <div className="relative flex justify-center text-xs uppercase">
-                                <span className="bg-background px-2 text-muted-foreground">Ou continue com</span>
+                                <span className="bg-card px-3 text-muted-foreground font-semibold">Ou continue com</span>
                             </div>
                         </div>
 
                         <div className="flex justify-center">
-                            <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => toast.error("Erro Google")} />
+                            <GoogleLogin
+                                onSuccess={handleGoogleSuccess}
+                                onError={() => toast.error("Erro Google")}
+                                width={340}
+                                theme="filled_black"
+                                shape="pill"
+                            />
                         </div>
 
                         {!isLogin && (
-                            <div className="mt-6 p-4 bg-secondary/50 rounded-lg">
-                                <div className="flex items-center gap-3">
-                                    <Wallet className="h-5 w-5 text-primary shrink-0" />
-                                    <p className="text-sm text-muted-foreground">
-                                        Ao criar sua conta, você receberá uma carteira digital para armazenar seus NFTs
+                            <div className="mt-6 p-4 bg-primary/5 rounded-xl border border-primary/20">
+                                <div className="flex items-start gap-3">
+                                    <Wallet className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                                    <p className="text-xs text-muted-foreground leading-relaxed">
+                                        <span className="font-semibold text-primary">Bônus:</span> Ao criar sua conta, você receberá uma carteira digital segura para armazenar seus NFTs automaticamente.
                                     </p>
                                 </div>
                             </div>

@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /profile
+Disallow: /checkout
+Disallow: /raffle-details/*
+Disallow: /api/
+Disallow: /feed
+
+# Sitemap (optional, but good for SEO if you have one)
+# Sitemap: https://sua-url-do-projeto.com/sitemap.xml

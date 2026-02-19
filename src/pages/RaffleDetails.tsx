@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, Users, Ticket, Trophy, Calendar, Target, Info, CheckCircle2, Minus, Plus } from "lucide-react";
+import { ArrowLeft, Clock, Users, Ticket, Trophy, Calendar, Target, Info, CheckCircle2, Minus, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { raffles } from "@/data/raffles";
 import { useWallet } from "@/contexts/WalletContext";
@@ -21,12 +21,13 @@ const rarityColors: Record<string, string> = {
 const RaffleDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { ownedNFTs, removeNFT } = useWallet();
+    const { ownedNFTs, removeNFT, refreshWallet } = useWallet();
     const { addUserRaffle, getUserValue } = useUserRaffles();
 
     const [selectedNFTs, setSelectedNFTs] = useState<Record<string, number>>({});
     const [raffle, setRaffle] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     useEffect(() => {
         if (id) {
@@ -145,6 +146,8 @@ const RaffleDetails: React.FC = () => {
     const revenueProgress = Math.min((currentRevenue / targetRevenue) * 100, 100);
 
     const handleParticipate = async () => {
+        if (isProcessing) return;
+
         if (raffle.status !== 'ativo') {
             toast.error("Este sorteio já foi encerrado!");
             return;
@@ -160,34 +163,42 @@ const RaffleDetails: React.FC = () => {
             return;
         }
 
-        await addUserRaffle(raffle, ticketsToReceive, selectedValue);
-
-        setRaffle((prev: any) => ({
-            ...prev,
-            participantes: prev.participantes + ticketsToReceive
-        }));
-
-        for (const [nftId, qty] of Object.entries(selectedNFTs)) {
-            await removeNFT(nftId, qty);
-        }
-
-        setSelectedNFTs({});
+        setIsProcessing(true);
 
         try {
-            const data = await api.getRaffle(raffle.id);
-            if (data && data.tickets_sold) {
-                setRaffle((prev: any) => ({
-                    ...prev,
-                    participantes: parseInt(data.tickets_sold) || 0
-                }));
-            }
-        } catch (error) {
-            console.error("Failed to refresh raffle stats", error);
-        }
+            await addUserRaffle(raffle, ticketsToReceive, selectedValue, selectedNFTs);
 
-        toast.success(`Você entrou no sorteio com ${ticketsToReceive} Bilhetes!`, {
-            description: `Valor total adicionado: R$ ${selectedValue.toFixed(2)}`,
-        });
+            setRaffle((prev: any) => ({
+                ...prev,
+                participantes: prev.participantes + ticketsToReceive
+            }));
+
+            // NFTs are now removed by the backend transaction
+            // We should refresh the wallet to reflect this change
+            await refreshWallet();
+            setSelectedNFTs({});
+
+            try {
+                const data = await api.getRaffle(raffle.id);
+                if (data && data.tickets_sold) {
+                    setRaffle((prev: any) => ({
+                        ...prev,
+                        participantes: parseInt(data.tickets_sold) || 0
+                    }));
+                }
+            } catch (error) {
+                console.error("Failed to refresh raffle stats", error);
+            }
+
+            toast.success(`Você entrou no sorteio com ${ticketsToReceive} Bilhetes!`, {
+                description: `Valor total adicionado: R$ ${selectedValue.toFixed(2)}`,
+            });
+        } catch (error) {
+            console.error("Erro ao participar do sorteio", error);
+            toast.error("Ocorreu um erro ao processar sua participação. Tente novamente.");
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     return (
@@ -265,7 +276,7 @@ const RaffleDetails: React.FC = () => {
                             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
                                 {raffle.titulo}
                             </h1>
-                            <p className="text-lg text-muted-foreground">
+                            <p className="text-lg text-muted-foreground whitespace-pre-wrap">
                                 {raffle.descricao}
                             </p>
                         </div>
@@ -457,10 +468,19 @@ const RaffleDetails: React.FC = () => {
                                 size="lg"
                                 className="w-full text-lg py-6 shadow-xl shadow-primary/20"
                                 onClick={handleParticipate}
-                                disabled={selectedCount === 0 || raffle.status !== "ativo"}
+                                disabled={selectedCount === 0 || raffle.status !== "ativo" || isProcessing}
                             >
-                                <Ticket className="h-5 w-5 mr-2" />
-                                Confirmar Entrada (R$ {selectedValue.toFixed(2)})
+                                {isProcessing ? (
+                                    <>
+                                        <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                                        Processando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Ticket className="h-5 w-5 mr-2" />
+                                        Confirmar Entrada (R$ {selectedValue.toFixed(2)})
+                                    </>
+                                )}
                             </Button>
 
                             <p className="text-xs text-center text-muted-foreground">

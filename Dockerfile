@@ -32,7 +32,6 @@ COPY --from=build /app/dist ./dist
 
 # Copy backend source code
 COPY server ./server
-COPY .env ./
 
 # Expose port (Railway usually sets PORT to whatever it wants, defaulting to 5050 if local)
 ENV PORT=5050

@@ -1,0 +1,79 @@
+// NFT Catalog - Source of Truth for Prices
+const nfts = [
+    {
+        id: "nft-1",
+        nome: "Beija-flor (R$ 1)",
+        emoji: "🐦",
+        preco: 1.00,
+        raridade: "comum",
+        descricao: "Representa a nota de 1 real. O Beija-flor-de-peito-azul simboliza beleza e agilidade.",
+        cor: "from-emerald-400 to-green-500",
+    },
+    {
+        id: "nft-2",
+        nome: "Tartaruga (R$ 2)",
+        emoji: "🐢",
+        preco: 2.00,
+        raridade: "comum",
+        descricao: "Representa a nota de 2 reais. A Tartaruga-de-pente vive nos mares tropicais.",
+        cor: "from-blue-400 to-cyan-500",
+    },
+    {
+        id: "nft-3",
+        nome: "Garça (R$ 5)",
+        emoji: "🦢",
+        preco: 5.00,
+        raridade: "comum",
+        descricao: "Representa a nota de 5 reais. A Garça-branca-grande vive em todo o Brasil.",
+        cor: "from-indigo-400 to-purple-500",
+    },
+    {
+        id: "nft-4",
+        nome: "Arara (R$ 10)",
+        emoji: "🦜",
+        preco: 10.00,
+        raridade: "raro",
+        descricao: "Representa a nota de 10 reais. A Arara-vermelha é um ícone da fauna.",
+        cor: "from-red-500 to-rose-600",
+    },
+    {
+        id: "nft-5",
+        nome: "Mico-Leão (R$ 20)",
+        emoji: "🐒",
+        preco: 20.00,
+        raridade: "raro",
+        descricao: "Representa a nota de 20 reais. O Mico-leão-dourado é símbolo da conservação.",
+        cor: "from-amber-400 to-orange-500",
+    },
+    {
+        id: "nft-6",
+        nome: "Onça-Pintada (R$ 50)",
+        emoji: "🐆",
+        preco: 50.00,
+        raridade: "epico",
+        descricao: "Representa a nota de 50 reais. O maior felino das Américas.",
+        cor: "from-yellow-500 to-orange-600",
+    },
+    {
+        id: "nft-7",
+        nome: "Garoupa (R$ 100)",
+        emoji: "🐟",
+        preco: 100.00,
+        raridade: "epico",
+        descricao: "Representa a nota de 100 reais. Um peixe robusto e valioso.",
+        cor: "from-cyan-500 to-blue-600",
+    },
+    {
+        id: "nft-8",
+        nome: "Lobo-Guará (R$ 200)",
+        emoji: "🐺",
+        preco: 200.00,
+        raridade: "lendario",
+        descricao: "Representa a nota de 200 reais. O grande canídeo do Cerrado.",
+        cor: "from-stone-500 to-neutral-600",
+    },
+];
+
+export default nfts;
+// Using ES Modules syntax since package.json likely has "type": "module" or .mjs extensions are used.
+// The file server/index.js uses 'import', so this should too.

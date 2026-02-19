@@ -8,6 +8,21 @@ interface User {
     name?: string;
     picture?: string;
     walletAddress?: string;
+    profile_complete?: boolean;
+    role?: string;
+    cep?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    number?: string;
+    district?: string;
+    cpf?: string;
+    birthDate?: string;
+    gender?: string;
+    country?: string;
+    phone?: string;
+    username?: string;
+
 }
 
 interface AuthContextType {
@@ -19,6 +34,7 @@ interface AuthContextType {
     googleLogin: (token: string) => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
     setWalletAddress: (address: string) => void;
+    updateUser: (data: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,11 +45,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
+    const ADMIN_EMAILS = ['brunofpguerra@hotmail.com', 'hedgehogdilemma1851@gmail.com', 'alexanderbeanzllli@gmail.com'];
+
     useEffect(() => {
         const sessionData = localStorage.getItem(SESSION_STORAGE_KEY);
         if (sessionData) {
             try {
                 const parsedUser = JSON.parse(sessionData);
+                // Force admin role if email matches
+                if (ADMIN_EMAILS.includes(parsedUser.email)) {
+                    parsedUser.role = 'admin';
+                }
                 setUser(parsedUser);
             } catch {
                 localStorage.removeItem(SESSION_STORAGE_KEY);
@@ -48,14 +70,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const response = await api.login(email, password);
             console.log("Login response:", response);
             if (response.user) {
+                const role = ADMIN_EMAILS.includes(response.user.email) ? 'admin' : (response.user.role || 'user');
+
                 // Ensure ID is string to match interface if needed, API sends number or string
                 const sessionUser: User = {
                     id: String(response.user.id),
                     email: response.user.email,
-                    walletAddress: response.user.walletAddress
+                    name: response.user.name,
+                    picture: response.user.picture,
+                    walletAddress: response.user.walletAddress,
+                    profile_complete: response.user.profile_complete || false,
+                    role: role,
+                    // Map address fields
+                    cep: response.user.cep,
+                    address: response.user.address,
+                    number: response.user.number,
+                    district: response.user.district,
+                    city: response.user.city,
+                    state: response.user.state
                 };
                 setUser(sessionUser);
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser));
+                // Also save to "user" key for consistency with other parts of the app
+                localStorage.setItem("user", JSON.stringify(sessionUser));
+
+                if (response.token) {
+                    localStorage.setItem("auth_token", response.token);
+                }
+
                 return { success: true };
             }
             return { success: false, error: "Invalid response from server" };
@@ -73,15 +115,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const response = await api.googleLogin(token);
             console.log("Google Login response:", response);
             if (response.user) {
+                const role = ADMIN_EMAILS.includes(response.user.email) ? 'admin' : (response.user.role || 'user');
+
                 const sessionUser: User = {
                     id: String(response.user.id),
                     email: response.user.email,
                     name: response.user.name,
                     picture: response.user.picture,
-                    walletAddress: response.user.walletAddress
+                    walletAddress: response.user.walletAddress,
+                    profile_complete: response.user.profile_complete || false,
+                    role: role,
+                    // Map address fields
+                    cep: response.user.cep,
+                    address: response.user.address,
+                    number: response.user.number,
+                    district: response.user.district,
+                    city: response.user.city,
+                    state: response.user.state
                 };
                 setUser(sessionUser);
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser));
+                // Also save to "user" key for consistency with other parts of the app
+                localStorage.setItem("user", JSON.stringify(sessionUser));
+
+                if (response.token) {
+                    localStorage.setItem("auth_token", response.token);
+                }
+
                 toast.success("Login com Google realizado!");
                 return { success: true };
             }
@@ -100,12 +160,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             const response = await api.register(email, password);
             if (response.user) {
+                const role = ADMIN_EMAILS.includes(response.user.email) ? 'admin' : 'user';
+
                 const sessionUser: User = {
                     id: String(response.user.id),
-                    email: response.user.email
+                    email: response.user.email,
+                    role: role
                 };
                 setUser(sessionUser);
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser));
+
+                if (response.token) {
+                    localStorage.setItem("auth_token", response.token);
+                }
+
                 toast.success("Conta criada com sucesso!");
                 return { success: true };
             }
@@ -121,6 +189,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const logout = useCallback(() => {
         setUser(null);
         localStorage.removeItem(SESSION_STORAGE_KEY);
+        localStorage.removeItem("user");
+        localStorage.removeItem("auth_token");
     }, []);
 
     const setWalletAddress = useCallback((address: string) => {
@@ -128,6 +198,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const updatedUser = { ...user, walletAddress: address };
         setUser(updatedUser);
         localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(updatedUser));
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+    }, [user]);
+
+    const updateUser = useCallback((data: Partial<User>) => {
+        if (!user) return;
+        const updatedUser = { ...user, ...data };
+        setUser(updatedUser);
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(updatedUser));
+        localStorage.setItem("user", JSON.stringify(updatedUser));
     }, [user]);
 
     return (
@@ -141,6 +220,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 googleLogin,
                 logout,
                 setWalletAddress,
+                updateUser,
             }}
         >
             {children}

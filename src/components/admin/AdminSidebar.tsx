@@ -10,102 +10,122 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { 
-    LayoutDashboard, 
-    Ticket, 
-    Users, 
-    Settings, 
+import {
+    LayoutDashboard,
+    Ticket,
+    Users,
+    Settings,
     LogOut,
-    PlusCircle
+    PlusCircle,
+    MessageSquare,
+    Zap,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+
+type ViewMode = 'dashboard' | 'create' | 'participants' | 'raffles' | 'settings' | 'details' | 'reviews' | 'coupons';
 
 interface AdminSidebarProps {
-    currentView: string;
-    onViewChange: (view: any) => void;
+    currentView: ViewMode;
+    onViewChange: (view: ViewMode) => void;
     onLogout: () => void;
+    pendingReviews?: number;
 }
 
-export function AdminSidebar({ currentView, onViewChange, onLogout }: AdminSidebarProps) {
+const mainMenu = [
+    { id: "dashboard" as const, label: "Dashboard", icon: LayoutDashboard },
+    { id: "raffles" as const, label: "Sorteios", icon: Ticket },
+    { id: "coupons" as const, label: "Cupons", icon: Ticket },
+    { id: "create" as const, label: "Novo Sorteio", icon: PlusCircle },
+];
+
+const managementMenu = [
+    { id: "participants" as const, label: "Participantes", icon: Users },
+    { id: "reviews" as const, label: "Depoimentos", icon: MessageSquare },
+    { id: "settings" as const, label: "Configurações", icon: Settings },
+];
+
+export function AdminSidebar({ currentView, onViewChange, onLogout, pendingReviews = 0 }: AdminSidebarProps) {
+    // "details" view should highlight "raffles" in sidebar
+    const activeView = currentView === 'details' ? 'raffles' : currentView;
+
     return (
-        <Sidebar>
-            <SidebarHeader className="p-4 border-b border-white/5">
-                <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
-                    Admin Panel
-                </h2>
+        <Sidebar className="border-r border-sidebar-border">
+            <SidebarHeader className="p-4 border-b border-sidebar-border">
+                <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-lg bg-primary/20 flex items-center justify-center ring-1 ring-primary/30">
+                        <Zap className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                        <h2 className="text-sm font-bold text-sidebar-foreground">Admin Panel</h2>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Gerenciamento</p>
+                    </div>
+                </div>
             </SidebarHeader>
+
             <SidebarContent>
                 <SidebarGroup>
-                    <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
+                    <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/50 px-4">
+                        Menu Principal
+                    </SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton 
-                                    isActive={currentView === 'dashboard'} 
-                                    onClick={() => onViewChange('dashboard')}
-                                    tooltip="Dashboard"
-                                >
-                                    <LayoutDashboard />
-                                    <span>Dashboard</span>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton 
-                                    isActive={currentView === 'create'} 
-                                    onClick={() => onViewChange('create')}
-                                    tooltip="Criar Sorteio"
-                                >
-                                    <PlusCircle />
-                                    <span>Criar Sorteio</span>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton 
-                                    isActive={currentView === 'raffles'} 
-                                    onClick={() => onViewChange('raffles')}
-                                    tooltip="Meus Sorteios"
-                                >
-                                    <Ticket />
-                                    <span>Meus Sorteios</span>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
+                            {mainMenu.map((item) => (
+                                <SidebarMenuItem key={item.id}>
+                                    <SidebarMenuButton
+                                        isActive={activeView === item.id}
+                                        onClick={() => onViewChange(item.id)}
+                                        tooltip={item.label}
+                                        className="transition-all duration-200"
+                                    >
+                                        <item.icon className="h-4 w-4" />
+                                        <span>{item.label}</span>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            ))}
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
-                
+
                 <SidebarGroup>
-                    <SidebarGroupLabel>Gerenciamento</SidebarGroupLabel>
+                    <SidebarGroupLabel className="text-[10px] uppercase tracking-widest text-muted-foreground/50 px-4">
+                        Gerenciamento
+                    </SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                             <SidebarMenuItem>
-                                <SidebarMenuButton 
-                                    isActive={currentView === 'participants'} 
-                                    onClick={() => onViewChange('participants')}
-                                    tooltip="Participantes"
-                                >
-                                    <Users />
-                                    <span>Participantes Global</span>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton 
-                                    isActive={currentView === 'settings'} 
-                                    onClick={() => onViewChange('settings')}
-                                    tooltip="Configurações"
-                                >
-                                    <Settings />
-                                    <span>Configurações</span>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
+                            {managementMenu.map((item) => (
+                                <SidebarMenuItem key={item.id}>
+                                    <SidebarMenuButton
+                                        isActive={activeView === item.id}
+                                        onClick={() => onViewChange(item.id)}
+                                        tooltip={item.label}
+                                        className="transition-all duration-200"
+                                    >
+                                        <item.icon className="h-4 w-4" />
+                                        <span>{item.label}</span>
+                                        {item.id === "reviews" && pendingReviews > 0 && (
+                                            <span className="ml-auto text-[10px] font-bold bg-destructive text-destructive-foreground rounded-full h-5 min-w-5 flex items-center justify-center px-1.5 animate-pulse">
+                                                {pendingReviews}
+                                            </span>
+                                        )}
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            ))}
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>
-            <SidebarFooter className="p-4 border-t border-white/5">
-                <Button variant="ghost" className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-900/10" onClick={onLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sair
-                </Button>
+
+            <SidebarFooter className="p-2 border-t border-sidebar-border">
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            onClick={onLogout}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 transition-all"
+                        >
+                            <LogOut className="h-4 w-4" />
+                            <span>Sair</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
             </SidebarFooter>
         </Sidebar>
     );

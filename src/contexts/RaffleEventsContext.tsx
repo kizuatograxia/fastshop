@@ -3,6 +3,16 @@ import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { Raffle } from '@/types/raffle';
 
+// Defensive UTC date parsing: if a date string has no timezone indicator, treat it as UTC.
+// This prevents a 3-hour offset in UTC-3 (Brazil) browsers.
+const parseAsUTC = (dateStr: string): Date => {
+    const trimmed = dateStr.trim();
+    if (trimmed.includes('T') && !trimmed.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(trimmed)) {
+        return new Date(trimmed + 'Z');
+    }
+    return new Date(trimmed);
+};
+
 interface RaffleEventContextType {
     activeRaffles: Raffle[];
     triggeringRaffle: Raffle | null;
@@ -50,17 +60,20 @@ export const RaffleEventsProvider = ({ children }: { children: ReactNode }) => {
                 checkCountdown(raffle);
 
                 // 2. Check for WINNER DRAWN event
-                // Trigger if:
-                // a) Status is 'encerrado' (ended)
-                // b) Has a winner
-                // c) Has NOT been notified in this session yet
-                // d) Draw time was recent (e.g. within last 1 hour) to avoid replaying old history
-                const isRecent = new Date().getTime() - new Date(raffle.dataFim).getTime() < 3600000; // 1 hour
+                const isRecent = new Date().getTime() - parseAsUTC(raffle.dataFim).getTime() < 3600000; // 1 hour
+                const notificationKey = `winner-${raffle.id}`;
 
-                if ((newStatus === 'encerrado' || newStatus === 'ended') && raffle.winner && !notifiedRaffles.current.has(`winner-${raffle.id}`) && isRecent) {
+                // Get local storage history
+                const seenNotifications = JSON.parse(localStorage.getItem('seen_notifications') || '[]');
+
+                if (newStatus === 'encerrado' && raffle.winner && !seenNotifications.includes(notificationKey) && isRecent) {
                     console.log(`[RaffleEvent] Triggering WIN for ${raffle.titulo}! Winner: ${raffle.winner.name}`);
                     setTriggeringRaffle(raffle);
-                    notifiedRaffles.current.add(`winner-${raffle.id}`);
+
+                    // Mark as seen immediately to avoid double trigger
+                    const updatedSeen = [...seenNotifications, notificationKey];
+                    localStorage.setItem('seen_notifications', JSON.stringify(updatedSeen));
+                    notifiedRaffles.current.add(notificationKey);
                 }
 
                 // Update known status
@@ -80,7 +93,7 @@ export const RaffleEventsProvider = ({ children }: { children: ReactNode }) => {
         if (raffle.status !== 'ativo' && raffle.status !== 'active') return;
 
         const now = new Date();
-        const drawDate = new Date(raffle.dataFim);
+        const drawDate = parseAsUTC(raffle.dataFim);
         const diff = drawDate.getTime() - now.getTime();
         const minutesLeft = Math.ceil(diff / 60000);
 

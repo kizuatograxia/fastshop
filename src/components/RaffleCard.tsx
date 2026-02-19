@@ -11,9 +11,10 @@ import { CountdownBadge } from "@/components/CountdownBadge";
 interface RaffleCardProps {
     raffle: Raffle;
     index: number;
+    disableNavigation?: boolean;
 }
 
-const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index }) => {
+const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigation = false }) => {
     const { getTotalNFTs } = useWallet();
     const { addUserRaffle, isParticipating } = useUserRaffles();
     const navigate = useNavigate();
@@ -35,7 +36,7 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index }) => {
             return;
         }
 
-        addUserRaffle(raffle, 1, raffle.custoNFT);
+        addUserRaffle(raffle, 1, raffle.custoNFT, {});
         toast.success(`Você entrou no sorteio: ${raffle.titulo}!`, {
             description: `Custo: ${raffle.custoNFT} NFT(s)`,
         });
@@ -50,9 +51,9 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index }) => {
 
     return (
         <article
-            className="group relative bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 hover:shadow-elevated hover:border-primary/30 hover:-translate-y-1 animate-fade-in cursor-pointer"
+            className={`group relative bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 hover:shadow-elevated hover:border-primary/30 hover:-translate-y-1 animate-fade-in ${disableNavigation ? "" : "cursor-pointer"}`}
             style={{ animationDelay: `${index * 0.1}s` }}
-            onClick={() => navigate(`/raffle/${raffle.id}`)}
+            onClick={() => !disableNavigation && navigate(`/raffle/${raffle.id}`)}
         >
             {/* Status Badge */}
             <div className="absolute top-4 left-4 z-10">
@@ -130,28 +131,30 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index }) => {
                     <span className="font-bold text-primary">{raffle.custoNFT} NFT</span>
                 </div>
 
-                {/* Buttons */}
-                <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        size="default"
-                        className="flex-1"
-                        onClick={handleMoreInfo}
-                    >
-                        <Info className="h-4 w-4" />
-                        Mais informações
-                    </Button>
-                    <Button
-                        variant="hero"
-                        size="default"
-                        className="flex-1"
-                        onClick={handleParticipate}
-                        disabled={alreadyParticipating}
-                    >
-                        <Ticket className="h-4 w-4" />
-                        {alreadyParticipating ? "Participando" : "Participar"}
-                    </Button>
-                </div>
+                {/* Buttons - Hidden if disabled */}
+                {!disableNavigation && (
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="default"
+                            className="flex-1"
+                            onClick={handleMoreInfo}
+                        >
+                            <Info className="h-4 w-4" />
+                            Mais informações
+                        </Button>
+                        <Button
+                            variant="hero"
+                            size="default"
+                            className="flex-1"
+                            onClick={handleParticipate}
+                            disabled={alreadyParticipating}
+                        >
+                            <Ticket className="h-4 w-4" />
+                            {alreadyParticipating ? "Participando" : "Participar"}
+                        </Button>
+                    </div>
+                )}
             </div>
         </article>
     );

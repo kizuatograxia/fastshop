@@ -1,2 +1,7 @@
 .vercel
 node_modules
+
+.env
+.DS_Store
+dist/
+test_db.js

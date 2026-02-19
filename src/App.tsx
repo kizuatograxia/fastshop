@@ -10,54 +10,94 @@ import { UserRafflesProvider } from "@/contexts/UserRafflesContext";
 import { RaffleEventsProvider } from "@/contexts/RaffleEventsContext";
 import { GlobalEventsListener } from "@/components/GlobalEventsListener";
 import { RaffleParticipationWidget } from "@/components/RaffleParticipationWidget";
+import MainLayout from "@/components/MainLayout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import RaffleDetails from "./pages/RaffleDetails";
 import Checkout from "./pages/Checkout";
 import Admin from "./pages/Admin";
+import WinnersFeed from "./pages/WinnersFeed";
+import Sorteios from "./pages/Sorteios";
+import NFTs from "./pages/NFTs";
+import ComoFunciona from "./pages/ComoFunciona";
 import NotFound from "./pages/NotFound";
+import RegisterPage from "./pages/Register";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+
+import { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 
-const App = () => (
-  <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-    <QueryClientProvider client={queryClient}>
-      <ThirdwebProvider>
-        <AuthProvider>
-          <WalletProvider>
-            <UserRafflesProvider>
-              <RaffleEventsProvider>
-                <GlobalEventsListener />
-                <TooltipProvider>
-                  <Toaster />
-                  <Sonner />
-                  <BrowserRouter>
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/auth" element={<Auth />} />
-                      <Route path="/login" element={<Auth defaultTab="login" />} />
-                      <Route path="/register" element={<Auth defaultTab="register" />} />
-                      <Route path="/profile" element={<Profile />} />
-                      <Route path="/raffle/:id" element={<RaffleDetails />} />
-                      <Route path="/checkout" element={<Checkout />} />
-                      <Route path="/admin" element={<Admin />} />
-                      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                    <RaffleParticipationWidget />
-                  </BrowserRouter>
-                </TooltipProvider>
-              </RaffleEventsProvider>
-            </UserRafflesProvider>
-          </WalletProvider>
-        </AuthProvider>
-      </ThirdwebProvider>
-    </QueryClientProvider>
-  </GoogleOAuthProvider>
-);
+const App = () => {
+  useEffect(() => {
+    // Security: Clean up Google OAuth metadata and potential leaks
+    const cleanupAuthArtifacts = async () => {
+      try {
+        // Clear firebase heartbeat if it exists (common with Google Auth SDKs)
+        if (window.indexedDB) {
+          window.indexedDB.deleteDatabase('firebase-heartbeat-database');
+        }
+
+        // Optional: clear sensitive unnecessary storage items if any
+        // localStorage.removeItem('g_state'); // Example, use with caution if it affects UX
+      } catch (e) {
+        console.error("Cleanup failed", e);
+      }
+    };
+
+    cleanupAuthArtifacts();
+  }, []);
+
+  return (
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <QueryClientProvider client={queryClient}>
+        <ThirdwebProvider>
+          <AuthProvider>
+            <WalletProvider>
+              <UserRafflesProvider>
+                <RaffleEventsProvider>
+                  <GlobalEventsListener />
+                  <TooltipProvider>
+                    <Toaster />
+                    <Sonner />
+                    <BrowserRouter>
+                      <Routes>
+                        {/* Main Layout Routes */}
+                        <Route element={<MainLayout />}>
+                          <Route path="/" element={<Index />} />
+                          <Route path="/feed" element={<WinnersFeed />} />
+                          <Route path="/sorteios" element={<Sorteios />} />
+                          <Route path="/nfts" element={<NFTs />} />
+                          <Route path="/como-funciona" element={<ComoFunciona />} />
+                          <Route path="/profile" element={<Profile />} />
+                          <Route path="/raffle/:id" element={<RaffleDetails />} />
+                          <Route path="/checkout" element={<Checkout />} />
+                          <Route path="/winners" element={<WinnersFeed />} />
+                        </Route>
+
+                        {/* Standalone Routes */}
+                        <Route path="/auth" element={<RegisterPage />} />
+                        <Route path="/login" element={<RegisterPage />} />
+                        <Route path="/register" element={<RegisterPage />} />
+                        <Route path="/admin" element={<Admin />} />
+
+                        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                      <RaffleParticipationWidget />
+                    </BrowserRouter>
+                  </TooltipProvider>
+                </RaffleEventsProvider>
+              </UserRafflesProvider>
+            </WalletProvider>
+          </AuthProvider>
+        </ThirdwebProvider>
+      </QueryClientProvider>
+    </GoogleOAuthProvider>
+  );
+};
 
 export default App;

@@ -43,7 +43,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
               <Menu className="h-5 w-5" />
             </Button>
 
-            <div className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <div className="relative">
                 <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-primary animate-glow-pulse" />
               </div>
@@ -53,21 +53,21 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
               <span className="hidden sm:inline text-xs font-medium text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
                 BETA
               </span>
-            </div>
+            </Link>
           </div>
 
           <div className="hidden md:flex items-center gap-6">
             <nav className="flex items-center gap-4">
-              <Link to="/#sorteios" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+              <Link to="/sorteios" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                 Sorteios
               </Link>
-              <Link to="/#ganhadores" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+              <Link to="/nfts" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+                Marketplace NFTs
+              </Link>
+              <Link to="/winners" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                 Ganhadores
               </Link>
-              <Link to="/#nfts" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                Comprar NFTs
-              </Link>
-              <Link to="/#como-funciona" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+              <Link to="/como-funciona" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                 Como Funciona
               </Link>
             </nav>
@@ -143,7 +143,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
               <Button
                 variant="default"
                 size="sm"
-                onClick={() => navigate("/auth")}
+                onClick={() => navigate("/register")}
               >
                 Entrar
               </Button>

@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Raffle } from "@/types/raffle";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, Users, Trophy, Target, Calendar, DollarSign, Pen } from "lucide-react";
+import { ArrowLeft, Clock, Users, Trophy, Target, Calendar, DollarSign, Pen, MessageSquare } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { CountdownBadge } from "@/components/CountdownBadge";
+import { WinnerDetailsModal } from "@/components/admin/WinnerDetailsModal";
 
 interface AdminRaffleDetailsProps {
     raffle: Raffle;
@@ -13,6 +15,11 @@ interface AdminRaffleDetailsProps {
 }
 
 export function AdminRaffleDetails({ raffle, onBack, onEdit, onViewParticipants, onDraw }: AdminRaffleDetailsProps) {
+    const [showWinnerModal, setShowWinnerModal] = useState(false);
+    const [trackingCode, setTrackingCode] = useState(raffle.trackingCode || "");
+    const [carrier, setCarrier] = useState(raffle.carrier || "");
+    const [shippingStatus, setShippingStatus] = useState(raffle.shippingStatus || "preparing");
+    const [isSavingTracking, setIsSavingTracking] = useState(false);
 
     const targetRevenue = (raffle.premioValor || 5000) * 1.5;
     const currentRevenue = (raffle.participantes * (raffle.custoNFT || 0));
@@ -60,7 +67,7 @@ export function AdminRaffleDetails({ raffle, onBack, onEdit, onViewParticipants,
 
                     <div>
                         <h1 className="text-3xl font-bold mb-2">{raffle.titulo}</h1>
-                        <p className="text-muted-foreground text-lg leading-relaxed">{raffle.descricao}</p>
+                        <p className="text-muted-foreground text-lg leading-relaxed whitespace-pre-wrap">{raffle.descricao}</p>
 
                         {/* Action Button for Draw */}
                         {raffle.status === 'ativo' && (
@@ -79,21 +86,132 @@ export function AdminRaffleDetails({ raffle, onBack, onEdit, onViewParticipants,
 
                     {/* Winner Section */}
                     {raffle.status === 'encerrado' && raffle.winner && (
-                        <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/50 rounded-2xl p-6 flex items-center gap-6">
-                            <div className="relative">
-                                <img
-                                    src={raffle.winner.picture}
-                                    alt={raffle.winner.name}
-                                    className="w-20 h-20 rounded-full border-2 border-white object-cover shadow-xl"
-                                />
-                                <div className="absolute -bottom-2 -right-2 bg-yellow-500 text-black p-1.5 rounded-full shadow-lg border border-white">
-                                    <Trophy className="w-4 h-4" fill="black" />
+                        <>
+                            <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/50 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6 justify-between">
+                                <div className="flex items-center gap-6">
+                                    <div className="relative">
+                                        <img
+                                            src={raffle.winner.picture}
+                                            alt={raffle.winner.name}
+                                            className="w-20 h-20 rounded-full border-2 border-white object-cover shadow-xl"
+                                        />
+                                        <div className="absolute -bottom-2 -right-2 bg-yellow-500 text-black p-1.5 rounded-full shadow-lg border border-white">
+                                            <Trophy className="w-4 h-4" fill="black" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-yellow-500 font-bold uppercase tracking-wider text-xs mb-1">Grande Vencedor</p>
+                                        <h2 className="text-2xl font-bold text-white mb-1">{raffle.winner.name}</h2>
+                                        <p className="text-sm text-yellow-500/80">ID: {raffle.winner.id}</p>
+                                    </div>
+                                </div>
+
+                                <Button
+                                    className="bg-yellow-500 hover:bg-yellow-400 text-black font-bold shadow-lg shadow-yellow-500/20"
+                                    onClick={() => setShowWinnerModal(true)}
+                                >
+                                    <MessageSquare className="w-4 h-4 mr-2" />
+                                    Ver Detalhes & Chat
+                                </Button>
+
+                                {/* Modal */}
+                                {raffle.winner.id && (
+                                    <WinnerDetailsModal
+                                        userId={raffle.winner.id}
+                                        isOpen={showWinnerModal}
+                                        onClose={() => setShowWinnerModal(false)}
+                                    />
+                                )}
+                            </div>
+
+                            {/* Winner Address */}
+                            <div className="mt-6 bg-card border border-white/5 rounded-xl p-4">
+                                <h4 className="font-bold text-muted-foreground mb-2 text-sm uppercase tracking-wider">Endereço de Entrega</h4>
+                                {raffle.winner.address ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                            <p className="font-semibold text-foreground">{raffle.winner.address}, {raffle.winner.number || 'S/N'}</p>
+                                            <p className="text-muted-foreground">{raffle.winner.city}/{raffle.winner.state}</p>
+                                            <p className="text-muted-foreground mt-1">CEP: <span className="text-foreground font-mono">{raffle.winner.cep}</span></p>
+                                        </div>
+                                        <div className="text-right md:text-left">
+                                            <p className="text-muted-foreground">Email: <span className="text-foreground select-all">{raffle.winner.email}</span></p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-2 text-yellow-500 bg-yellow-500/10 p-3 rounded-lg border border-yellow-500/20">
+                                        <Clock className="w-4 h-4" />
+                                        <span>Endereço não cadastrado pelo ganhador.</span>
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    )}
+
+                    {/* Tracking Section */}
+                    {raffle.status === 'encerrado' && raffle.winner && (
+                        <div className="bg-card border border-white/5 rounded-2xl p-6 shadow-xl">
+                            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                <span className="text-xl">🚚</span>
+                                Rastreamento do Prêmio
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-muted-foreground">Código de Rastreio</label>
+                                    <input
+                                        type="text"
+                                        value={trackingCode}
+                                        onChange={(e) => setTrackingCode(e.target.value)}
+                                        className="w-full bg-background border border-white/10 rounded-md p-2 text-sm text-foreground"
+                                        placeholder="Ex: BR123456789PT"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-muted-foreground">Transportadora</label>
+                                    <input
+                                        type="text"
+                                        value={carrier}
+                                        onChange={(e) => setCarrier(e.target.value)}
+                                        className="w-full bg-background border border-white/10 rounded-md p-2 text-sm text-foreground"
+                                        placeholder="Ex: Correios, Jadlog"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-muted-foreground">Status da Entrega</label>
+                                    <select
+                                        value={shippingStatus}
+                                        onChange={(e) => setShippingStatus(e.target.value as "preparing" | "shipped" | "in_transit" | "delivered")}
+                                        className="w-full bg-background border border-white/10 rounded-md p-2 text-sm text-foreground"
+                                    >
+                                        <option value="preparing">📦 Preparando</option>
+                                        <option value="shipped">🚚 Enviado</option>
+                                        <option value="in_transit">✈️ Em Trânsito</option>
+                                        <option value="delivered">✅ Entregue</option>
+                                    </select>
                                 </div>
                             </div>
-                            <div>
-                                <p className="text-yellow-500 font-bold uppercase tracking-wider text-xs mb-1">Grande Vencedor</p>
-                                <h2 className="text-2xl font-bold text-white mb-1">{raffle.winner.name}</h2>
-                                <p className="text-sm text-yellow-500/80">ID: {raffle.winner.id}</p>
+                            <div className="mt-4 flex justify-end">
+                                <Button
+                                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                                    onClick={async () => {
+                                        setIsSavingTracking(true);
+                                        try {
+                                            const { api } = await import("@/lib/api");
+                                            const { toast } = await import("sonner");
+                                            await api.updateTracking(raffle.id, { trackingCode, carrier, status: shippingStatus });
+                                            toast.success("Rastreio atualizado com sucesso!");
+                                        } catch (error) {
+                                            console.error(error);
+                                            const { toast } = await import("sonner");
+                                            toast.error("Erro ao atualizar rastreio");
+                                        } finally {
+                                            setIsSavingTracking(false);
+                                        }
+                                    }}
+                                    disabled={isSavingTracking}
+                                >
+                                    {isSavingTracking ? "Salvando..." : "Salvar Rastreio"}
+                                </Button>
                             </div>
                         </div>
                     )}
@@ -154,7 +272,8 @@ export function AdminRaffleDetails({ raffle, onBack, onEdit, onViewParticipants,
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }
+
