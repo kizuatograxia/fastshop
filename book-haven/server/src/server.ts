@@ -31,8 +31,17 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/tunnel', tunnelRoutes); // Mount Tunnel Routes
 app.use('/api', apiRoutes);
 
-// Health Check
-app.get('/', (req, res) => {
+// Serve Frontend (Vite Build)
+const frontendPath = path.join(__dirname, '../../dist');
+app.use(express.static(frontendPath));
+
+// SPA Catch-all (Must be last)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
+});
+
+// Health Check (Moved up or redundant if * catches all, but specialized route takes precedence)
+app.get('/health', (req, res) => {
     res.json({ message: 'Book Haven API is running' });
 });
 
