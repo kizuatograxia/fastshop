@@ -85,25 +85,36 @@ const Checkout: React.FC = () => {
 
         setIsLoading(true);
 
-        // Simulação de resposta (MOCK para Sicoob futuro)
-        setTimeout(async () => {
+        try {
+            const itemsToBuy = cartItems.map(item => ({ id: item.id, quantity: item.quantidade }));
+
+            // Call Backend to Generate Pix
+            // We pass 'itemsToBuy' as 'realItems' for internal tracking
+            const data = await api.createPayment(user.id, finalPrice, itemsToBuy);
+
             setPixData({
-                qrCode: "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=00020126580014br.gov.bcb.pix0136exemplo-pix-luckynft5204000053039865802BR5913LUCKYNFT6008SAOPAULO62070503***6304ABCD",
-                qrCodeBase64: "",
-                copyPasteCode: "00020126580014br.gov.bcb.pix0136exemplo-pix-luckynft5204000053039865802BR5913LUCKYNFT6008SAOPAULO62070503***6304ABCD",
-                expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-                transactionId: `txn_${Date.now()}`,
+                qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.qrCode)}`, // Generate visual QR from code if base64 missing, or use base64
+                qrCodeBase64: data.qrCodeBase64,
+                copyPasteCode: data.copyPaste,
+                expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 mins expiry default
+                transactionId: data.transactionId,
             });
-            setIsLoading(false);
 
-            // Simular aprovação automática para teste
             toast({
-                title: "Aguardando Pagamento",
-                description: "Realize o pagamento do PIX para liberar seus NFTs.",
+                title: "PIX Gerado!",
+                description: "Escaneie o QR Code ou use o Copia e Cola.",
             });
 
-            // Aqui poderíamos ter um botão "Simular Pagamento Confirmado" na UI para testes
-        }, 1500);
+        } catch (error) {
+            console.error("Payment Error:", error);
+            toast({
+                title: "Erro no Pagamento",
+                description: "Não foi possível gerar o PIX. Tente novamente.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     // Função de teste para simular o callback de sucesso

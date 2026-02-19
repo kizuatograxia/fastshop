@@ -180,7 +180,7 @@ export function AdminRaffleDetails({ raffle, onBack, onEdit, onViewParticipants,
                                     <label className="text-sm font-medium text-muted-foreground">Status da Entrega</label>
                                     <select
                                         value={shippingStatus}
-                                        onChange={(e) => setShippingStatus(e.target.value)}
+                                        onChange={(e) => setShippingStatus(e.target.value as "preparing" | "shipped" | "in_transit" | "delivered")}
                                         className="w-full bg-background border border-white/10 rounded-md p-2 text-sm text-foreground"
                                     >
                                         <option value="preparing">📦 Preparando</option>

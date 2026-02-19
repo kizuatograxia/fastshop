@@ -22,6 +22,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import nfts from './nfts.js';
 import jwt from 'jsonwebtoken';
+import { setupPaymentRoutes } from './payment.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -110,6 +111,13 @@ try {
     console.error('Failed to create database pool:', err);
 }
 
+// Initialize Payment Routes (Facade Strategy)
+if (pool) {
+    setupPaymentRoutes(app, pool);
+} else {
+    console.warn('Skipping Payment Routes: Pool not ready');
+}
+
 // Initialize Database
 const initDB = async () => {
     if (!pool) {
@@ -136,6 +144,19 @@ const initDB = async () => {
                 nft_metadata JSONB,
                 quantity INTEGER DEFAULT 1,
                 UNIQUE(user_id, nft_id)
+            );
+        `);
+
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS transactions (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER REFERENCES users(id),
+                external_reference VARCHAR(255) UNIQUE NOT NULL,
+                amount DECIMAL(10,2) NOT NULL,
+                description VARCHAR(255),
+                items JSONB, -- Stores the REAL items (raffle numbers, NFT IDs)
+                status VARCHAR(50) DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);
         await pool.query(`

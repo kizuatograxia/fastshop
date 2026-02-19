@@ -180,6 +180,20 @@ export const api = {
         return res.json();
     },
 
+    createPayment: async (userId: number | string, amount: number, realItems: any[]) => {
+        const token = localStorage.getItem('auth_token');
+        const res = await fetch(`${API_URL}/payment/create`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            },
+            body: JSON.stringify({ userId, amount, realItems }),
+        });
+        if (!res.ok) throw new Error((await res.json()).message);
+        return res.json();
+    },
+
     validateCoupon: async (code: string, cartTotal: number) => {
         const res = await fetch(`${API_URL}/coupons/validate`, {
             method: "POST",
