@@ -47,3 +47,25 @@ export const Privacy = () => (
         </div>
     </Layout>
 );
+
+export const Refund = () => (
+    <Layout>
+        <div className="container py-24 max-w-4xl">
+            <h1 className="text-4xl font-bold mb-8">Refund Policy</h1>
+            <div className="prose prose-slate max-w-none space-y-6 text-muted-foreground">
+                <p>At BookVault, customer satisfaction is our priority. If you are not satisfied with your purchase, we're here to help.</p>
+
+                <h2 className="text-2xl font-semibold text-foreground">Digital Products</h2>
+                <p>Once a digital product has been accessed or downloaded, it is generally non-refundable. However, exceptions can be made on a case-by-case basis within 7 days of purchase.</p>
+
+                <h2 className="text-2xl font-semibold text-foreground">Physical Products</h2>
+                <p>For any physical shipments, you have 30 calendar days to return an item from the date you received it. To be eligible for a return, your item must be unused and in the same condition that you received it.</p>
+
+                <h2 className="text-2xl font-semibold text-foreground">Contact Us</h2>
+                <p>If you have any questions on how to initiate a refund, please contact us.</p>
+
+                <p className="pt-8 text-sm italic">Last updated: February 19, 2026</p>
+            </div>
+        </div>
+    </Layout>
+);

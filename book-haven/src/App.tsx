@@ -23,7 +23,7 @@ import OrderSuccess from "./pages/OrderSuccess";
 import AuthorDetail from "./pages/AuthorDetail";
 import MyLibrary from "./pages/MyLibrary";
 import Reader from "./pages/Reader";
-import { Terms, Privacy } from "./pages/Legal";
+import { Terms, Privacy, Refund } from "./pages/Legal";
 import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
 
@@ -50,6 +50,7 @@ const App = () => (
               <Route path="/about" element={<About />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/refund" element={<Refund />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/faq" element={<FAQ />} />
 
