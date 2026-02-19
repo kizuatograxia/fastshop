@@ -9,8 +9,20 @@ const DATA_FILE = path.join(__dirname, '../../data/books.json');
 const loadBooks = (): any[] => {
     try {
         if (!fs.existsSync(DATA_FILE)) return [];
-        const data = fs.readFileSync(DATA_FILE, 'utf-8');
-        return JSON.parse(data);
+        let data = fs.readFileSync(DATA_FILE, 'utf-8');
+
+        // Strip Byte Order Mark (BOM) if it exists (common Windows issue)
+        if (data.charCodeAt(0) === 0xFEFF || data.charCodeAt(0) === 0xFFFD) {
+            data = data.substring(1);
+        }
+
+        // Final fallback: remove anything before the first '['
+        const firstBracket = data.indexOf('[');
+        if (firstBracket !== -1) {
+            data = data.substring(firstBracket);
+        }
+
+        return JSON.parse(data.trim());
     } catch (error) {
         console.error("Error loading books:", error);
         return [];
