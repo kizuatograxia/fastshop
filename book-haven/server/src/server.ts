@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -26,12 +26,12 @@ app.use(express.static(path.join(__dirname, '../../dist')));
 // app.use('/api/admin', adminRoutes);
 // app.use('/api', apiRoutes);
 
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (req: Request, res: Response) => {
     res.json({ status: "ok", mode: "facade" });
 });
 
 // Catch-all handler for SPA
-app.get('*', (req, res) => {
+app.get('*', (req: Request, res: Response) => {
     res.sendFile(path.join(__dirname, '../../dist/index.html'));
 });
 
