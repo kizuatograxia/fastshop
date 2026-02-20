@@ -1,9 +1,5 @@
 import { Request, Response } from 'express';
-
-// Mock Config for Tunnel
-// In production, this env var will point to the Tunnel URL
-const TUNNEL_URL = process.env.BOOKHAVEN_TUNNEL_URL || 'https://mundopix-tunnel.up.railway.app/webhook/pix';
-// Use a real tunnel URL if available or similar
+import { db } from '../lib/db';
 
 export const createOrder = async (req: Request, res: Response) => {
     try {
@@ -12,38 +8,27 @@ export const createOrder = async (req: Request, res: Response) => {
         console.log("Receiving Order:", { amount, customer });
 
         if (paymentMethod === 'PIX') {
-            // Forward to Payment Tunnel
-            // Construct payload compatible with MundoPix / MP
-            const payload = {
-                transaction_amount: amount,
-                description: `BookHaven Order - ${items.length} items`,
-                payer: {
-                    email: customer.email,
-                    first_name: customer.fullName.split(' ')[0],
-                    last_name: customer.fullName.split(' ').slice(1).join(' '),
-                    identification: {
-                        type: "CPF",
-                        number: customer.cpf
-                    }
+            // Save order to DB first
+            await db.order.create({
+                data: {
+                    customerId: customer.email || 'guest',
+                    customerName: customer.fullName || '',
+                    customerEmail: customer.email || '',
+                    customerCpf: customer.cpf || null,
+                    address: customer.address || null,
+                    totalAmount: amount,
+                    paymentMethod: 'PIX',
+                    status: 'pending',
+                    items: items,
                 }
-            };
+            });
 
-            // Call Tunnel (or Mercado Pago directly if we had credentials here)
-            // Ideally, we call the Tunnel which has the credentials
-            // For now, let's MOCK the response if Tunnel is not configured, 
-            // OR try to call the tunnel.
-
-            // MOCK RESPONSE FOR DEMO (Since Tunnel setup might be complex)
-            // If the user provided a TUNNEL_URL, we try it.
-            // But to guarantee "Functionality" (Visual Flow), we return a Mock QRCode.
-
+            // Mock Pix response (swap with real Mercado Pago call when ready)
             const mockPixResponse = {
                 qrCode: "00020126580014BR.GOV.BCB.PIX0114+551199999999520400005303986540510.005802BR5913MundoPix Ltd6008Sao Paulo62070503***6304E2CA",
-                qrCodeBase64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY2BgYAAAAAQAAVzN/2kAAAAASUVORK5CYII=", // 1x1 pixel for demo
+                qrCodeBase64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAANSURBVBhXY2BgYAAAAAQAAVzN/2kAAAAASUVORK5CYII=",
                 orderId: `ORD-${Date.now()}`
             };
-
-            // In a real scenario, we would await fetch(TUNNEL_URL, ...)
 
             return res.status(201).json(mockPixResponse);
         }

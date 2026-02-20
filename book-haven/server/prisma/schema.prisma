@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("USER")
+  createdAt DateTime @default(now())
+}
+
+model Author {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  photo     String?
+  bio       String?
+  bookCount Int      @default(0)
+  genres    String[] // Prisma supports scalar arrays for PostgreSQL
+  books     Book[]
+}
+
+model Publisher {
+  id    String @id @default(cuid())
+  name  String
+  slug  String @unique
+  logo  String?
+  books Book[]
+}
+
+model Book {
+  id               String   @id @default(cuid())
+  title            String
+  slug             String   @unique
+  authorId         String
+  author           Author   @relation(fields: [authorId], references: [id])
+  publisherId      String?
+  publisher        Publisher? @relation(fields: [publisherId], references: [id])
+  price            Float
+  description      String?
+  shortDescription String?
+  coverImage       String?
+  rating           Float    @default(0)
+  reviewCount      Int      @default(0)
+  format           String[]
+  genre            String
+  releaseDate      DateTime
+  language         String   @default("English")
+  isbn             String?
+  status           String   @default("available")
+  isFeatured       Boolean  @default(false)
+  totalSales       Int      @default(0)
+  weeklySales      Int      @default(0)
+  hasEbook         Boolean  @default(false)
+  bookFilePath     String?
+  createdAt        DateTime @default(now())
+}
+
+model Order {
+  id            String   @id @default(cuid())
+  customerId    String   // Optionally link this to User later, for now just literal string or relation if logged in
+  customerName  String
+  customerEmail String
+  customerCpf   String?
+  address       String?
+  totalAmount   Float
+  paymentMethod String
+  status        String   @default("pending")
+  items         Json     // Store cart items as JSON to keep it simple initially
+  createdAt     DateTime @default(now())
+}
