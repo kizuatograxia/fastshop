@@ -219,11 +219,17 @@ const Register: React.FC = () => {
                         phone: form.phone,
                         username: form.username,
                     });
-                    // Update localStorage with profile_complete
-                    const sessionData = JSON.parse(localStorage.getItem("luckynft_session") || "{}");
-                    sessionData.profile_complete = true;
-                    localStorage.setItem("luckynft_session", JSON.stringify(sessionData));
-                    localStorage.setItem("user", JSON.stringify(sessionData));
+                    // Update context — single source of truth
+                    updateUser({
+                        profile_complete: true,
+                        cpf: form.cpf,
+                        address: form.address,
+                        number: form.number,
+                        district: form.district,
+                        city: form.city,
+                        state: form.state,
+                        cep: form.cep,
+                    });
                 }
                 toast.success("Perfil completo e conta criada! 🎉");
                 navigate("/");
@@ -249,33 +255,17 @@ const Register: React.FC = () => {
                                 username: form.username,
                             });
 
-                            // Update local context properly using the new helper
-                            // This ensures the user object has all the new fields immediately
-                            if (updateUser) {
-                                updateUser({
-                                    profile_complete: true,
-                                    cpf: form.cpf,
-                                    // user interface doesn't have birthDate/gender usually but we can add what matches
-                                    address: form.address,
-                                    number: form.number,
-                                    district: form.district,
-                                    city: form.city,
-                                    state: form.state,
-                                    cep: form.cep,
-                                    // phone: form.phone // User interface might not have phone? check AuthContext User type
-                                });
-                            } else {
-                                // Fallback if updateUser not available (should be there)
-                                sessionData.profile_complete = true;
-                                sessionData.address = form.address;
-                                sessionData.number = form.number;
-                                sessionData.district = form.district;
-                                sessionData.city = form.city;
-                                sessionData.state = form.state;
-                                sessionData.cep = form.cep;
-                                localStorage.setItem("luckynft_session", JSON.stringify(sessionData));
-                                localStorage.setItem("user", JSON.stringify(sessionData));
-                            }
+                            // Update context — single source of truth
+                            updateUser({
+                                profile_complete: true,
+                                cpf: form.cpf,
+                                address: form.address,
+                                number: form.number,
+                                district: form.district,
+                                city: form.city,
+                                state: form.state,
+                                cep: form.cep,
+                            });
                         } catch (profileErr) {
                             console.warn("Profile save failed, continuing:", profileErr);
                         }

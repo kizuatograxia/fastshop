@@ -64,9 +64,6 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
               <Link to="/nfts" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                 Marketplace NFTs
               </Link>
-              <Link to="/winners" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                Ganhadores
-              </Link>
               <Link to="/como-funciona" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                 Como Funciona
               </Link>

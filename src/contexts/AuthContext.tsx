@@ -48,11 +48,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const ADMIN_EMAILS = ['brunofpguerra@hotmail.com', 'hedgehogdilemma1851@gmail.com', 'alexanderbeanzllli@gmail.com'];
 
     useEffect(() => {
-        const sessionData = localStorage.getItem(SESSION_STORAGE_KEY);
+        let sessionData = localStorage.getItem(SESSION_STORAGE_KEY);
+        // Migration: if old 'user' key exists but session doesn't, migrate
+        if (!sessionData) {
+            const oldUserData = localStorage.getItem('user');
+            if (oldUserData) {
+                sessionData = oldUserData;
+                localStorage.setItem(SESSION_STORAGE_KEY, oldUserData);
+                localStorage.removeItem('user');
+            }
+        } else {
+            // Clean up old duplicate key if it still exists
+            localStorage.removeItem('user');
+        }
         if (sessionData) {
             try {
                 const parsedUser = JSON.parse(sessionData);
-                // Force admin role if email matches
                 if (ADMIN_EMAILS.includes(parsedUser.email)) {
                     parsedUser.role = 'admin';
                 }
@@ -91,8 +102,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 };
                 setUser(sessionUser);
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser));
-                // Also save to "user" key for consistency with other parts of the app
-                localStorage.setItem("user", JSON.stringify(sessionUser));
 
                 if (response.token) {
                     localStorage.setItem("auth_token", response.token);
@@ -135,8 +144,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 };
                 setUser(sessionUser);
                 localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionUser));
-                // Also save to "user" key for consistency with other parts of the app
-                localStorage.setItem("user", JSON.stringify(sessionUser));
 
                 if (response.token) {
                     localStorage.setItem("auth_token", response.token);
@@ -198,7 +205,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const updatedUser = { ...user, walletAddress: address };
         setUser(updatedUser);
         localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(updatedUser));
-        localStorage.setItem("user", JSON.stringify(updatedUser));
     }, [user]);
 
     const updateUser = useCallback((data: Partial<User>) => {
@@ -206,7 +212,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const updatedUser = { ...user, ...data };
         setUser(updatedUser);
         localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(updatedUser));
-        localStorage.setItem("user", JSON.stringify(updatedUser));
     }, [user]);
 
     return (
