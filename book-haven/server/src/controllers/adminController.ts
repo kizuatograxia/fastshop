@@ -40,7 +40,10 @@ const serializeBook = (book: any) => ({
 
 export const getBooks = async (req: Request, res: Response) => {
     try {
-        const { featured, genre, limit, sort } = req.query;
+        const featured = req.query.featured as string | undefined;
+        const genre = req.query.genre as string | undefined;
+        const limit = req.query.limit as string | undefined;
+        const sort = req.query.sort as string | undefined;
 
         const where: any = {};
         if (featured === 'true') where.isFeatured = true;
@@ -68,9 +71,9 @@ export const getBooks = async (req: Request, res: Response) => {
 
 export const getBookBySlug = async (req: Request, res: Response) => {
     try {
-        const { slug } = req.params;
+        const slug = req.params.slug as string;
         const book = await db.book.findUnique({
-            where: { slug },
+            where: { slug: slug },
             include: { author: true, publisher: true }
         });
 
