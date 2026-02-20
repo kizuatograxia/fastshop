@@ -13,6 +13,7 @@ router.get('/raffles', async (req, res) => {
             SELECT r.*, COUNT(t.id) as tickets_sold
             FROM raffles r
             LEFT JOIN tickets t ON r.id = t.raffle_id
+            WHERE r.status = 'active'
             GROUP BY r.id
             ORDER BY r.created_at DESC
         `;
