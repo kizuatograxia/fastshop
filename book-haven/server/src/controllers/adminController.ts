@@ -136,7 +136,7 @@ export const createBook = async (req: Request, res: Response) => {
             }
         }
 
-        const slug = (body.title || '').toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') + '-' + Date.now().toString(36);
+        const slug = (body.title || '').toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 8);
 
         const newBook = await db.book.create({
             data: {
