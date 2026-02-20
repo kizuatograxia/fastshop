@@ -15,7 +15,8 @@ app.use(cors());
 app.use(express.json());
 
 // Serve uploaded files statically
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+const uploadsDir = process.env.RAILWAY_ENVIRONMENT ? '/app/uploads' : path.join(__dirname, '../uploads');
+app.use('/uploads', express.static(uploadsDir));
 
 // Serve Frontend
 app.use(express.static(path.join(__dirname, '../../dist')));

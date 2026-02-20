@@ -13,7 +13,12 @@ const storage = multer.diskStorage({
         } else if (file.fieldname === 'bookFile') {
             uploadPath += 'books/';
         }
-        const fullPath = path.join(__dirname, '../../', uploadPath);
+
+        // Map natively to the Railway Mount Volume if on production
+        let fullPath = process.env.RAILWAY_ENVIRONMENT
+            ? path.join('/app', uploadPath)
+            : path.join(__dirname, '../../', uploadPath);
+
         if (!fs.existsSync(fullPath)) {
             fs.mkdirSync(fullPath, { recursive: true });
         }
@@ -131,7 +136,7 @@ export const createBook = async (req: Request, res: Response) => {
             }
         }
 
-        const slug = (body.title || '').toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '');
+        const slug = (body.title || '').toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '') + '-' + Date.now().toString(36);
 
         const newBook = await db.book.create({
             data: {
@@ -161,9 +166,9 @@ export const createBook = async (req: Request, res: Response) => {
         });
 
         return res.status(201).json(serializeBook(newBook));
-    } catch (error) {
+    } catch (error: any) {
         console.error('Create Book Error:', error);
-        return res.status(500).json({ error: 'Failed to create book' });
+        return res.status(500).json({ error: error.message || 'Failed to create book' });
     }
 };
 
