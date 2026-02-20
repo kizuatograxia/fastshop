@@ -44,15 +44,18 @@ const AdminDashboard = () => {
                         headers: { 'Authorization': token ? `Bearer ${token}` : '' }
                     })
                 ]);
-                const statsData = await statsRes.json();
-                const ordersData = await ordersRes.json();
+                const statsData = await statsRes.ok ? await statsRes.json() : {};
+                const ordersData = await ordersRes.ok ? await ordersRes.json() : [];
 
                 if (isMounted) {
                     setStats(statsData);
-                    setRecentOrders(ordersData);
+                    setRecentOrders(Array.isArray(ordersData) ? ordersData : []);
                 }
             } catch (error) {
                 console.error("Dashboard Fetch Error:", error);
+                if (isMounted) {
+                    setRecentOrders([]); // Fallback
+                }
             } finally {
                 if (isMounted) setLoading(false);
             }
