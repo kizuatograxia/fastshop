@@ -43,8 +43,7 @@ const Register = () => {
                 body: JSON.stringify({
                     email: formData.email,
                     password: formData.password,
-                    firstName: formData.firstName,
-                    lastName: formData.lastName,
+                    name: `${formData.firstName} ${formData.lastName}`.trim(),
                 }),
             });
 
