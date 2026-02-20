@@ -42,15 +42,15 @@ export const RaffleEventsProvider = ({ children }: { children: ReactNode }) => {
         // Polling Interval
         const interval = setInterval(() => {
             fetchRaffles();
-        }, 5000); // Check every 5 seconds
+        }, 30000); // Check every 30 seconds
 
         return () => clearInterval(interval);
     }, []);
 
     const fetchRaffles = async () => {
         try {
-            // Fetch all known raffles to detect changes
-            const allRaffles = await api.getAdminRaffles();
+            // Use public endpoint instead of admin-only endpoint
+            const allRaffles = await api.getActiveRaffles();
 
             allRaffles.forEach((raffle: Raffle) => {
                 const oldStatus = lastKnownStatus[raffle.id];
