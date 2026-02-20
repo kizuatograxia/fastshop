@@ -71,6 +71,31 @@ const AdminBooks = () => {
         fetchBooks();
     }, []);
 
+    const handleDeleteProduct = async (id: string, title: string) => {
+        if (!confirm(`Are you sure you want to delete "${title}"? This cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/books/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                toast({ title: "Product Deleted", description: `Successfully deleted ${title}.` });
+                fetchBooks(); // Refresh list
+            } else {
+                toast({ variant: "destructive", title: "Deletion Failed", description: "This product might be tied to existing orders." });
+            }
+        } catch (error) {
+            toast({ variant: "destructive", title: "Error", description: "Failed to delete product." });
+        }
+    };
+
     // Clean up preview URL
     useEffect(() => {
         return () => {
@@ -445,7 +470,19 @@ const AdminBooks = () => {
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem className="cursor-pointer" onClick={() => toast({ title: "Coming Soon", description: "Edit functionality is under development." })}>
+                                                        Edit Product
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600" onClick={() => handleDeleteProduct(book.id, book.title)}>
+                                                        Delete Product
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
                                 ))

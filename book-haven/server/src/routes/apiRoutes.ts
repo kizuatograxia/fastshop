@@ -1,8 +1,7 @@
 import express from 'express';
 import { createOrder, getOrders, getDashboardStats } from '../controllers/orderController';
-import { getBooks, createBook, upload, getBookBySlug } from '../controllers/adminController';
+import { getBooks, createBook, upload, getBookBySlug, deleteBook } from '../controllers/adminController';
 import { login, register } from '../controllers/authController';
-
 import { authenticate, requireAdmin } from '../middleware/auth';
 
 const router = express.Router();
@@ -41,9 +40,10 @@ router.get('/stats', authenticate, requireAdmin, getDashboardStats); // For Admi
 // Admin / Book Routes
 router.get('/books', getBooks);
 router.get('/books/:slug', getBookBySlug);
-router.post('/books', upload.fields([
+router.post('/books', authenticate, requireAdmin, upload.fields([
     { name: 'coverImage', maxCount: 1 },
     { name: 'bookFile', maxCount: 1 }
 ]), createBook);
+router.delete('/books/:id', authenticate, requireAdmin, deleteBook);
 
 export default router;

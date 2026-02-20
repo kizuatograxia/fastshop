@@ -166,3 +166,16 @@ export const createBook = async (req: Request, res: Response) => {
         return res.status(500).json({ error: 'Failed to create book' });
     }
 };
+
+export const deleteBook = async (req: Request, res: Response) => {
+    try {
+        const id = req.params.id as string;
+        await db.book.delete({
+            where: { id: id }
+        });
+        return res.json({ message: 'Book deleted successfully' });
+    } catch (error) {
+        console.error('deleteBook error:', error);
+        return res.status(500).json({ error: 'Failed to delete book. It may be linked to existing orders.' });
+    }
+};
