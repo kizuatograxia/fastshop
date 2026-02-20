@@ -4,7 +4,6 @@ import CategoryNav from "@/components/CategoryNav";
 import RaffleGrid from "@/components/RaffleGrid";
 import NFTGrid from "@/components/NFTGrid";
 import HowItWorks from "@/components/HowItWorks";
-import WinnersSection from "@/components/WinnersSection";
 import { raffles as localRaffles, nfts } from "@/data/raffles";
 import { api } from "@/lib/api";
 import { Raffle } from "@/types/raffle";
@@ -42,7 +41,6 @@ const Index: React.FC = () => {
         <Hero />
         <RaffleGrid raffles={filteredRaffles} />
         <NFTGrid nfts={nfts} />
-        <WinnersSection />
         <HowItWorks />
       </main>
 
