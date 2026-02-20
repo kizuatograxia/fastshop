@@ -1,7 +1,9 @@
 import express from 'express';
-import { createOrder } from '../controllers/orderController';
+import { createOrder, getOrders, getDashboardStats } from '../controllers/orderController';
 import { getBooks, createBook, upload, getBookBySlug } from '../controllers/adminController';
 import { login, register } from '../controllers/authController';
+
+import { authenticate, requireAdmin } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -32,7 +34,9 @@ router.post('/tunnel/create', async (req: express.Request, res: express.Response
     }
 });
 
-router.post('/orders', createOrder);
+router.post('/orders', authenticate, createOrder);
+router.get('/orders', authenticate, requireAdmin, getOrders); // For Admin
+router.get('/stats', authenticate, requireAdmin, getDashboardStats); // For Admin
 
 // Admin / Book Routes
 router.get('/books', getBooks);

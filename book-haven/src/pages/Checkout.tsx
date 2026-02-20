@@ -25,30 +25,54 @@ const Checkout = () => {
         cpf: ''
     });
 
+    const [paymentMethod, setPaymentMethod] = useState<'PIX' | 'CREDIT_CARD'>('PIX');
+    const [cardData, setCardData] = useState({
+        number: '',
+        expiry: '',
+        cvv: ''
+    });
+
     useEffect(() => {
-        if (items.length === 0) {
-            navigate('/store');
-            toast({ title: "Cart Empty", description: "Please add books to your cart first." });
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            try {
+                const user = JSON.parse(storedUser);
+                setFormData(prev => ({
+                    ...prev,
+                    fullName: user.name || prev.fullName,
+                    email: user.email || prev.email
+                }));
+            } catch (e) {
+                console.error("Error parsing stored user:", e);
+            }
         }
-    }, [items, navigate, toast]);
+    }, []);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.id]: e.target.value });
     };
 
+    const handleCardChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setCardData({ ...cardData, [e.target.id]: e.target.value });
+    };
+
     const handlePlaceOrder = async () => {
         setLoading(true);
+        const token = localStorage.getItem('token');
+
         try {
             const response = await fetch('/api/orders', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': token ? `Bearer ${token}` : ''
                 },
                 body: JSON.stringify({
-                    paymentMethod: 'PIX',
+                    paymentMethod: paymentMethod,
                     items: items,
                     amount: totalAmount,
-                    customer: formData
+                    customer: formData,
+                    cardData: paymentMethod === 'CREDIT_CARD' ? cardData : undefined
                 }),
             });
 
@@ -58,7 +82,7 @@ const Checkout = () => {
                 throw new Error(data.error || 'Payment failed');
             }
 
-            if (data.qrCode) {
+            if (paymentMethod === 'PIX' && data.qrCode) {
                 setQrCode(data.qrCode);
                 setQrCodeBase64(data.qrCodeBase64);
                 setStep(3); // Move to Pix Step
@@ -66,9 +90,13 @@ const Checkout = () => {
                     title: "Pix Generated!",
                     description: "Please scan the QR Code to pay.",
                 });
-                clearCart(); // Clear cart after generating order
+                clearCart();
             } else {
-                // Fallback success (Credit Card simulation)
+                // Success (Credit Card or other final states)
+                toast({
+                    title: "Order Successful!",
+                    description: "Your digital books are now available in your library.",
+                });
                 navigate('/order/success', { state: { orderId: data.orderId } });
                 clearCart();
             }
@@ -101,19 +129,19 @@ const Checkout = () => {
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="fullName">Full Name</Label>
-                            <Input id="fullName" value={formData.fullName} onChange={handleInputChange} disabled={step > 1} />
+                            <Input id="fullName" value={formData.fullName} onChange={handleInputChange} disabled={step > 1} placeholder="John Doe" />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" value={formData.email} onChange={handleInputChange} disabled={step > 1} />
+                            <Input id="email" type="email" value={formData.email} onChange={handleInputChange} disabled={step > 1} placeholder="john@example.com" />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="cpf">CPF (for Pix)</Label>
+                            <Label htmlFor="cpf">CPF (for Pix/Billing)</Label>
                             <Input id="cpf" value={formData.cpf} onChange={handleInputChange} disabled={step > 1} placeholder="000.000.000-00" />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="address">Address</Label>
-                            <Input id="address" value={formData.address} onChange={handleInputChange} disabled={step > 1} />
+                            <Label htmlFor="address">Billing Address</Label>
+                            <Input id="address" value={formData.address} onChange={handleInputChange} disabled={step > 1} placeholder="123 Street Name" />
                         </div>
                         {step === 1 && (
                             <Button onClick={() => setStep(2)} className="w-full mt-4">Continue to Payment</Button>
@@ -128,21 +156,53 @@ const Checkout = () => {
                             <CardTitle>Payment Method</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="p-4 bg-blue-50 text-blue-800 rounded border border-blue-200 text-sm mb-4">
-                                <strong>Total: ${totalAmount.toFixed(2)}</strong>
+                            <div className="p-4 bg-primary/5 text-primary rounded border border-primary/20 text-sm mb-4 flex justify-between">
+                                <span className="font-semibold">Total to Pay:</span>
+                                <span className="font-bold text-lg">${totalAmount.toFixed(2)}</span>
                             </div>
 
                             <div className="space-y-2">
                                 <Label>Select Method</Label>
-                                <div className="flex gap-4">
-                                    <Button variant="outline" className="w-full border-primary text-primary bg-primary/10">Pix (Instant)</Button>
-                                    {/* <Button variant="outline" className="w-full" disabled>Credit Card</Button> */}
+                                <div className="flex gap-2">
+                                    <Button
+                                        variant={paymentMethod === 'PIX' ? 'default' : 'outline'}
+                                        className="flex-1 border-primary"
+                                        onClick={() => setPaymentMethod('PIX')}
+                                    >
+                                        Pix (Instant)
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="flex-1 opacity-50 cursor-not-allowed"
+                                        disabled
+                                    >
+                                        Card <span className="ml-1 text-[10px] bg-gray-200 px-1 rounded text-gray-600">Soon</span>
+                                    </Button>
                                 </div>
                             </div>
+
+                            {paymentMethod === 'CREDIT_CARD' && (
+                                <div className="space-y-3 pt-4 border-t animate-in fade-in slide-in-from-top-2">
+                                    <div className="space-y-1">
+                                        <Label htmlFor="number">Card Number</Label>
+                                        <Input id="number" value={cardData.number} onChange={handleCardChange} placeholder="0000 0000 0000 0000" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="space-y-1">
+                                            <Label htmlFor="expiry">Expiry</Label>
+                                            <Input id="expiry" value={cardData.expiry} onChange={handleCardChange} placeholder="MM/YY" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label htmlFor="cvv">CVV</Label>
+                                            <Input id="cvv" value={cardData.cvv} onChange={handleCardChange} placeholder="123" />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </CardContent>
                         <CardFooter>
-                            <Button className="w-full bg-green-600 hover:bg-green-700" onClick={handlePlaceOrder} disabled={loading}>
-                                {loading ? 'Generating Pix...' : `Generate Pix Code`}
+                            <Button className="w-full bg-green-600 hover:bg-green-700 h-12 text-lg font-semibold" onClick={handlePlaceOrder} disabled={loading}>
+                                {loading ? 'Processing...' : paymentMethod === 'PIX' ? 'Generate Pix Code' : `Pay $${totalAmount.toFixed(2)} Now`}
                             </Button>
                         </CardFooter>
                     </Card>

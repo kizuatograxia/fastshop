@@ -26,6 +26,53 @@ const data = [
 ];
 
 const AdminDashboard = () => {
+    const [stats, setStats] = useState<any>(null);
+    const [recentOrders, setRecentOrders] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const fetchDashboardData = async () => {
+            const token = localStorage.getItem('token');
+            try {
+                const [statsRes, ordersRes] = await Promise.all([
+                    fetch('/api/stats', {
+                        headers: { 'Authorization': token ? `Bearer ${token}` : '' }
+                    }),
+                    fetch('/api/orders', {
+                        headers: { 'Authorization': token ? `Bearer ${token}` : '' }
+                    })
+                ]);
+                const statsData = await statsRes.json();
+                const ordersData = await ordersRes.json();
+
+                if (isMounted) {
+                    setStats(statsData);
+                    setRecentOrders(ordersData);
+                }
+            } catch (error) {
+                console.error("Dashboard Fetch Error:", error);
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+
+        // Polling interval every 5 seconds for real-time updates
+        const intervalId = setInterval(fetchDashboardData, 5000);
+
+        return () => {
+            isMounted = false;
+            clearInterval(intervalId);
+        };
+    }, []);
+
+    if (loading && !stats) return <div className="p-8 text-center text-gray-500">Loading Dashboard...</div>;
+
+    const chartData = stats?.chartData || data;
+
     return (
         <div className="space-y-8 animate-fade-in">
             <div className="flex justify-between items-center">
@@ -49,55 +96,55 @@ const AdminDashboard = () => {
                         <DollarSign className="h-4 w-4 text-green-600" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">$45,231.89</div>
+                        <div className="text-2xl font-bold">${stats?.totalRevenue?.toFixed(2) || '0.00'}</div>
                         <p className="text-xs text-green-600 flex items-center mt-1">
                             <ArrowUpRight className="h-3 w-3 mr-1" />
-                            +20.1% from last month
+                            Live from database
                         </p>
                     </CardContent>
                 </Card>
                 <Card className="hover:shadow-md transition-shadow">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">
-                            Active Orders
+                            Total Orders
                         </CardTitle>
                         <ShoppingBag className="h-4 w-4 text-blue-600" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">+2350</div>
+                        <div className="text-2xl font-bold">{stats?.totalOrders || 0}</div>
                         <p className="text-xs text-green-600 flex items-center mt-1">
                             <ArrowUpRight className="h-3 w-3 mr-1" />
-                            +180.1% from last month
+                            Processed successfully
                         </p>
                     </CardContent>
                 </Card>
                 <Card className="hover:shadow-md transition-shadow">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">
-                            Books Sold
+                            Books Sold (Units)
                         </CardTitle>
                         <BookOpen className="h-4 w-4 text-orange-600" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">12,234</div>
+                        <div className="text-2xl font-bold">{stats?.totalUnitsSold || 0}</div>
                         <p className="text-xs text-green-600 flex items-center mt-1">
                             <ArrowUpRight className="h-3 w-3 mr-1" />
-                            +19% from last month
+                            From successful orders
                         </p>
                     </CardContent>
                 </Card>
                 <Card className="hover:shadow-md transition-shadow">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">
-                            Total Customers
+                            Library Titles
                         </CardTitle>
-                        <Users className="h-4 w-4 text-purple-600" />
+                        <BookOpen className="h-4 w-4 text-purple-600" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">573</div>
-                        <p className="text-xs text-red-600 flex items-center mt-1">
-                            <ArrowDownRight className="h-3 w-3 mr-1" />
-                            -4% from last month
+                        <div className="text-2xl font-bold">{stats?.totalInventoryBooks || 0}</div>
+                        <p className="text-xs text-blue-600 flex items-center mt-1">
+                            <Activity className="h-3 w-3 mr-1" />
+                            Total items in store
                         </p>
                     </CardContent>
                 </Card>
@@ -115,14 +162,14 @@ const AdminDashboard = () => {
                     <CardContent className="pl-2">
                         <div className="h-[300px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={data}>
+                                <AreaChart data={chartData}>
                                     <defs>
                                         <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%" stopColor="#2563eb" stopOpacity={0.8} />
                                             <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
-                                    <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                                    <XAxis dataKey="name" stroke="#888888" fontSize={10} tickLine={false} axisLine={false} />
                                     <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                                     <Tooltip
@@ -137,7 +184,7 @@ const AdminDashboard = () => {
                 </Card>
                 <Card className="col-span-3 hover:shadow-md transition-shadow">
                     <CardHeader>
-                        <CardTitle>Sales by Day</CardTitle>
+                        <CardTitle>Orders by Day</CardTitle>
                         <CardDescription>
                             Number of orders processed daily.
                         </CardDescription>
@@ -145,8 +192,8 @@ const AdminDashboard = () => {
                     <CardContent>
                         <div className="h-[300px] w-full">
                             <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={data}>
-                                    <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                                <BarChart data={chartData}>
+                                    <XAxis dataKey="name" stroke="#888888" fontSize={10} tickLine={false} axisLine={false} />
                                     <Bar dataKey="orders" fill="#1e293b" radius={[4, 4, 0, 0]} />
                                     <Tooltip
                                         cursor={{ fill: 'transparent' }}
@@ -159,27 +206,39 @@ const AdminDashboard = () => {
                 </Card>
             </div>
 
-            {/* Quick Actions / Recent Activity Placeholder */}
+            {/* Recent Activity */}
             <div className="grid gap-4 md:grid-cols-2">
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Activity className="h-5 w-5 text-gray-500" />
-                            System Activity
+                            Recent Orders
                         </CardTitle>
+                        <CardDescription>Latest 20 orders from the store.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-4">
-                            {[1, 2, 3].map((_, i) => (
-                                <div key={i} className="flex items-center gap-4 text-sm border-b pb-3 last:border-0 last:pb-0">
-                                    <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-                                    <div className="flex-1">
-                                        <p className="font-medium text-gray-900">New order #ORD-{1020 + i}</p>
-                                        <p className="text-gray-500">2 minutes ago</p>
+                        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                            {recentOrders.length === 0 ? (
+                                <p className="text-sm text-gray-500 text-center py-4">No orders yet.</p>
+                            ) : (
+                                recentOrders.map((order, i) => (
+                                    <div key={order.id} className="flex items-center gap-4 text-sm border-b pb-3 last:border-0 last:pb-0">
+                                        <div className={`h-2 w-2 rounded-full ${order.status === 'completed' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                                        <div className="flex-1">
+                                            <p className="font-semibold text-gray-900">{order.customerName}</p>
+                                            <p className="text-xs text-gray-500">
+                                                {order.paymentMethod} • ${order.totalAmount.toFixed(2)} • {new Date(order.createdAt).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold ${order.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                                                }`}>
+                                                {order.status}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <Button variant="ghost" size="sm">View</Button>
-                                </div>
-                            ))}
+                                ))
+                            )}
                         </div>
                     </CardContent>
                 </Card>
