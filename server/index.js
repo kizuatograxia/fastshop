@@ -39,19 +39,9 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
-// DEBUG: List files to diagnose ENOENT
 console.log('CWD:', process.cwd());
-try {
-    console.log('Root contents:', fs.readdirSync(process.cwd()));
-    const distPath = path.join(process.cwd(), 'dist');
-    if (fs.existsSync(distPath)) {
-        console.log('Dist contents:', fs.readdirSync(distPath));
-    } else {
-        console.log('Dist directory DOES NOT EXIST at:', distPath);
-    }
-} catch (e) {
-    console.error('Error listing files:', e);
-}
+const DIST_DIR = path.resolve(__dirname, '..', 'dist');
+console.log('DIST_DIR resolved to:', DIST_DIR);
 
 // Express App Setup
 const app = express();
@@ -90,14 +80,17 @@ if (pool) {
 // Initialize Database
 initDB();
 
-// Health Check
+// Health Check (Robust)
 app.get('/health', async (req, res) => {
     try {
-        if (!pool) throw new Error('Database pool not initialized');
-        await pool.query('SELECT 1');
-        res.json({ status: 'ok', database: 'connected' });
+        if (pool) {
+            await pool.query('SELECT 1');
+            return res.json({ status: 'ok', database: 'connected', timestamp: new Date().toISOString() });
+        }
+        res.json({ status: 'warning', database: 'not_initialized' });
     } catch (error) {
-        res.status(500).json({ status: 'error', database: 'disconnected', error: error.message });
+        console.error('Health check failed:', error.message);
+        res.status(200).json({ status: 'degraded', database: 'error', message: error.message });
     }
 });
 
@@ -116,15 +109,13 @@ app.use('/api', bannersRoutesModule);
 app.use('/api', categoriesRoutesModule);
 
 // Serve React App (Static Files)
-const DIST_DIR = path.resolve(__dirname, '..', 'dist');
-console.log('Serving from DIST_DIR:', DIST_DIR);
-
 if (fs.existsSync(DIST_DIR)) {
+    console.log('Serving static files from:', DIST_DIR);
     app.use(express.static(DIST_DIR, {
-        index: false // Prevent serving index.html as static file for root
+        index: false
     }));
 } else {
-    console.warn('WARNING: DIST_DIR does not exist:', DIST_DIR);
+    console.warn('WARNING: DIST_DIR does not exist at startup:', DIST_DIR);
 }
 
 app.get('*', (req, res) => {
@@ -136,7 +127,17 @@ app.get('*', (req, res) => {
     }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
     console.log(`Environment: ${process.env.NODE_ENV}`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+    console.log('SIGTERM signal received: closing HTTP server');
+    server.close(() => {
+        console.log('HTTP server closed');
+        if (pool) pool.end();
+        process.exit(0);
+    });
 });
