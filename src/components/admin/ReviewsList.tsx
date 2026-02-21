@@ -32,14 +32,18 @@ interface ReviewsListProps {
     reviews: Review[];
     onApprove: (id: string) => void;
     onReject: (id: string) => void;
+    onDelete: (id: string) => void;
     isLoading?: boolean;
+    showActions?: boolean;
 }
 
 export const ReviewsList = ({
     reviews,
     onApprove,
     onReject,
-    isLoading = false
+    onDelete,
+    isLoading = false,
+    showActions = true
 }: ReviewsListProps) => {
     if (isLoading) {
         return (
@@ -51,11 +55,11 @@ export const ReviewsList = ({
 
     if (reviews.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center h-64 text-center border border-dashed border-white/10 rounded-xl bg-white/5">
-                <MessageSquare className="h-12 w-12 text-muted-foreground mb-4 opacity-50" />
-                <h3 className="text-lg font-medium">Nenhum depoimento pendente</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                    Tudo limpo! Não há novos depoimentos para analisar.
+            <div className="flex flex-col items-center justify-center h-48 text-center border border-dashed border-white/10 rounded-xl bg-white/5">
+                <MessageSquare className="h-10 w-10 text-muted-foreground mb-4 opacity-50" />
+                <h3 className="text-md font-medium">Nenhum depoimento encontrado</h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                    Não há depoimentos nesta categoria.
                 </p>
             </div>
         );
@@ -137,23 +141,37 @@ export const ReviewsList = ({
 
                             <TableCell className="text-right">
                                 <div className="flex items-center justify-end gap-2">
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-400/10 border-red-400/20"
-                                        onClick={() => onReject(review.id)}
-                                        title="Rejeitar"
-                                    >
-                                        <X className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                        size="sm"
-                                        className="h-8 w-8 p-0 bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/20"
-                                        onClick={() => onApprove(review.id)}
-                                        title="Aprovar"
-                                    >
-                                        <Check className="h-4 w-4" />
-                                    </Button>
+                                    {showActions ? (
+                                        <>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-400/10 border-red-400/20"
+                                                onClick={() => onReject(review.id)}
+                                                title="Rejeitar"
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                className="h-8 w-8 p-0 bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/20"
+                                                onClick={() => onApprove(review.id)}
+                                                title="Aprovar"
+                                            >
+                                                <Check className="h-4 w-4" />
+                                            </Button>
+                                        </>
+                                    ) : (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-8 w-8 p-0 text-red-500 hover:text-red-400 hover:bg-red-500/10 border-red-500/20"
+                                            onClick={() => onDelete(review.id)}
+                                            title="Deletar permanentemente"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    )}
                                 </div>
                             </TableCell>
                         </TableRow>

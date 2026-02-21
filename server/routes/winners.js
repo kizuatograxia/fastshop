@@ -125,4 +125,29 @@ router.put('/winners/:id/reject', async (req, res) => {
     }
 });
 
+// Delete Testimonial (Admin - Generic Delete)
+router.delete('/winners/:id', async (req, res) => {
+    const { id } = req.params;
+    const { password } = req.body;
+
+    if (password !== ADMIN_PASSWORD) {
+        return res.status(401).json({ message: 'Não autorizado' });
+    }
+
+    try {
+        const result = await pool.query(
+            `DELETE FROM testimonials WHERE id = $1 RETURNING *`,
+            [id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Depoimento não encontrado' });
+        }
+        console.log('Testimonial deleted:', id);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting testimonial:', error);
+        res.status(500).json({ message: 'Erro ao deletar depoimento' });
+    }
+});
+
 export default router;

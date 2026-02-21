@@ -611,4 +611,26 @@ export const api = {
         localStorage.setItem("admin_reviews", JSON.stringify(updatedReviews));
         return { success: true };
     },
+
+    deleteReview: async (password: string, id: string) => {
+        try {
+            const res = await fetch(`${API_URL}/winners/${id}`, {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ password }),
+            });
+            if (res.ok) {
+                return { success: true };
+            }
+        } catch (e) {
+            console.error("API delete failed", e);
+        }
+
+        // Fallback local delete
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const storedReviews = JSON.parse(localStorage.getItem("admin_reviews") || "[]");
+        const updatedReviews = storedReviews.filter((r: any) => r.id !== id);
+        localStorage.setItem("admin_reviews", JSON.stringify(updatedReviews));
+        return { success: true };
+    },
 };

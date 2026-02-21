@@ -35,6 +35,7 @@ const Admin = () => {
     const [selectedRaffle, setSelectedRaffle] = useState<Raffle | null>(null);
     const [participants, setParticipants] = useState<any[]>([]);
     const [reviews, setReviews] = useState<Review[]>([]);
+    const [approvedReviews, setApprovedReviews] = useState<Review[]>([]);
 
     // --- ROULETTE STATE ---
     const [showRoulette, setShowRoulette] = useState(false);
@@ -114,11 +115,17 @@ const Admin = () => {
     };
 
     const fetchReviews = async () => {
+        setIsLoading(true);
         try {
-            const data = await api.getPendingReviews(password);
-            setReviews(data);
+            const pending = await api.getPendingReviews(password);
+            const approved = await api.getApprovedReviews();
+            setReviews(pending);
+            setApprovedReviews(approved);
         } catch (error) {
             toast.error("Erro ao carregar depoimentos.");
+        } finally {
+            setIsLoading(true); // Wait, should be false? Fix it while I'm at it.
+            setIsLoading(false);
         }
     };
 
@@ -126,7 +133,7 @@ const Admin = () => {
         try {
             await api.approveReview(password, id);
             toast.success("Depoimento aprovado!");
-            setReviews(prev => prev.filter(r => r.id !== id));
+            fetchReviews(); // Refresh both lists
         } catch (error) {
             toast.error("Erro ao aprovar depoimento.");
         }
@@ -140,6 +147,18 @@ const Admin = () => {
             setReviews(prev => prev.filter(r => r.id !== id));
         } catch (error) {
             toast.error("Erro ao rejeitar depoimento.");
+        }
+    };
+
+    const handleDeleteReview = async (id: string) => {
+        if (!confirm("Tem certeza que deseja deletar este depoimento permanentemente?")) return;
+        try {
+            await api.deleteReview(password, id);
+            toast.success("Depoimento deletado com sucesso.");
+            setReviews(prev => prev.filter(r => r.id !== id));
+            setApprovedReviews(prev => prev.filter(r => r.id !== id));
+        } catch (error) {
+            toast.error("Erro ao deletar depoimento.");
         }
     };
 
@@ -344,18 +363,39 @@ const Admin = () => {
             )}
 
             {view === 'reviews' && (
-                <div className="space-y-6">
-                    <div className="flex justify-between items-center">
-                        <h2 className="text-2xl font-bold">Análise de Depoimentos</h2>
-                        <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium">
-                            {reviews.length} pendentes
+                <div className="space-y-8">
+                    <div className="space-y-6">
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-2xl font-bold">Análise de Depoimentos</h2>
+                            <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium">
+                                {reviews.length} pendentes
+                            </div>
                         </div>
+                        <ReviewsList
+                            reviews={reviews}
+                            onApprove={handleApproveReview}
+                            onReject={handleRejectReview}
+                            onDelete={handleDeleteReview}
+                            isLoading={isLoading}
+                        />
                     </div>
-                    <ReviewsList
-                        reviews={reviews}
-                        onApprove={handleApproveReview}
-                        onReject={handleRejectReview}
-                    />
+
+                    <div className="space-y-6 pt-8 border-t border-white/5">
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-2xl font-bold">Depoimentos Publicados</h2>
+                            <div className="bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-xs font-medium">
+                                {approvedReviews.length} ativos
+                            </div>
+                        </div>
+                        <ReviewsList
+                            reviews={approvedReviews}
+                            onApprove={handleApproveReview}
+                            onReject={handleRejectReview}
+                            onDelete={handleDeleteReview}
+                            showActions={false}
+                            isLoading={isLoading}
+                        />
+                    </div>
                 </div>
             )}
 
