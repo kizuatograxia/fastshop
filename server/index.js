@@ -23,8 +23,16 @@ import winnersRoutes from './routes/winners.js';
 import chatRoutes from './routes/chat.js';
 import shippingRoutes from './routes/shipping.js';
 import nftsRoutes from './routes/nfts.js';
-import bannersRoutes from './routes/banners.js';
-import categoriesRoutes from './routes/categories.js';
+import bannersRoutesModule from './routes/banners.js';
+import categoriesRoutesModule from './routes/categories.js';
+
+// Global error handling to prevent silent crashes
+process.on('uncaughtException', (err) => {
+    console.error('FATAL: Uncaught Exception:', err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('FATAL: Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -104,14 +112,20 @@ app.use('/api', winnersRoutes);
 app.use('/api', chatRoutes);
 app.use('/api', shippingRoutes);
 app.use('/api', nftsRoutes);
-app.use('/api', bannersRoutes);
-app.use('/api', categoriesRoutes);
+app.use('/api', bannersRoutesModule);
+app.use('/api', categoriesRoutesModule);
 
 // Serve React App (Static Files)
 const DIST_DIR = path.resolve(__dirname, '..', 'dist');
-console.log('Serving static files from:', DIST_DIR);
+console.log('Serving from DIST_DIR:', DIST_DIR);
 
-app.use(express.static(DIST_DIR));
+if (fs.existsSync(DIST_DIR)) {
+    app.use(express.static(DIST_DIR, {
+        index: false // Prevent serving index.html as static file for root
+    }));
+} else {
+    console.warn('WARNING: DIST_DIR does not exist:', DIST_DIR);
+}
 
 app.get('*', (req, res) => {
     const indexPath = path.join(DIST_DIR, 'index.html');

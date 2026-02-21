@@ -11,7 +11,17 @@ const __dirname = path.dirname(__filename);
 // misinterpreted by the client's local timezone.
 const { types } = pkg;
 types.setTypeParser(1114, (stringValue) => {
-    return stringValue ? new Date(stringValue + 'Z').toISOString() : null;
+    if (!stringValue) return null;
+    try {
+        // Only append Z if it looks like it's missing a timezone part
+        const cleanValue = stringValue.includes('+') || stringValue.includes('Z')
+            ? stringValue
+            : stringValue + 'Z';
+        return new Date(cleanValue).toISOString();
+    } catch (e) {
+        console.warn('PG Parser: Invalid date encountered:', stringValue);
+        return stringValue; // Fallback to raw string
+    }
 });
 
 const { Pool } = pkg;
