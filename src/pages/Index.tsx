@@ -32,7 +32,7 @@ const Index: React.FC = () => {
       });
   }, []);
 
-  const activeRaffles = raffles.filter(r => r.status === 'ativo');
+  const activeRaffles = raffles.filter(r => r.status === 'ativo' || r.status === 'active');
   const filteredRaffles =
     activeCategory === "todos"
       ? activeRaffles
@@ -41,6 +41,8 @@ const Index: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Layout components handled by MainLayout */}
+
+      <Hero />
 
       <CategoryNav
         activeCategory={activeCategory}

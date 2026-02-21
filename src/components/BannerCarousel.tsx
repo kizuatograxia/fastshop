@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { API_URL } from "@/lib/api";
 
 interface Banner {
     id: string;
@@ -20,7 +21,7 @@ const BannerCarousel: React.FC = () => {
     useEffect(() => {
         const fetchBanners = async () => {
             try {
-                const response = await fetch("http://localhost:5050/api/banners");
+                const response = await fetch(`${API_URL}/banners`);
                 if (!response.ok) throw new Error("Failed to fetch");
                 const data = await response.json();
                 setBanners(data);
