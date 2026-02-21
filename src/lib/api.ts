@@ -1,9 +1,7 @@
-const PROD_URL = "https://4fx59qbb.up.railway.app/api";
-
 export const API_URL = import.meta.env.VITE_API_URL || (
     typeof window !== 'undefined' && window.location.hostname === 'localhost'
-        ? "http://localhost:5050/api" // Local Backend
-        : PROD_URL // Remote Backend (or relative path if served statically)
+        ? "http://localhost:5050/api"
+        : "/api"
 );
 console.log("API URL configured as:", API_URL);
 
