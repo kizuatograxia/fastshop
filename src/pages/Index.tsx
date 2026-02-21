@@ -42,6 +42,10 @@ const Index: React.FC = () => {
     <div className="min-h-screen bg-background">
       {/* Layout components handled by MainLayout */}
 
+      <div className="container mx-auto px-4 pt-6">
+        <BannerCarousel />
+      </div>
+
       <Hero />
 
       <CategoryNav
@@ -50,7 +54,6 @@ const Index: React.FC = () => {
       />
 
       <main className="container mx-auto px-4">
-        <BannerCarousel />
         <RaffleGrid raffles={filteredRaffles} />
         <NFTGrid nfts={liveNfts} />
         <HowItWorks />
