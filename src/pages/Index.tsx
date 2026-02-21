@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Hero from "@/components/Hero";
+import BannerCarousel from "@/components/BannerCarousel";
 import CategoryNav from "@/components/CategoryNav";
 import RaffleGrid from "@/components/RaffleGrid";
 import NFTGrid from "@/components/NFTGrid";
@@ -13,6 +14,7 @@ const Index: React.FC = () => {
   // const [walletOpen, setWalletOpen] = useState(false); // Unused
   const [activeCategory, setActiveCategory] = useState("todos");
   const [raffles, setRaffles] = useState<Raffle[]>([]);
+  const [liveNfts, setLiveNfts] = useState<any[]>([]);
 
   React.useEffect(() => {
     api.getActiveRaffles()
@@ -21,12 +23,20 @@ const Index: React.FC = () => {
         console.error("Failed to fetch raffles, falling back to local", err);
         setRaffles(localRaffles);
       });
+
+    api.getNFTCatalog()
+      .then(setLiveNfts)
+      .catch(err => {
+        console.error("Failed to fetch nfts, falling back to local", err);
+        setLiveNfts(nfts);
+      });
   }, []);
 
+  const activeRaffles = raffles.filter(r => r.status === 'ativo');
   const filteredRaffles =
     activeCategory === "todos"
-      ? raffles
-      : raffles.filter((r) => r.categoria === activeCategory);
+      ? activeRaffles
+      : activeRaffles.filter((r) => r.categoria === activeCategory);
 
   return (
     <div className="min-h-screen bg-background">
@@ -37,10 +47,10 @@ const Index: React.FC = () => {
         onCategoryChange={setActiveCategory}
       />
 
-      <main>
-        <Hero />
+      <main className="container mx-auto px-4">
+        <BannerCarousel />
         <RaffleGrid raffles={filteredRaffles} />
-        <NFTGrid nfts={nfts} />
+        <NFTGrid nfts={liveNfts} />
         <HowItWorks />
       </main>
 

@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RefreshCw, Plus, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Raffle } from "@/types/raffle";
-import { categories } from "@/data/raffles";
+import { api } from "@/lib/api";
 
 // Define the shape of the form data
 export interface CreateRaffleDTO {
@@ -30,6 +30,14 @@ interface RaffleFormProps {
 }
 
 export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: RaffleFormProps) {
+    const [categories, setCategories] = useState<any[]>([]);
+
+    useEffect(() => {
+        api.getCategories()
+            .then(setCategories)
+            .catch(err => console.error("Failed to load categories in form:", err));
+    }, []);
+
     const defaultFormData: CreateRaffleDTO = {
         title: "",
         description: "",

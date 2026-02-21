@@ -20,7 +20,25 @@ router.post('/admin/verify', (req, res) => {
 router.post('/raffles', async (req, res) => {
     const { password, raffle } = req.body;
 
-    if (password !== ADMIN_PASSWORD) {
+    // Auth: password OR JWT
+    let isAuthorized = (password === ADMIN_PASSWORD);
+
+    if (!isAuthorized) {
+        const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+        if (authHeader) {
+            const token = authHeader.split(' ')[1];
+            if (token) {
+                try {
+                    const decoded = jwt.verify(token, JWT_SECRET);
+                    if (decoded && decoded.role === 'admin') isAuthorized = true;
+                } catch (err) {
+                    console.warn("Invalid token in raffle creation:", err.message);
+                }
+            }
+        }
+    }
+
+    if (!isAuthorized) {
         return res.status(401).json({ message: "Não autorizado" });
     }
 
@@ -62,7 +80,25 @@ router.put('/raffles/:id', async (req, res) => {
     const { id } = req.params;
     const { password, raffle } = req.body;
 
-    if (password !== ADMIN_PASSWORD) {
+    // Auth: password OR JWT
+    let isAuthorized = (password === ADMIN_PASSWORD);
+
+    if (!isAuthorized) {
+        const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+        if (authHeader) {
+            const token = authHeader.split(' ')[1];
+            if (token) {
+                try {
+                    const decoded = jwt.verify(token, JWT_SECRET);
+                    if (decoded && decoded.role === 'admin') isAuthorized = true;
+                } catch (err) {
+                    console.warn("Invalid token in raffle update:", err.message);
+                }
+            }
+        }
+    }
+
+    if (!isAuthorized) {
         return res.status(401).json({ message: "Não autorizado" });
     }
 
@@ -94,7 +130,25 @@ router.delete('/raffles/:id', async (req, res) => {
     const { id } = req.params;
     const { password } = req.body;
 
-    if (password !== ADMIN_PASSWORD) {
+    // Auth: password OR JWT
+    let isAuthorized = (password === ADMIN_PASSWORD);
+
+    if (!isAuthorized) {
+        const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+        if (authHeader) {
+            const token = authHeader.split(' ')[1];
+            if (token) {
+                try {
+                    const decoded = jwt.verify(token, JWT_SECRET);
+                    if (decoded && decoded.role === 'admin') isAuthorized = true;
+                } catch (err) {
+                    console.warn("Invalid token in raffle deletion:", err.message);
+                }
+            }
+        }
+    }
+
+    if (!isAuthorized) {
         return res.status(401).json({ message: "Não autorizado" });
     }
 

@@ -106,13 +106,12 @@ export const api = {
         const data = await res.json();
         return data.map((item: any) => ({
             id: String(item.id),
-            name: item.name,
+            nome: item.nome || item.name,
             emoji: item.emoji,
-            price: Number(item.price),
-            rarity: item.rarity,
-            description: item.description,
-            gradient: item.gradient || "from-primary/20 to-accent/20",
-            stock: item.stock
+            preco: Number(item.preco || item.price),
+            raridade: item.raridade || item.rarity,
+            descricao: item.descricao || item.description,
+            cor: item.cor || item.gradient || "from-primary/20 to-accent/20"
         }));
     },
 
@@ -123,21 +122,29 @@ export const api = {
         const data = await res.json();
 
         // Map backend fields to frontend interface
-        return data.map((r: any) => ({
-            id: String(r.id),
-            titulo: r.title,
-            descricao: r.description,
-            premio: r.prize_pool,
-            premioValor: r.prize_value || 0,
-            imagem: r.image_url,
-            dataFim: r.draw_date,
-            participantes: parseInt(r.tickets_sold) || 0,
-            maxParticipantes: r.max_tickets,
-            custoNFT: r.ticket_price,
-            status: r.status === 'active' ? 'ativo' : 'encerrado',
-            categoria: r.category || 'tech',
-            raridade: r.rarity || 'comum'
-        }));
+        return data
+            .filter((r: any) => r.status === 'active')
+            .map((r: any) => ({
+                id: String(r.id),
+                titulo: r.title,
+                descricao: r.description,
+                premio: r.prize_pool,
+                premioValor: r.prize_value || 0,
+                imagem: r.image_url,
+                dataFim: r.draw_date,
+                participantes: parseInt(r.tickets_sold) || 0,
+                maxParticipantes: r.max_tickets,
+                custoNFT: r.ticket_price,
+                status: r.status === 'active' ? 'ativo' : 'encerrado',
+                categoria: r.category || 'tech',
+                raridade: r.rarity || 'comum'
+            }));
+    },
+
+    getCategories: async () => {
+        const res = await fetch(`${API_URL}/categories`);
+        if (!res.ok) throw new Error("Failed to fetch categories");
+        return res.json();
     },
 
     getRaffle: async (id: string) => {
@@ -256,9 +263,13 @@ export const api = {
     },
 
     createRaffle: async (password: string, raffle: any) => {
+        const token = localStorage.getItem('auth_token');
         const res = await fetch(`${API_URL}/raffles`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            },
             body: JSON.stringify({ password, raffle }),
         });
         if (!res.ok) throw new Error("Falha ao criar sorteio");
@@ -362,9 +373,13 @@ export const api = {
     },
 
     updateRaffle: async (password: string, id: string, raffle: any) => {
+        const token = localStorage.getItem('auth_token');
         const res = await fetch(`${API_URL}/raffles/${id}`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            },
             body: JSON.stringify({ password, raffle }),
         });
         if (!res.ok) throw new Error("Falha ao atualizar sorteio");
@@ -372,9 +387,13 @@ export const api = {
     },
 
     deleteRaffle: async (password: string, id: string) => {
+        const token = localStorage.getItem('auth_token');
         const res = await fetch(`${API_URL}/raffles/${id}`, {
             method: "DELETE",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            },
             body: JSON.stringify({ password }),
         });
         if (!res.ok) throw new Error("Falha ao deletar sorteio");

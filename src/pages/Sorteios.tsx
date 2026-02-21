@@ -26,34 +26,38 @@ import {
 import { api } from "@/lib/api";
 import { Raffle } from "@/types/raffle";
 import { toast } from "sonner";
-import { categories as sharedCategories } from "@/data/raffles";
 
 const Sorteios: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("todos");
   const [sortBy, setSortBy] = useState<"price" | "ending" | "popular">("ending");
   const [raffles, setRaffles] = useState<Raffle[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadRaffles = async () => {
+    const loadData = async () => {
       try {
         setLoading(true);
-        const data = await api.getActiveRaffles();
-        setRaffles(data);
+        const [rafflesData, categoriesData] = await Promise.all([
+          api.getActiveRaffles(),
+          api.getCategories()
+        ]);
+        setRaffles(rafflesData);
+        setCategories(categoriesData);
       } catch (error) {
-        console.error("Failed to load raffles:", error);
-        toast.error("Erro ao carregar sorteios. Tente novamente.");
+        console.error("Failed to load data:", error);
+        toast.error("Erro ao carregar dados. Tente novamente.");
       } finally {
         setLoading(false);
       }
     };
 
-    loadRaffles();
+    loadData();
   }, []);
 
   const filteredRaffles = useMemo(() => {
-    let result = [...raffles];
+    let result = raffles.filter(r => r.status === 'ativo');
 
     // Filter by search
     if (searchQuery) {
@@ -164,7 +168,7 @@ const Sorteios: React.FC = () => {
 
           {/* Category Pills */}
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {sharedCategories.map((cat) => (
+            {categories.map((cat) => (
               <Button
                 key={cat.id}
                 variant={activeCategory === cat.id ? "default" : "outline"}

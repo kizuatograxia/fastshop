@@ -23,6 +23,7 @@ import winnersRoutes from './routes/winners.js';
 import chatRoutes from './routes/chat.js';
 import shippingRoutes from './routes/shipping.js';
 import nftsRoutes from './routes/nfts.js';
+import bannersRoutes from './routes/banners.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -102,6 +103,8 @@ app.use('/api', winnersRoutes);
 app.use('/api', chatRoutes);
 app.use('/api', shippingRoutes);
 app.use('/api', nftsRoutes);
+app.use('/api', bannersRoutes);
+app.use('/api', categoriesRoutes);
 
 // Serve React App (Static Files)
 const DIST_DIR = path.join(process.cwd(), 'dist');

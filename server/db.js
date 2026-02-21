@@ -171,6 +171,58 @@ const initDB = async () => {
             console.error('Migration CRITICAL warning:', migError);
         }
 
+        // Banners Table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS banners (
+                id SERIAL PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                subtitle TEXT,
+                image_url TEXT NOT NULL,
+                link_url TEXT,
+                button_text VARCHAR(50) DEFAULT 'Ver Detalhes',
+                display_order INTEGER DEFAULT 0,
+                is_active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        // Categories Table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS categories (
+                id VARCHAR(50) PRIMARY KEY,
+                nome VARCHAR(100) NOT NULL,
+                emoji VARCHAR(50),
+                display_order INTEGER DEFAULT 0
+            );
+        `);
+
+        // Seed initial categories if empty
+        const categoriesCheck = await pool.query('SELECT count(*) FROM categories');
+        if (parseInt(categoriesCheck.rows[0].count) === 0) {
+            await pool.query(`
+                INSERT INTO categories (id, nome, emoji, display_order)
+                VALUES 
+                ('todos', 'Todos Sorteios', '🎟️', 0),
+                ('tech', 'Tecnologia', '📱', 1),
+                ('games', 'Games', '🎮', 2),
+                ('dinheiro', 'Dinheiro', '💰', 3)
+                ON CONFLICT (id) DO NOTHING;
+            `);
+            console.log('Seeded initial categories');
+        }
+
+        // Seed initial banner if empty
+        const bannersCheck = await pool.query('SELECT count(*) FROM banners');
+        if (parseInt(bannersCheck.rows[0].count) === 0) {
+            await pool.query(`
+                INSERT INTO banners (title, subtitle, image_url, button_text)
+                VALUES 
+                ('Sorteios Exclusivos de NFTs', 'Participe com NFTs únicos e concorra a prêmios incríveis.', 'https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?w=1600&q=80', 'Ver Sorteios'),
+                ('Ganhe um iPhone 15 Pro Max', 'Novos sorteios toda semana. Não perca sua chance!', 'https://images.unsplash.com/photo-1696446701796-da61225697cc?w=1600&q=80', 'Participar Agora');
+            `);
+            console.log('Seeded initial banners');
+        }
+
         // Purchases Table
         await pool.query(`
             CREATE TABLE IF NOT EXISTS purchases (
