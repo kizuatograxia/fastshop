@@ -29,7 +29,7 @@ import categoriesRoutes from './routes/categories.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-dotenv.config({ path: '../.env' });
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 // DEBUG: List files to diagnose ENOENT
 console.log('CWD:', process.cwd());
@@ -108,15 +108,18 @@ app.use('/api', bannersRoutes);
 app.use('/api', categoriesRoutes);
 
 // Serve React App (Static Files)
-const DIST_DIR = path.join(process.cwd(), 'dist');
+const DIST_DIR = path.resolve(__dirname, '..', 'dist');
 console.log('Serving static files from:', DIST_DIR);
 
 app.use(express.static(DIST_DIR));
 
 app.get('*', (req, res) => {
     const indexPath = path.join(DIST_DIR, 'index.html');
-    console.log('Rendering SPA:', indexPath, 'Request:', req.url);
-    res.sendFile(indexPath);
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        res.status(404).send('Frontend not built. Please run npm run build.');
+    }
 });
 
 app.listen(PORT, '0.0.0.0', () => {

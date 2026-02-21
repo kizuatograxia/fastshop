@@ -1,5 +1,10 @@
 import pkg from 'pg';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Fix timezone handling: Ensure TIMESTAMP WITHOUT TIMEZONE (type 1114)
 // is returned as a raw ISO string, not a Date object that could be
@@ -11,7 +16,7 @@ types.setTypeParser(1114, (stringValue) => {
 
 const { Pool } = pkg;
 
-dotenv.config({ path: '../.env' });
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 // Validate essential environment variables
 if (!process.env.DATABASE_URL) {
