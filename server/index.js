@@ -24,6 +24,7 @@ import chatRoutes from './routes/chat.js';
 import shippingRoutes from './routes/shipping.js';
 import nftsRoutes from './routes/nfts.js';
 import bannersRoutes from './routes/banners.js';
+import categoriesRoutes from './routes/categories.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
