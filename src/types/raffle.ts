@@ -2,6 +2,7 @@ export interface NFT {
     id: string;
     nome: string;
     emoji: string;
+    image?: string;
     preco: number;
     raridade: "comum" | "raro" | "epico" | "lendario";
     descricao: string;

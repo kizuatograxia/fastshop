@@ -106,6 +106,7 @@ export const api = {
             id: String(item.id),
             nome: item.nome || item.name,
             emoji: item.emoji,
+            image: item.image,
             preco: Number(item.preco || item.price),
             raridade: item.raridade || item.rarity,
             descricao: item.descricao || item.description,

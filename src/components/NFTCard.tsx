@@ -56,9 +56,17 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft, index }) => {
 
             {/* NFT Display */}
             <div className={`relative aspect-square overflow-hidden bg-gradient-to-br ${nft.cor} flex items-center justify-center`}>
-                <span className="text-7xl md:text-8xl transition-transform duration-500 group-hover:scale-125 drop-shadow-lg">
-                    {nft.emoji}
-                </span>
+                {nft.image ? (
+                    <img
+                        src={nft.image}
+                        alt={nft.nome}
+                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+                    />
+                ) : (
+                    <span className="text-7xl md:text-8xl transition-transform duration-500 group-hover:scale-125 drop-shadow-lg">
+                        {nft.emoji}
+                    </span>
+                )}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
             </div>
 

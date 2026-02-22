@@ -4,6 +4,7 @@ const nfts = [
         id: "nft-1",
         nome: "Beija-flor (R$ 1)",
         emoji: "🐦",
+        // image: "https://example.com/bird.gif",
         preco: 1.00,
         raridade: "comum",
         descricao: "Representa a nota de 1 real. O Beija-flor-de-peito-azul simboliza beleza e agilidade.",
