@@ -26,19 +26,30 @@ const ThemeToggle: React.FC = () => {
     const toggleTheme = () => setIsDark(!isDark);
 
     return (
-        <label className="relative inline-flex items-center cursor-pointer mr-2" aria-label="Toggle Theme">
-            <input
-                type="checkbox"
-                className="sr-only peer"
-                checked={isDark}
-                onChange={toggleTheme}
+        <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label="Toggle Theme"
+            className={`
+                relative inline-flex h-8 w-14 items-center justify-between rounded-full px-1.5 transition-colors duration-300
+                focus:outline-none focus:ring-2 focus:ring-primary/50
+                ${isDark ? 'bg-slate-800' : 'bg-gray-200'}
+            `}
+        >
+            <span className="sr-only">Toggle theme</span>
+
+            {/* Icons */}
+            <Sun className={`h-4 w-4 z-10 transition-opacity duration-300 ${isDark ? 'opacity-0' : 'opacity-100 text-amber-500'}`} />
+            <Moon className={`h-4 w-4 z-10 transition-opacity duration-300 ${isDark ? 'opacity-100 text-blue-300' : 'opacity-0'}`} />
+
+            {/* Sliding Circle */}
+            <span
+                className={`
+                    absolute left-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-300
+                    ${isDark ? 'translate-x-6 bg-[#0F172A]' : 'translate-x-0'}
+                `}
             />
-            {/* The pill background */}
-            <div className="w-14 h-8 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/50 dark:peer-focus:ring-primary/30 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-transform dark:border-gray-600 peer-checked:bg-slate-800 flex items-center justify-between px-1.5 transition-colors duration-300">
-                <Sun className="h-4 w-4 text-amber-500 z-10 ml-0.5" />
-                <Moon className="h-4 w-4 text-blue-300 z-10 mr-0.5" />
-            </div>
-        </label>
+        </button>
     );
 };
 
