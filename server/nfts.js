@@ -50,6 +50,7 @@ const nfts = [
         id: "nft-6",
         nome: "Onça-Pintada (R$ 50)",
         emoji: "🐆",
+        image: "/onca-emoji.png",
         preco: 50.00,
         raridade: "epico",
         descricao: "Representa a nota de 50 reais. O maior felino das Américas.",
