@@ -9,7 +9,7 @@ interface RaffleGridProps {
 
 const RaffleGrid: React.FC<RaffleGridProps> = ({ raffles }) => {
     return (
-        <section id="sorteios" className="container mx-auto px-4 py-12">
+        <section id="sorteios" className="py-12">
             <div className="flex items-center gap-3 mb-8">
                 <div className="p-2 bg-primary/10 rounded-lg">
                     <Trophy className="h-6 w-6 text-primary" />
@@ -23,9 +23,9 @@ const RaffleGrid: React.FC<RaffleGridProps> = ({ raffles }) => {
                     </p>
                 </div>
             </div>
-            <div className="columns-1 sm:columns-2 lg:columns-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
                 {raffles.map((raffle, index) => (
-                    <div key={raffle.id} className="w-full inline-block break-inside-avoid mb-6">
+                    <div key={raffle.id} className="w-full">
                         <RaffleCard raffle={raffle} index={index} />
                     </div>
                 ))}
