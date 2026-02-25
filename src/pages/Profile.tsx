@@ -374,7 +374,17 @@ const Profile = () => {
                                         >
                                             {rarityLabels[nft.raridade]}
                                         </div>
-                                        <div className="text-5xl mb-3 text-center">{nft.emoji}</div>
+                                        {nft.image ? (
+                                            <div className="flex justify-center mb-3">
+                                                <img
+                                                    src={nft.image}
+                                                    alt={nft.nome}
+                                                    className="w-16 h-16 object-contain drop-shadow-md"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="text-5xl mb-3 text-center drop-shadow-md">{nft.emoji}</div>
+                                        )}
                                         <h4 className="font-semibold text-foreground text-center truncate">
                                             {nft.nome}
                                         </h4>

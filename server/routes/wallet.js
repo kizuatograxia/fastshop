@@ -12,12 +12,17 @@ router.get('/wallet', authenticateToken, async (req, res) => {
     if (!userId) return res.status(400).json({ message: 'UserId required' });
 
     try {
+        const { default: nftsCatalog } = await import('../nfts.js');
         const result = await pool.query('SELECT nft_id as id, nft_metadata, quantity as quantidade FROM wallets WHERE user_id = $1', [userId]);
-        const wallet = result.rows.map(row => ({
-            id: row.id,
-            ...row.nft_metadata,
-            quantidade: row.quantidade
-        }));
+        const wallet = result.rows.map(row => {
+            const liveCatalogInfo = nftsCatalog.find(n => n.id === row.metadata?.id || n.id === row.id) || {};
+            return {
+                id: row.id,
+                ...row.nft_metadata,
+                ...liveCatalogInfo, // Override with latest catalog strictly for display
+                quantidade: row.quantidade
+            };
+        });
         res.json(wallet);
     } catch (error) {
         console.error('Error fetching wallet:', error);
@@ -63,12 +68,17 @@ router.post('/wallet', authenticateToken, async (req, res) => {
         }
 
         // Return updated wallet
+        const { default: nftsCatalog } = await import('../nfts.js');
         const result = await pool.query('SELECT nft_id as id, nft_metadata, quantity as quantidade FROM wallets WHERE user_id = $1', [userId]);
-        const wallet = result.rows.map(row => ({
-            id: row.id,
-            ...row.nft_metadata,
-            quantidade: row.quantidade
-        }));
+        const wallet = result.rows.map(row => {
+            const liveCatalogInfo = nftsCatalog.find(n => n.id === row.metadata?.id || n.id === row.id) || {};
+            return {
+                id: row.id,
+                ...row.nft_metadata,
+                ...liveCatalogInfo,
+                quantidade: row.quantidade
+            };
+        });
         res.json(wallet);
     } catch (error) {
         console.error('Error adding to wallet:', error);
@@ -100,12 +110,17 @@ router.post('/wallet/remove', authenticateToken, async (req, res) => {
         }
 
         // Return updated wallet
+        const { default: nftsCatalog } = await import('../nfts.js');
         const result = await pool.query('SELECT nft_id as id, nft_metadata, quantity as quantidade FROM wallets WHERE user_id = $1', [userId]);
-        const wallet = result.rows.map(row => ({
-            id: row.id,
-            ...row.nft_metadata,
-            quantidade: row.quantidade
-        }));
+        const wallet = result.rows.map(row => {
+            const liveCatalogInfo = nftsCatalog.find(n => n.id === row.metadata?.id || n.id === row.id) || {};
+            return {
+                id: row.id,
+                ...row.nft_metadata,
+                ...liveCatalogInfo,
+                quantidade: row.quantidade
+            };
+        });
         res.json(wallet);
     } catch (error) {
         console.error('Error removing from wallet:', error);
@@ -202,12 +217,17 @@ router.post('/shop/buy', authenticateToken, async (req, res) => {
 
         console.log(`User ${userId} bought items. Total: ${totalCost}, Discount: ${discount}, Final: ${finalCost}`);
 
+        const { default: nftsCatalog } = await import('../nfts.js');
         const result = await pool.query('SELECT nft_id as id, nft_metadata, quantity as quantidade FROM wallets WHERE user_id = $1', [userId]);
-        const wallet = result.rows.map(row => ({
-            id: row.id,
-            ...row.nft_metadata,
-            quantidade: row.quantidade
-        }));
+        const wallet = result.rows.map(row => {
+            const liveCatalogInfo = nftsCatalog.find(n => n.id === row.metadata?.id || n.id === row.id) || {};
+            return {
+                id: row.id,
+                ...row.nft_metadata,
+                ...liveCatalogInfo,
+                quantidade: row.quantidade
+            };
+        });
 
         res.json({ success: true, wallet, totalCost, discount, finalCost });
     } catch (error) {
