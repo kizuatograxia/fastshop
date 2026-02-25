@@ -211,20 +211,19 @@ const initDB = async () => {
             );
         `);
 
-        // Seed initial categories if empty
-        const categoriesCheck = await pool.query('SELECT count(*) FROM categories');
-        if (parseInt(categoriesCheck.rows[0].count) === 0) {
-            await pool.query(`
-                INSERT INTO categories (id, nome, emoji, display_order)
-                VALUES 
-                ('todos', 'Todos Sorteios', '🎟️', 0),
-                ('tech', 'Tecnologia', '📱', 1),
-                ('games', 'Games', '🎮', 2),
-                ('dinheiro', 'Dinheiro', '💰', 3)
-                ON CONFLICT (id) DO NOTHING;
-            `);
-            console.log('Seeded initial categories');
-        }
+        // Seed categories
+        await pool.query(`
+            INSERT INTO categories (id, nome, emoji, display_order)
+            VALUES 
+            ('todos', 'Todos Sorteios', '🎟️', 0),
+            ('tech', 'Tecnologia', '📱', 1),
+            ('games', 'Games', '🎮', 2),
+            ('dinheiro', 'Dinheiro', '💰', 3),
+            ('brinquedos', 'Brinquedos', '🧸', 4),
+            ('giftcards', 'Gift Cards', '🎁', 5)
+            ON CONFLICT (id) DO NOTHING;
+        `);
+        console.log('Categories verified/seeded');
 
         // Seed initial banner if empty
         const bannersCheck = await pool.query('SELECT count(*) FROM banners');

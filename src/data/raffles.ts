@@ -166,6 +166,8 @@ export const categories = [
     { id: "tech", nome: "Tecnologia", emoji: "📱" },
     { id: "games", nome: "Games", emoji: "🎮" },
     { id: "dinheiro", nome: "Dinheiro", emoji: "💰" },
+    { id: "brinquedos", nome: "Brinquedos", emoji: "🧸" },
+    { id: "giftcards", nome: "Gift Cards", emoji: "🎁" },
 ];
 
 export const nftCategories = [
