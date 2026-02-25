@@ -68,6 +68,7 @@ const nfts = [
         id: "nft-8",
         nome: "Lobo-Guará (R$ 200)",
         emoji: "🐺",
+        image: "/lobo-emoji.png",
         preco: 200.00,
         raridade: "lendario",
         descricao: "Representa a nota de 200 reais. O grande canídeo do Cerrado.",
