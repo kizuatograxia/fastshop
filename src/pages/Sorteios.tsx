@@ -199,7 +199,7 @@ const Sorteios: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 + index * 0.05 }}
-                className="break-inside-avoid mb-6"
+                className="w-full inline-block break-inside-avoid mb-6"
               >
                 <Link to={`/raffle/${raffle.id}`}>
                   <Card className="group bg-card border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-glow hover:-translate-y-1 cursor-pointer">
