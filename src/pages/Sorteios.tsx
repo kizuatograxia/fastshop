@@ -201,7 +201,7 @@ const Sorteios: React.FC = () => {
                 transition={{ delay: 0.2 + index * 0.05 }}
               >
                 <Link to={`/raffle/${raffle.id}`}>
-                  <Card className="group flex flex-col h-full bg-card border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-glow hover:-translate-y-1 cursor-pointer">
+                  <Card className="group bg-card border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-glow hover:-translate-y-1 cursor-pointer">
                     {/* Image */}
                     <div className="relative w-full overflow-hidden">
                       <img
@@ -237,13 +237,13 @@ const Sorteios: React.FC = () => {
                       </div>
                     </div>
 
-                    <CardContent className="p-4 space-y-4 flex flex-col flex-grow">
+                    <CardContent className="p-4 space-y-4">
                       {/* Title */}
                       <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors line-clamp-1 pb-2">
                         {raffle.titulo}
                       </h3>
 
-                      <div className="mt-auto space-y-4">
+                      <div className="space-y-4">
                         {/* Progress */}
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">

@@ -51,7 +51,7 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
 
     return (
         <article
-            className={`group relative flex flex-col h-full bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 hover:shadow-elevated hover:border-primary/30 hover:-translate-y-1 animate-fade-in ${disableNavigation ? "" : "cursor-pointer"}`}
+            className={`group relative bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 hover:shadow-elevated hover:border-primary/30 hover:-translate-y-1 animate-fade-in ${disableNavigation ? "" : "cursor-pointer"}`}
             style={{ animationDelay: `${index * 0.1}s` }}
             onClick={() => !disableNavigation && navigate(`/raffle/${raffle.id}`)}
         >
@@ -99,16 +99,16 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
             </div>
 
             {/* Content */}
-            <div className="p-4 space-y-3 flex flex-col flex-grow">
+            <div className="p-4 space-y-3">
                 <h3 className="font-bold text-lg text-foreground leading-tight group-hover:text-primary transition-colors">
                     {raffle.titulo}
                 </h3>
 
-                <p className="text-sm text-muted-foreground line-clamp-2 pb-2">
+                <p className="text-sm text-muted-foreground line-clamp-none pb-2">
                     {raffle.descricao}
                 </p>
 
-                <div className="mt-auto space-y-3">
+                <div className="space-y-3">
                     {/* Progress Bar */}
                     <div className="space-y-1">
                         <div className="flex justify-between text-xs text-muted-foreground">
