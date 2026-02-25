@@ -66,11 +66,11 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
             </div>
 
             {/* Image Container */}
-            <div className="relative aspect-square overflow-hidden bg-secondary/30">
+            <div className="relative aspect-square flex items-center justify-center overflow-hidden bg-secondary/30 p-2">
                 <img
                     src={raffle.imagem}
                     alt={raffle.titulo}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110 drop-shadow-md"
                     loading="lazy"
                     onError={(e) => {
                         e.currentTarget.src = "https://images.unsplash.com/photo-1635326444826-06c8f8d2e61d?w=800&q=80";

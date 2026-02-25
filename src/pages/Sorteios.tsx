@@ -203,11 +203,11 @@ const Sorteios: React.FC = () => {
                 <Link to={`/raffle/${raffle.id}`}>
                   <Card className="group bg-card border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-glow hover:-translate-y-1 cursor-pointer">
                     {/* Image */}
-                    <div className="relative aspect-video overflow-hidden">
+                    <div className="relative aspect-square flex items-center justify-center overflow-hidden bg-secondary/30 p-2">
                       <img
                         src={raffle.imagem}
                         alt={raffle.titulo}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110 drop-shadow-md"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
 

@@ -281,12 +281,12 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                         </div>
 
                         {/* Image */}
-                        <div className="relative aspect-square overflow-hidden bg-secondary/30">
+                        <div className="relative aspect-square flex items-center justify-center overflow-hidden bg-secondary/30 p-2">
                             {formData.image_url ? (
                                 <img
                                     src={formData.image_url}
                                     alt="Preview"
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-contain drop-shadow-md"
                                     onError={(e) => {
                                         e.currentTarget.src = "https://images.unsplash.com/photo-1635326444826-06c8f8d2e61d?w=800&q=80";
                                     }}
