@@ -32,6 +32,7 @@ const nfts = [
         id: "nft-4",
         nome: "Arara (R$ 10)",
         emoji: "🦜",
+        image: "/arara-emoji.png",
         preco: 10.00,
         raridade: "raro",
         descricao: "Representa a nota de 10 reais. A Arara-vermelha é um ícone da fauna.",
