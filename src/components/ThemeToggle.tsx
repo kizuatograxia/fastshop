@@ -26,30 +26,75 @@ const ThemeToggle: React.FC = () => {
     const toggleTheme = () => setIsDark(!isDark);
 
     return (
-        <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label="Toggle Theme"
-            className={`
-                relative inline-flex h-8 w-14 items-center justify-between rounded-full px-1.5 transition-colors duration-300
-                focus:outline-none focus:ring-2 focus:ring-primary/50
-                ${isDark ? 'bg-[#334155]' : 'bg-[#E2E8F0]'}
-            `}
-        >
-            <span className="sr-only">Toggle theme</span>
+        <>
+            <style>{`
+                .theme-toggle-label {
+                    position: relative;
+                    display: inline-flex;
+                    align-items: center;
+                    cursor: pointer;
+                    width: 52px;
+                    height: 28px;
+                    background-color: #E2E8F0;
+                    border-radius: 9999px;
+                    transition: background-color 0.3s;
+                }
+                .dark .theme-toggle-label {
+                    background-color: #334155 !important;
+                }
+                .theme-toggle-slider {
+                    position: absolute;
+                    left: 2px;
+                    top: 2px;
+                    width: 24px;
+                    height: 24px;
+                    background-color: white;
+                    border-radius: 50%;
+                    transition: transform 0.3s, background-color 0.3s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                }
+                .theme-toggle-checkbox:checked + .theme-toggle-label .theme-toggle-slider {
+                    transform: translateX(24px);
+                    background-color: #0F172A !important;
+                }
+                .icon-sun, .icon-moon {
+                    font-size: 16px;
+                    transition: opacity 0.3s;
+                }
+                .icon-sun {
+                    color: #F59E0B;
+                    opacity: 1;
+                }
+                .icon-moon {
+                    color: #F8FAFC;
+                    opacity: 0;
+                    position: absolute;
+                }
+                .theme-toggle-checkbox:checked + .theme-toggle-label .icon-sun {
+                    opacity: 0;
+                }
+                .theme-toggle-checkbox:checked + .theme-toggle-label .icon-moon {
+                    opacity: 1;
+                }
+            `}</style>
 
-            {/* Icons */}
-            <Sun className={`h-4 w-4 z-10 transition-opacity duration-300 ${isDark ? 'opacity-0' : 'opacity-100 text-[#F59E0B]'}`} />
-            <Moon className={`h-4 w-4 z-10 transition-opacity duration-300 ${isDark ? 'opacity-100 text-[#F8FAFC]' : 'opacity-0'}`} />
-
-            {/* Sliding Circle */}
-            <span
-                className={`
-                    absolute left-[2px] top-[2px] flex h-6 w-6 items-center justify-center rounded-full shadow-sm transition-all duration-300
-                    ${isDark ? 'translate-x-6 bg-[#0F172A]' : 'translate-x-0 bg-white'}
-                `}
-            />
-        </button>
+            <label className="relative inline-flex items-center cursor-pointer mr-2">
+                <input
+                    type="checkbox"
+                    className="sr-only theme-toggle-checkbox"
+                    checked={isDark}
+                    onChange={toggleTheme}
+                />
+                <div className="theme-toggle-label flex items-center justify-between px-1.5">
+                    <Sun className="icon-sun h-4 w-4 z-10" />
+                    <Moon className="icon-moon h-4 w-4 z-10" />
+                    <div className="theme-toggle-slider"></div>
+                </div>
+            </label>
+        </>
     );
 };
 
