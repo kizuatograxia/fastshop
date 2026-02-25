@@ -49,11 +49,11 @@ export function AdminRaffleDetails({ raffle, onBack, onEdit, onViewParticipants,
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Image & Main Info - Left Col */}
                 <div className="lg:col-span-2 space-y-6">
-                    <div className="relative aspect-video flex items-center justify-center rounded-2xl overflow-hidden bg-secondary/30 border border-white/5 shadow-2xl p-4">
+                    <div className="relative w-full rounded-2xl overflow-hidden bg-secondary/30 border border-white/5 shadow-2xl">
                         <img
                             src={raffle.imagem}
                             alt={raffle.titulo}
-                            className="w-full h-full object-contain drop-shadow-lg"
+                            className="w-full h-auto object-cover"
                         />
                         <div className="absolute top-4 left-4 flex gap-2">
                             <span className="px-3 py-1 bg-black/60 backdrop-blur text-white rounded-lg text-sm font-bold border border-white/10 flex items-center gap-2">

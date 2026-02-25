@@ -267,7 +267,7 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
             <div className="hidden lg:block space-y-4">
                 <p className="text-muted-foreground font-medium text-center">Preview em Tempo Real</p>
                 <div className="transform scale-90 origin-top">
-                    <article className="group relative bg-card rounded-2xl border border-border overflow-hidden shadow-elevated">
+                    <article className="group relative flex flex-col h-full bg-card rounded-2xl border border-border overflow-hidden shadow-elevated">
                         {/* Status Badge */}
                         <div className="absolute top-4 left-4 z-10">
                             <span className="bg-green-500/90 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1 rounded-full">
@@ -281,12 +281,12 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                         </div>
 
                         {/* Image */}
-                        <div className="relative aspect-square flex items-center justify-center overflow-hidden bg-secondary/30 p-2">
+                        <div className="relative w-full overflow-hidden">
                             {formData.image_url ? (
                                 <img
                                     src={formData.image_url}
                                     alt="Preview"
-                                    className="w-full h-full object-contain drop-shadow-md"
+                                    className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
                                     onError={(e) => {
                                         e.currentTarget.src = "https://images.unsplash.com/photo-1635326444826-06c8f8d2e61d?w=800&q=80";
                                     }}
@@ -299,38 +299,40 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                         </div>
 
                         {/* Content */}
-                        <div className="p-4 space-y-3">
-                            <h3 className="font-bold text-lg text-foreground leading-tight">
+                        <div className="p-4 space-y-3 flex flex-col flex-grow">
+                            <h3 className="font-bold text-lg text-foreground leading-tight group-hover:text-primary transition-colors">
                                 {formData.title || "Título do Prêmio"}
                             </h3>
-                            <p className="text-sm text-muted-foreground line-clamp-2">
+                            <p className="text-sm text-muted-foreground line-clamp-2 pb-2">
                                 {formData.description || "Descrição do prêmio aparecerá aqui..."}
                             </p>
 
-                            {/* Progress Bar */}
-                            <div className="space-y-1">
-                                <div className="flex justify-between text-xs text-muted-foreground">
-                                    <span className="flex items-center gap-1">👥 0 bilhetes vendidos</span>
-                                    <span>0%</span>
+                            <div className="mt-auto space-y-3">
+                                {/* Progress Bar */}
+                                <div className="space-y-1">
+                                    <div className="flex justify-between text-xs text-muted-foreground">
+                                        <span className="flex items-center gap-1">👥 0 bilhetes vendidos</span>
+                                        <span>0%</span>
+                                    </div>
+                                    <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                                        <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full w-0" />
+                                    </div>
                                 </div>
-                                <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                                    <div className="h-full bg-gradient-to-r from-primary to-accent rounded-full w-0" />
-                                </div>
-                            </div>
 
-                            {/* NFT Cost */}
-                            <div className="flex items-center justify-between py-2 px-3 bg-secondary/50 rounded-lg">
-                                <span className="text-xs text-muted-foreground">Custo para participar</span>
-                                <span className="font-bold text-primary">{formData.ticket_price || 0} NFT</span>
-                            </div>
-
-                            {/* Fake Buttons */}
-                            <div className="flex gap-2">
-                                <div className="flex-1 h-10 rounded-md border border-border flex items-center justify-center text-sm text-muted-foreground">
-                                    ℹ️ Mais informações
+                                {/* NFT Cost */}
+                                <div className="flex items-center justify-between py-2 px-3 bg-secondary/50 rounded-lg">
+                                    <span className="text-xs text-muted-foreground">Custo para participar</span>
+                                    <span className="font-bold text-primary">{formData.ticket_price || 0} NFT</span>
                                 </div>
-                                <div className="flex-1 h-10 rounded-md bg-gradient-to-r from-primary to-accent flex items-center justify-center text-sm text-white font-medium">
-                                    🎫 Participar
+
+                                {/* Fake Buttons */}
+                                <div className="flex gap-2">
+                                    <div className="flex-1 h-10 rounded-md border border-border flex items-center justify-center text-sm text-muted-foreground">
+                                        ℹ️ Mais informações
+                                    </div>
+                                    <div className="flex-1 h-10 rounded-md bg-gradient-to-r from-primary to-accent flex items-center justify-center text-sm text-white font-medium">
+                                        🎫 Participar
+                                    </div>
                                 </div>
                             </div>
                         </div>

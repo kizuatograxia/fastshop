@@ -51,7 +51,7 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
 
     return (
         <article
-            className={`group relative bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 hover:shadow-elevated hover:border-primary/30 hover:-translate-y-1 animate-fade-in ${disableNavigation ? "" : "cursor-pointer"}`}
+            className={`group relative flex flex-col h-full bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 hover:shadow-elevated hover:border-primary/30 hover:-translate-y-1 animate-fade-in ${disableNavigation ? "" : "cursor-pointer"}`}
             style={{ animationDelay: `${index * 0.1}s` }}
             onClick={() => !disableNavigation && navigate(`/raffle/${raffle.id}`)}
         >
@@ -66,11 +66,11 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
             </div>
 
             {/* Image Container */}
-            <div className="relative aspect-square flex items-center justify-center overflow-hidden bg-secondary/30 p-2">
+            <div className="relative w-full overflow-hidden">
                 <img
                     src={raffle.imagem}
                     alt={raffle.titulo}
-                    className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110 drop-shadow-md"
+                    className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                     onError={(e) => {
                         e.currentTarget.src = "https://images.unsplash.com/photo-1635326444826-06c8f8d2e61d?w=800&q=80";
@@ -99,62 +99,64 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
             </div>
 
             {/* Content */}
-            <div className="p-4 space-y-3">
+            <div className="p-4 space-y-3 flex flex-col flex-grow">
                 <h3 className="font-bold text-lg text-foreground leading-tight group-hover:text-primary transition-colors">
                     {raffle.titulo}
                 </h3>
 
-                <p className="text-sm text-muted-foreground line-clamp-2">
+                <p className="text-sm text-muted-foreground line-clamp-2 pb-2">
                     {raffle.descricao}
                 </p>
 
-                {/* Progress Bar */}
-                <div className="space-y-1">
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            {raffle.participantes} bilhetes vendidos
-                        </span>
-                        <span>{Math.round(progressPercent)}%</span>
+                <div className="mt-auto space-y-3">
+                    {/* Progress Bar */}
+                    <div className="space-y-1">
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                                <Users className="h-3 w-3" />
+                                {raffle.participantes} bilhetes vendidos
+                            </span>
+                            <span>{Math.round(progressPercent)}%</span>
+                        </div>
+                        <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500"
+                                style={{ width: `${progressPercent}%` }}
+                            />
+                        </div>
                     </div>
-                    <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500"
-                            style={{ width: `${progressPercent}%` }}
-                        />
-                    </div>
-                </div>
 
-                {/* NFT Cost */}
-                <div className="flex items-center justify-between py-2 px-3 bg-secondary/50 rounded-lg">
-                    <span className="text-xs text-muted-foreground">Custo para participar</span>
-                    <span className="font-bold text-primary">{raffle.custoNFT} NFT</span>
-                </div>
-
-                {/* Buttons - Hidden if disabled */}
-                {!disableNavigation && (
-                    <div className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            size="default"
-                            className="flex-1"
-                            onClick={handleMoreInfo}
-                        >
-                            <Info className="h-4 w-4" />
-                            Mais informações
-                        </Button>
-                        <Button
-                            variant="hero"
-                            size="default"
-                            className="flex-1"
-                            onClick={handleParticipate}
-                            disabled={alreadyParticipating}
-                        >
-                            <Ticket className="h-4 w-4" />
-                            {alreadyParticipating ? "Participando" : "Participar"}
-                        </Button>
+                    {/* NFT Cost */}
+                    <div className="flex items-center justify-between py-2 px-3 bg-secondary/50 rounded-lg">
+                        <span className="text-xs text-muted-foreground">Custo para participar</span>
+                        <span className="font-bold text-primary">{raffle.custoNFT} NFT</span>
                     </div>
-                )}
+
+                    {/* Buttons - Hidden if disabled */}
+                    {!disableNavigation && (
+                        <div className="flex gap-2">
+                            <Button
+                                variant="outline"
+                                size="default"
+                                className="flex-1"
+                                onClick={handleMoreInfo}
+                            >
+                                <Info className="h-4 w-4" />
+                                Mais informações
+                            </Button>
+                            <Button
+                                variant="hero"
+                                size="default"
+                                className="flex-1"
+                                onClick={handleParticipate}
+                                disabled={alreadyParticipating}
+                            >
+                                <Ticket className="h-4 w-4" />
+                                {alreadyParticipating ? "Participando" : "Participar"}
+                            </Button>
+                        </div>
+                    )}
+                </div>
             </div>
         </article>
     );

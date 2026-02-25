@@ -201,13 +201,13 @@ const Sorteios: React.FC = () => {
                 transition={{ delay: 0.2 + index * 0.05 }}
               >
                 <Link to={`/raffle/${raffle.id}`}>
-                  <Card className="group bg-card border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-glow hover:-translate-y-1 cursor-pointer">
+                  <Card className="group flex flex-col h-full bg-card border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-glow hover:-translate-y-1 cursor-pointer">
                     {/* Image */}
-                    <div className="relative aspect-square flex items-center justify-center overflow-hidden bg-secondary/30 p-2">
+                    <div className="relative w-full overflow-hidden">
                       <img
                         src={raffle.imagem}
                         alt={raffle.titulo}
-                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110 drop-shadow-md"
+                        className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
 
@@ -237,42 +237,44 @@ const Sorteios: React.FC = () => {
                       </div>
                     </div>
 
-                    <CardContent className="p-4 space-y-4">
+                    <CardContent className="p-4 space-y-4 flex flex-col flex-grow">
                       {/* Title */}
-                      <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors line-clamp-1">
+                      <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors line-clamp-1 pb-2">
                         {raffle.titulo}
                       </h3>
 
-                      {/* Progress */}
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Progresso</span>
-                          <span className="text-foreground font-medium">
-                            {raffle.participantes}/{raffle.maxParticipantes}
-                          </span>
+                      <div className="mt-auto space-y-4">
+                        {/* Progress */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Progresso</span>
+                            <span className="text-foreground font-medium">
+                              {raffle.participantes}/{raffle.maxParticipantes}
+                            </span>
+                          </div>
+                          <Progress
+                            value={(raffle.participantes / raffle.maxParticipantes) * 100}
+                            className="h-2 bg-secondary"
+                          />
                         </div>
-                        <Progress
-                          value={(raffle.participantes / raffle.maxParticipantes) * 100}
-                          className="h-2 bg-secondary"
-                        />
-                      </div>
 
-                      {/* Footer */}
-                      <div className="flex items-center justify-between pt-2">
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Users className="h-4 w-4" />
-                          <span className="text-sm">{raffle.participantes} participantes</span>
+                        {/* Footer */}
+                        <div className="flex items-center justify-between pt-2">
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Users className="h-4 w-4" />
+                            <span className="text-sm">{raffle.participantes} participantes</span>
+                          </div>
+                          <Badge className="bg-primary/10 text-primary border-0">
+                            <Ticket className="h-3 w-3 mr-1" />
+                            R$ {raffle.custoNFT}
+                          </Badge>
                         </div>
-                        <Badge className="bg-primary/10 text-primary border-0">
-                          <Ticket className="h-3 w-3 mr-1" />
-                          R$ {raffle.custoNFT}
-                        </Badge>
-                      </div>
 
-                      {/* CTA Button */}
-                      <Button className="w-full" variant="default">
-                        Participar Agora
-                      </Button>
+                        {/* CTA Button */}
+                        <Button className="w-full" variant="default">
+                          Participar Agora
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 </Link>
