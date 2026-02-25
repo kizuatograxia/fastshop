@@ -21,9 +21,9 @@ export function RaffleList({ raffles, onEdit, onViewDetails, onViewParticipants,
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
             {raffles.map((raffle, index) => (
-                <div key={raffle.id} className="relative group cursor-pointer" onClick={() => onViewDetails(raffle)}>
+                <div key={raffle.id} className="relative group cursor-pointer w-full inline-block break-inside-avoid mb-6" onClick={() => onViewDetails(raffle)}>
                     {/* Card with Hover Actions */}
                     <div className="absolute top-4 right-4 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <Button size="icon" variant="secondary" className="bg-white/90 text-black hover:bg-white" onClick={(e) => { e.stopPropagation(); onEdit(raffle); }} title="Editar Sorteio">
