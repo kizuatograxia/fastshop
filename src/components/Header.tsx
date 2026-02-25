@@ -16,6 +16,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import NotificationList from "@/components/NotificationList";
 import { Bell } from "lucide-react";
 
+import ThemeToggle from "./ThemeToggle";
+
 interface HeaderProps {
   onMenuClick: () => void;
   onWalletClick: () => void;
@@ -71,6 +73,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
           </div>
 
           <div className="flex items-center gap-2">
+            <ThemeToggle />
 
             {/* Notification Bell */}
             {isAuthenticated && (
