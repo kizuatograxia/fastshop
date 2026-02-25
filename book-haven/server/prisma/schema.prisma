@@ -80,5 +80,6 @@ model Order {
   paymentMethod String
   status        String   @default("pending")
   items         Json     // Store cart items as JSON to keep it simple initially
+  externalReference String? @unique
   createdAt     DateTime @default(now())
 }
