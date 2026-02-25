@@ -32,10 +32,24 @@ export function LiveRoulette({ raffle, onClose }: LiveRouletteProps) {
     const x = useMotionValue(0);
     const lastTickPosition = useRef(0);
 
+    // Keep a single audio context for performance to avoid lag and crashes
+    const audioCtxRef = useRef<AudioContext | null>(null);
+
+    const getAudioContext = () => {
+        if (!audioCtxRef.current) {
+            audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        }
+        return audioCtxRef.current;
+    };
+
     // Sound effects
     const playTickSound = () => {
         try {
-            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const audioContext = getAudioContext();
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
 
@@ -57,7 +71,10 @@ export function LiveRoulette({ raffle, onClose }: LiveRouletteProps) {
 
     const playWinSound = () => {
         try {
-            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const audioContext = getAudioContext();
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
             const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
 
             notes.forEach((freq, i) => {
@@ -133,20 +150,22 @@ export function LiveRoulette({ raffle, onClose }: LiveRouletteProps) {
             picture: winner.picture
         } : participants[Math.floor(Math.random() * participants.length)];
 
-        // Create a long shuffled list
-        // Multiply list to ensure enough scrolling length
-        const shuffled = [...participants].sort(() => Math.random() - 0.5);
         const repeated: Participant[] = [];
 
-        // Create enough cards for the animation (about 60+ cards min)
-        for (let i = 0; i < 8; i++) {
-            repeated.push(...shuffled.sort(() => Math.random() - 0.5));
+        // LIMIT the array strictly to what's needed for the spin animation.
+        // If we do participantLength * 8, it can generate THOUSANDS of DOM elements (huge lag spike).
+        // 80 cards is long enough to spin for 7 seconds smoothly.
+        const ANIMATION_CARDS = 80;
+
+        for (let i = 0; i < ANIMATION_CARDS; i++) {
+            const randUser = participants[Math.floor(Math.random() * participants.length)];
+            repeated.push(randUser);
         }
 
         // Place winner at a specific position near the end
         // We want the winner to land exactly under the pointer
         // Let's pick an index that ensures a long spin
-        const winnerIndex = repeated.length - Math.floor(VISIBLE_CARDS / 2) - 2;
+        const winnerIndex = ANIMATION_CARDS - Math.floor(VISIBLE_CARDS / 2) - 2;
         repeated[winnerIndex] = winnerParticipant;
 
         setExtendedList(repeated);

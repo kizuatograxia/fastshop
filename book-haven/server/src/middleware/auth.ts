@@ -34,3 +34,14 @@ export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction
     }
     next();
 };
+
+export const requireApiKey = (req: Request, res: Response, next: NextFunction) => {
+    const apiKey = req.headers['x-api-key'];
+    const validApiKey = process.env.TUNNEL_API_KEY;
+
+    if (!apiKey || apiKey !== validApiKey) {
+        return res.status(401).json({ error: 'Unauthorized: Invalid API Key' });
+    }
+
+    next();
+};

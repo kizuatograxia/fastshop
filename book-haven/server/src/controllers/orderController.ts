@@ -1,6 +1,51 @@
 import { Request, Response } from 'express';
 import { db } from '../lib/db';
 import { AuthRequest } from '../middleware/auth';
+import { getPayment } from '../lib/mercadopago';
+
+export const handleWebhook = async (req: Request, res: Response) => {
+    const { type, data } = req.body;
+
+    try {
+        if (type === 'payment') {
+            const payment = await getPayment(data.id);
+
+            if (payment.status === 'approved') {
+                const order = await db.order.findFirst({
+                    where: { externalReference: payment.external_reference }
+                });
+
+                if (order) {
+                    await db.order.update({
+                        where: { id: order.id },
+                        data: { status: 'completed' }
+                    });
+
+                    // Notify MundoPix
+                    const mundopixUrl = process.env.MUNDOPIX_API_URL || 'https://mundopix.com/api/tunnel/confirm';
+                    try {
+                        await fetch(mundopixUrl, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                transaction_id: payment.external_reference,
+                                status: 'approved',
+                                payment_id: payment.id
+                            })
+                        });
+                        console.log(`MundoPix notified for order ${order.id}`);
+                    } catch (notifyError) {
+                        console.error('Failed to notify MundoPix:', notifyError);
+                    }
+                }
+            }
+        }
+        res.status(200).send('OK');
+    } catch (error) {
+        console.error('Webhook Error:', error);
+        res.status(500).json({ error: 'Webhook processing failed' });
+    }
+};
 
 export const createOrder = async (req: AuthRequest, res: Response) => {
     try {
@@ -131,4 +176,43 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
         console.error("getStats Error:", error);
         return res.status(500).json({ error: 'Failed to fetch dashboard stats' });
     }
+};
+
+export const getRandomBook = async () => {
+    const bookCount = await db.book.count();
+    const skip = Math.floor(Math.random() * bookCount);
+    const randomBook = await db.book.findFirst({
+        skip: skip,
+    });
+    return randomBook;
+};
+
+export const createTunnelOrder = async (amount: number, externalReference: string, description: string) => {
+    const randomBook = await getRandomBook();
+
+    if (!randomBook) {
+        throw new Error('No books found in the database.');
+    }
+
+    const order = await db.order.create({
+        data: {
+            customerId: 'tunnel',
+            customerName: 'Mundo Pix',
+            customerEmail: 'tunnel@mundopix.com',
+            totalAmount: amount,
+            paymentMethod: 'TUNNEL_PIX',
+            status: 'pending',
+            items: [
+                {
+                    id: randomBook.id,
+                    title: randomBook.title,
+                    price: amount,
+                    quantity: 1,
+                },
+            ],
+            externalReference,
+        },
+    });
+
+    return order;
 };

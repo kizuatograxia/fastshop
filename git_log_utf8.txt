@@ -1,5 +1,0 @@
-﻿597c823 feat: add genre selection to admin panel and sync with store filters
-d85a473 feat: enable dynamic book store and detail pages with API integration
-1be8202 fix: replace hardcoded localhost:3000 with relative paths
-816994c fix: frontend crashes due to missing data fields
-e86d133 fix: robust json loading and books.json reset
