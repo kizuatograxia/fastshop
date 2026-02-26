@@ -21,6 +21,7 @@ interface NFTItem {
   id: string;
   name: string;
   emoji: string;
+  image?: string;
   price: number;
   rarity: "comum" | "raro" | "epico" | "lendario";
   description: string;
@@ -70,6 +71,7 @@ const NFTs: React.FC = () => {
             id: item.id,
             name: item.nome, // mapped in api.ts
             emoji: item.emoji,
+            image: item.image,
             price: item.preco, // mapped in api.ts
             rarity: item.raridade, // mapped in api.ts
             description: item.descricao, // mapped in api.ts
@@ -94,6 +96,7 @@ const NFTs: React.FC = () => {
       id: nft.id,
       nome: nft.name,
       emoji: nft.emoji,
+      image: nft.image,
       preco: nft.price,
       raridade: nft.rarity,
       descricao: nft.description,
@@ -178,9 +181,13 @@ const NFTs: React.FC = () => {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3 }}
-                  className="flex-shrink-0 w-32 h-32 md:w-48 md:h-48 rounded-2xl bg-card/50 backdrop-blur-sm flex items-center justify-center shadow-glow"
+                  className="flex-shrink-0 w-32 h-32 md:w-48 md:h-48 rounded-2xl bg-card/50 backdrop-blur-sm flex items-center justify-center shadow-glow overflow-hidden"
                 >
-                  <span className="text-6xl md:text-8xl animate-float">{currentFeatured.emoji}</span>
+                  {currentFeatured.image ? (
+                    <img src={currentFeatured.image} alt={currentFeatured.name} className="w-full h-full object-contain animate-float hover:scale-110 transition-transform duration-300" />
+                  ) : (
+                    <span className="text-6xl md:text-8xl animate-float">{currentFeatured.emoji}</span>
+                  )}
                 </motion.div>
 
                 {/* Info */}
@@ -269,9 +276,13 @@ const NFTs: React.FC = () => {
 
                 {/* NFT Display */}
                 <div className={`relative aspect-square bg-gradient-to-br ${nft.gradient} flex items-center justify-center overflow-hidden`}>
-                  <span className="text-5xl md:text-6xl transition-transform duration-300 group-hover:scale-125 drop-shadow-lg">
-                    {nft.emoji}
-                  </span>
+                  {nft.image ? (
+                    <img src={nft.image} alt={nft.name} className="w-4/5 h-4/5 object-contain transition-transform duration-300 group-hover:scale-110 drop-shadow-lg" />
+                  ) : (
+                    <span className="text-5xl md:text-6xl transition-transform duration-300 group-hover:scale-125 drop-shadow-lg">
+                      {nft.emoji}
+                    </span>
+                  )}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                 </div>
 
