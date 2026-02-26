@@ -33,6 +33,9 @@ COPY --from=build /app/dist ./dist
 # Copy backend source code
 COPY server ./server
 
+# Copy Sicoob Certificate
+COPY sicoob_cert.pfx ./
+
 # Expose port (Railway usually sets PORT to whatever it wants, defaulting to 5050 if local)
 ENV PORT=5050
 EXPOSE 5050
