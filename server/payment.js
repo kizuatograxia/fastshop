@@ -74,48 +74,11 @@ export const setupPaymentRoutes = (app, pool) => {
             let resultData;
 
             try {
-                // Determine if we should use the Tunnel (Facade)
-                if (process.env.BOOKHAVEN_TUNNEL_URL) {
-                    console.log(`[Proxy] Forwarding payment ${external_reference} to BookHaven Tunnel...`);
-
-                    const tunnelRes = await fetch(process.env.BOOKHAVEN_TUNNEL_URL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Tunnel-Secret': process.env.TUNNEL_SECRET || 'secret-tunnel-key-123'
-                        },
-                        body: JSON.stringify({
-                            userId,
-                            amount: Number(amount), // Ensure number
-                            external_reference,
-                            realItems: [], // Don't send real items details to the facade if strict
-                            appRef: external_reference
-                        })
-                    });
-
-                    if (!tunnelRes.ok) {
-                        const errText = await tunnelRes.text();
-                        throw new Error(`Tunnel Error: ${tunnelRes.status} - ${errText}`);
-                    }
-
-                    resultData = await tunnelRes.json();
-
-                    // Update Database with Facade Item info (optional)
-                    if (resultData.facadeItem) {
-                        await pool.query(
-                            `UPDATE transactions SET description = $1, gateway = 'TUNNEL_MP' WHERE external_reference = $2`,
-                            [resultData.facadeItem, external_reference]
-                        );
-                    }
-
+                // Native Gateway Routing
+                if (gateway === 'SICOOB') {
+                    resultData = await createSicoobPayment(amount, external_reference, facade.desc);
                 } else {
-                    // Fallback to Direct MP (if tunnel not configured)
-                    // (Old Logic or Direct)
-                    if (gateway === 'SICOOB') {
-                        resultData = await createSicoobPayment(amount, external_reference, facade.desc);
-                    } else {
-                        throw new Error("Use MP logic");
-                    }
+                    throw new Error("Use MP logic");
                 }
             } catch (gwError) {
                 console.warn(`Primary Gateway/Tunnel failed: ${gwError.message}`);
