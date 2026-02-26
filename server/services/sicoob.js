@@ -97,7 +97,7 @@ export const createPixCharge = async (txid, valor, devedor) => {
     // valor: number (float)
     // devedor: { cpf, nome }
 
-    if (!SICOOB_CLIENT_ID) {
+    if (!process.env.SICOOB_CLIENT_ID) {
         console.log('Mocking Pix Creation for:', txid, valor);
         return {
             txid: txid,
