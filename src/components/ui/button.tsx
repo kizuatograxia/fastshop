@@ -10,16 +10,16 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 hover:shadow-[0_0_30px_hsl(162,95%,71%,0.3)] active:scale-[0.98]",
+          "bg-primary text-[#0F172A] hover:brightness-110 active:scale-[0.98]",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
-          "border border-primary/50 bg-transparent text-primary hover:bg-primary/10 hover:border-primary",
+          "border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-700",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-muted hover:text-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        hero: "bg-gradient-to-r from-primary to-accent text-primary-foreground font-bold uppercase tracking-wider hover:shadow-[0_0_40px_hsl(162,95%,71%,0.4)] hover:scale-105 active:scale-100",
+        hero: "bg-primary text-[#0F172A] font-bold uppercase tracking-wider hover:brightness-110 transition-colors shadow-sm",
         cart: "bg-primary/10 text-primary hover:bg-primary hover:text-slate-900 font-bold uppercase tracking-wide transition-colors hover:shadow-[0_0_30px_hsl(162,95%,71%,0.4)]",
         icon: "bg-secondary/50 text-foreground hover:bg-secondary hover:text-primary",
       },

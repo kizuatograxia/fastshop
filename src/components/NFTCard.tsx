@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NFT } from "@/types/raffle";
 import { useWallet } from "@/contexts/WalletContext";
@@ -92,7 +92,7 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft, index }) => {
                     className="w-full h-10 rounded text-xs gap-1"
                     onClick={handleBuy}
                 >
-                    <span className="material-icons-outlined text-[16px]">add_shopping_cart</span>
+                    <ShoppingCart className="h-4 w-4" />
                     Comprar NFT
                 </Button>
             </div>
