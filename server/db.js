@@ -141,6 +141,9 @@ const initDB = async () => {
                 // Constraint might already exist, safe to ignore
             }
 
+            // Transaction columns
+            await pool.query(`ALTER TABLE transactions ADD COLUMN IF NOT EXISTS gateway VARCHAR(50);`);
+
             // User Profile Columns
             await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS cpf VARCHAR(20);`);
             await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_date VARCHAR(20);`);
