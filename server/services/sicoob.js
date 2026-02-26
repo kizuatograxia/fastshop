@@ -9,21 +9,25 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Sicoob API Config
-const SICOOB_API_URL = process.env.SICOOB_API_URL || 'https://api.sicoob.com.br';
-const SICOOB_AUTH_URL = process.env.SICOOB_AUTH_URL || 'https://auth.sicoob.com.br/auth/realms/cooperado/protocol/openid-connect/token';
-const SICOOB_CLIENT_ID = process.env.SICOOB_CLIENT_ID;
-const SICOOB_CERT_PATH = process.env.SICOOB_CERT_PATH; // Path to .pfx or .pem
-const SICOOB_CERT_PASS = process.env.SICOOB_CERT_PASS; // Password if pfx
+const getSicoobConfig = () => ({
+    apiUrl: process.env.SICOOB_API_URL || 'https://api.sicoob.com.br',
+    authUrl: process.env.SICOOB_AUTH_URL || 'https://auth.sicoob.com.br/auth/realms/cooperado/protocol/openid-connect/token',
+    clientId: process.env.SICOOB_CLIENT_ID,
+    certPath: process.env.SICOOB_CERT_PATH,
+    certPass: process.env.SICOOB_CERT_PASS,
+    pixKey: process.env.SICOOB_PIX_KEY
+});
 
 let accessToken = null;
 let tokenExpiry = null;
 
 // Helper to get HTTPS Agent with Certificate
 const getAgent = () => {
-    if (!SICOOB_CERT_PATH) return null;
+    const config = getSicoobConfig();
+    if (!config.certPath) return null;
 
     try {
-        const certPath = path.resolve(process.cwd(), SICOOB_CERT_PATH);
+        const certPath = path.resolve(process.cwd(), config.certPath);
         if (!fs.existsSync(certPath)) {
             console.error('Sicoob Cert not found at:', certPath);
             return null;
@@ -35,7 +39,7 @@ const getAgent = () => {
         if (certPath.endsWith('.pfx')) {
             return new https.Agent({
                 pfx: cert,
-                passphrase: SICOOB_CERT_PASS,
+                passphrase: config.certPass,
                 rejectUnauthorized: false // Sicoob sometimes has chain issues, but ideally true
             });
         }
@@ -43,7 +47,7 @@ const getAgent = () => {
         // If .pem (Client only, assuming key is inside or separate... sticking to pfx for simplicity as it's standard A1)
         return new https.Agent({
             pfx: cert,
-            passphrase: SICOOB_CERT_PASS
+            passphrase: config.certPass
         });
     } catch (e) {
         console.error('Error loading Sicoob Cert:', e);
@@ -52,11 +56,13 @@ const getAgent = () => {
 };
 
 const authenticate = async () => {
+    const config = getSicoobConfig();
+
     if (accessToken && tokenExpiry && new Date() < tokenExpiry) {
         return accessToken;
     }
 
-    if (!SICOOB_CLIENT_ID) {
+    if (!config.clientId) {
         console.warn('Sicoob Client ID missing. Mocking Auth.');
         return 'mock-token';
     }
@@ -69,11 +75,11 @@ const authenticate = async () => {
     try {
         const params = new URLSearchParams();
         params.append('grant_type', 'client_credentials');
-        params.append('client_id', SICOOB_CLIENT_ID);
+        params.append('client_id', config.clientId);
         // Scopes: cob.write cob.read pix.write pix.read
         params.append('scope', 'cob.write cob.read pix.write pix.read');
 
-        const response = await axios.post(SICOOB_AUTH_URL, params, {
+        const response = await axios.post(config.authUrl, params, {
             httpsAgent: agent,
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -97,8 +103,9 @@ export const createPixCharge = async (txid, valor, devedor) => {
     // valor: number (float)
     // devedor: { cpf, nome }
 
-    console.log(`Verificando Env do Sicoob Client ID:`, process.env.SICOOB_CLIENT_ID);
-    console.log(`Verificando Chave Pix Sicoob:`, process.env.SICOOB_PIX_KEY);
+    const config = getSicoobConfig();
+    console.log(`Verificando Env do Sicoob Client ID:`, config.clientId);
+    console.log(`Verificando Chave Pix Sicoob:`, config.pixKey);
 
     const token = await authenticate();
     const agent = getAgent();
@@ -110,13 +117,13 @@ export const createPixCharge = async (txid, valor, devedor) => {
             nome: devedor.nome
         },
         valor: { original: valor.toFixed(2) },
-        chave: process.env.SICOOB_PIX_KEY, // Your Pix Key
+        chave: config.pixKey, // Your Pix Key
         solicitacaoPagador: 'Compra Book-Haven'
     };
 
     try {
         // PUT /pix/api/v2/cob/{txid}
-        const url = `${SICOOB_API_URL}/pix/api/v2/cob/${txid}`;
+        const url = `${config.apiUrl}/pix/api/v2/cob/${txid}`;
         const response = await axios.put(url, body, {
             httpsAgent: agent,
             headers: {
@@ -133,13 +140,14 @@ export const createPixCharge = async (txid, valor, devedor) => {
 };
 
 export const checkPixStatus = async (txid) => {
-    if (!SICOOB_CLIENT_ID) return { status: 'CONCLUIDA' }; // Mock
+    const config = getSicoobConfig();
+    if (!config.clientId) return { status: 'CONCLUIDA' }; // Mock
 
     const token = await authenticate();
     const agent = getAgent();
 
     try {
-        const url = `${SICOOB_API_URL}/pix/api/v2/cob/${txid}`;
+        const url = `${config.apiUrl}/pix/api/v2/cob/${txid}`;
         const response = await axios.get(url, {
             httpsAgent: agent,
             headers: { Authorization: `Bearer ${token}` }
