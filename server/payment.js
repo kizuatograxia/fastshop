@@ -10,13 +10,27 @@ const facades = [
     { title: "Workshop: Estratégias de Marketing", desc: "Acesso ao replay do workshop", priceVariant: 0 }
 ];
 
-// Sicoob Integration Placeholder (Requires Certificates)
-const createSicoobPayment = async (amount, external_reference, description) => {
-    // TODO: Implement Sicoob logic here using https, fs, and client certs.
-    // For now, verification will fail so we throw error to trigger fallback.
-    // if (!process.env.SICOOB_CERT) throw new Error("Certificado Sicoob não configurado");
+import { createPixCharge } from './services/sicoob.js';
 
-    throw new Error("Sicoob integration pending certificates");
+// Sicoob Integration API
+const createSicoobPayment = async (amount, external_reference, description) => {
+    const devedor = {
+        cpf: '19119119100', // Mock format for testing or get from DB later
+        nome: 'Cliente Book-Haven'
+    };
+
+    // Pix TxId must be alphanumeric and length 26 to 35
+    const txid = external_reference.replace(/-/g, '') + 'A';
+
+    const pixData = await createPixCharge(txid, Number(amount), devedor);
+
+    return {
+        qrCode: pixData.pixCopiaECola,
+        qrCodeBase64: null,
+        copyPaste: pixData.pixCopiaECola,
+        transactionId: pixData.txid || txid,
+        ticketUrl: null
+    };
 };
 
 export const setupPaymentRoutes = (app, pool) => {
