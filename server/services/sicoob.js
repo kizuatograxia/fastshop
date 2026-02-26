@@ -117,7 +117,7 @@ export const createPixCharge = async (txid, valor, devedor) => {
         },
         valor: { original: valor.toFixed(2) },
         chave: process.env.SICOOB_PIX_KEY, // Your Pix Key
-        solicitacaoPagador: 'Compra FastShop NFT'
+        solicitacaoPagador: 'Compra Book-Haven'
     };
 
     try {
