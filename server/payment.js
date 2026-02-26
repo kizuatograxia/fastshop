@@ -118,12 +118,13 @@ export const setupPaymentRoutes = (app, pool) => {
                     }
                 }
             } catch (gwError) {
-                console.warn(`Primary Gateway/Tunnel failed (${gwError.message}). Falling back to Direct MP.`);
+                console.warn(`Primary Gateway/Tunnel failed: ${gwError.message}`);
+                if (gwError.response) {
+                    console.warn(`Gateway Response Error Data:`, gwError.response.data);
+                }
 
                 // Fallback to Mercado Pago DO BRASIL (Direct in App)
-                // This is the "Last Resort" - still works but less stealthy if auditor checks source IP vs Domain
                 const payment = new mercadopago.Payment(client);
-                // ... (rest of fallback logic same as before)
                 const mpResult = await payment.create({
                     body: {
                         transaction_amount: Number(amount),
