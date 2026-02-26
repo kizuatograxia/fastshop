@@ -81,19 +81,18 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft, index }) => {
                     </p>
                 </div>
 
-                <div className="flex items-center justify-between">
-                    <p className="text-xl font-bold text-gradient">
+                <div className="flex items-center justify-between pb-1">
+                    <p className="text-lg font-bold text-gradient">
                         R$ {nft.preco.toFixed(2).replace(".", ",")}
                     </p>
                 </div>
 
                 <Button
                     variant="cart"
-                    size="default"
-                    className="w-full"
+                    className="w-full h-10 rounded text-xs gap-1"
                     onClick={handleBuy}
                 >
-                    <Sparkles className="h-4 w-4" />
+                    <span className="material-icons-outlined text-[16px]">add_shopping_cart</span>
                     Comprar NFT
                 </Button>
             </div>
