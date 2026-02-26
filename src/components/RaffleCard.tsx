@@ -56,12 +56,12 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
             onClick={() => !disableNavigation && navigate(`/raffle/${raffle.id}`)}
         >
             {/* Status Badge */}
-            <div className="absolute top-4 left-4 z-10">
+            <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10 scale-[0.85] md:scale-100 origin-top-left">
                 <CountdownBadge targetDate={raffle.dataFim} />
             </div>
 
             {/* Prize Value Badge */}
-            <div className="absolute top-4 right-4 z-10 bg-background/80 backdrop-blur-sm text-foreground px-2 py-1 rounded-lg text-xs font-bold border border-border">
+            <div className="absolute top-2 right-2 md:top-4 md:right-4 z-10 bg-background/80 backdrop-blur-sm text-foreground px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg text-[10px] md:text-xs font-bold border border-border">
                 R$ {raffle.premioValor.toLocaleString("pt-BR")}
             </div>
 
@@ -99,22 +99,22 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
             </div>
 
             {/* Content */}
-            <div className="p-4 space-y-3">
-                <h3 className="font-bold text-lg text-foreground leading-tight group-hover:text-primary transition-colors">
+            <div className="p-3 md:p-4 space-y-2 md:space-y-3">
+                <h3 className="font-bold text-sm md:text-lg text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-2 md:line-clamp-none">
                     {raffle.titulo}
                 </h3>
 
-                <p className="text-sm text-muted-foreground line-clamp-none pb-2">
+                <p className="text-[11px] md:text-sm text-muted-foreground line-clamp-1 md:line-clamp-2 pb-1 md:pb-2">
                     {raffle.descricao}
                 </p>
 
                 <div className="space-y-3">
                     {/* Progress Bar */}
                     <div className="space-y-1">
-                        <div className="flex justify-between text-xs text-muted-foreground">
+                        <div className="flex justify-between text-[10px] md:text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">
                                 <Users className="h-3 w-3" />
-                                {raffle.participantes} bilhetes vendidos
+                                <span>{raffle.participantes} <span className="hidden sm:inline">bilhetes vendidos</span></span>
                             </span>
                             <span>{Math.round(progressPercent)}%</span>
                         </div>
@@ -127,31 +127,31 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
                     </div>
 
                     {/* NFT Cost */}
-                    <div className="flex items-center justify-between py-2 px-3 bg-secondary/50 rounded-lg">
-                        <span className="text-xs text-muted-foreground">Custo para participar</span>
-                        <span className="font-bold text-primary">{raffle.custoNFT} NFT</span>
+                    <div className="flex items-center justify-between py-1.5 px-2 md:py-2 md:px-3 bg-secondary/50 rounded-md md:rounded-lg">
+                        <span className="text-[10px] md:text-xs text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis mr-2">
+                            Custo <span className="hidden sm:inline">para participar</span>
+                        </span>
+                        <span className="font-bold text-[11px] md:text-sm text-primary whitespace-nowrap">{raffle.custoNFT} NFT</span>
                     </div>
 
                     {/* Buttons - Hidden if disabled */}
                     {!disableNavigation && (
-                        <div className="flex gap-2">
+                        <div className="flex gap-1.5 md:gap-2">
                             <Button
                                 variant="outline"
-                                size="default"
-                                className="flex-1"
+                                className="flex-1 hidden sm:flex h-8 md:h-10 text-xs md:text-sm px-2"
                                 onClick={handleMoreInfo}
                             >
-                                <Info className="h-4 w-4" />
-                                Mais informações
+                                <Info className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                                Mais Info
                             </Button>
                             <Button
                                 variant="hero"
-                                size="default"
-                                className="flex-1"
+                                className="flex-1 h-8 md:h-10 text-xs md:text-sm px-2"
                                 onClick={handleParticipate}
                                 disabled={alreadyParticipating}
                             >
-                                <Ticket className="h-4 w-4" />
+                                <Ticket className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                                 {alreadyParticipating ? "Participando" : "Participar"}
                             </Button>
                         </div>

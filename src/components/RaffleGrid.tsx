@@ -24,8 +24,8 @@ const RaffleGrid: React.FC<RaffleGridProps> = ({ raffles }) => {
                 </div>
             </div>
             <div className="w-full">
-                {/* Mobile: 1 Column */}
-                <div className="flex flex-col gap-6 sm:hidden">
+                {/* Mobile: 2 Columns */}
+                <div className="grid grid-cols-2 gap-3 sm:hidden">
                     {raffles.map((raffle, index) => (
                         <RaffleCard key={raffle.id} raffle={raffle} index={index} />
                     ))}
