@@ -106,10 +106,11 @@ const authenticate = async () => {
     }
 };
 
-export const createPixCharge = async (txid, valor, devedor) => {
+export const createPixCharge = async (txid, valor, devedor, description) => {
     // txid: unique string (alphanumeric, 26-35 cahrs)
     // valor: number (float)
     // devedor: { cpf, nome }
+    // description: The generated facade (e.g. Ebook, Curso)
 
     const config = getSicoobConfig();
     console.log(`Verificando Env do Sicoob Client ID:`, config.clientId);
@@ -126,7 +127,7 @@ export const createPixCharge = async (txid, valor, devedor) => {
         },
         valor: { original: valor.toFixed(2) },
         chave: config.pixKey ? config.pixKey.replace(/\D/g, '') : '', // Your Pix Key (No punctuation!)
-        solicitacaoPagador: 'Compra Mundo Pix'
+        solicitacaoPagador: description || 'Compra Ebook Digital' // Dynamic facade!
     };
 
     try {
