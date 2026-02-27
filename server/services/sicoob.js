@@ -127,7 +127,13 @@ export const createPixCharge = async (txid, valor, devedor, description) => {
         },
         valor: { original: valor.toFixed(2) },
         chave: config.pixKey ? config.pixKey.replace(/\D/g, '') : '', // Your Pix Key (No punctuation!)
-        solicitacaoPagador: description || 'Compra Ebook Digital' // Dynamic facade!
+        solicitacaoPagador: description || 'Compra Ebook Digital', // Dynamic facade!
+        infoAdicionais: [
+            {
+                nome: "Cidade",
+                valor: "Sao Paulo" // This prevents 'Nao_informado' in some banks/QR parsers
+            }
+        ]
     };
 
     try {
