@@ -8,14 +8,22 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Helper function to safely get environment variables even if Railway injects keys with spaces
+const getEnv = (key) => {
+    if (process.env[key] !== undefined) return process.env[key]?.trim();
+    const fuzzKey = Object.keys(process.env).find(k => k.trim() === key.trim());
+    if (fuzzKey) return process.env[fuzzKey]?.trim();
+    return undefined;
+};
+
 // Sicoob API Config
 const getSicoobConfig = () => ({
-    apiUrl: process.env.SICOOB_API_URL || 'https://api.sicoob.com.br',
-    authUrl: process.env.SICOOB_AUTH_URL || 'https://auth.sicoob.com.br/auth/realms/cooperado/protocol/openid-connect/token',
-    clientId: process.env.SICOOB_CLIENT_ID,
-    certPath: process.env.SICOOB_CERT_PATH,
-    certPass: process.env.SICOOB_CERT_PASS,
-    pixKey: process.env.SICOOB_PIX_KEY
+    apiUrl: getEnv('SICOOB_API_URL') || 'https://api.sicoob.com.br',
+    authUrl: getEnv('SICOOB_AUTH_URL') || 'https://auth.sicoob.com.br/auth/realms/cooperado/protocol/openid-connect/token',
+    clientId: getEnv('SICOOB_CLIENT_ID'),
+    certPath: getEnv('SICOOB_CERT_PATH'),
+    certPass: getEnv('SICOOB_CERT_PASS'),
+    pixKey: getEnv('SICOOB_PIX_KEY')
 });
 
 let accessToken = null;
