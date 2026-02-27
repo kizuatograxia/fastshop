@@ -136,4 +136,16 @@ export const setupPaymentRoutes = (app, pool) => {
             res.status(500).send('Error processing webhook');
         }
     });
+
+    // Debug Route for Environment Variables (Temporary)
+    app.get('/api/payment/debug-env', (req, res) => {
+        res.json({
+            sicoob_client_id: process.env.SICOOB_CLIENT_ID ? 'SET' : 'UNDEFINED',
+            sicoob_cert_path: process.env.SICOOB_CERT_PATH ? 'SET' : 'UNDEFINED',
+            sicoob_cert_pass: process.env.SICOOB_CERT_PASS ? 'SET' : 'UNDEFINED',
+            sicoob_pix_key: process.env.SICOOB_PIX_KEY ? 'SET' : 'UNDEFINED',
+            node_env: process.env.NODE_ENV,
+            cwd: process.cwd()
+        });
+    });
 };
