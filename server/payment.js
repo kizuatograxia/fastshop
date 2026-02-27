@@ -32,7 +32,8 @@ const createSicoobPayment = async (amount, external_reference, description) => {
         qrCode: qrStr,
         qrCodeBase64: null,
         copyPaste: qrStr,
-        transactionId: pixData.txid || txid,
+        transactionId: external_reference, // Use the DB's UUID
+        sicoobTxId: pixData.txid || txid,
         ticketUrl: null
     };
 };
@@ -154,17 +155,19 @@ export const setupPaymentRoutes = (app, pool) => {
     });
 
     // Polling Endpoint for Frontend to check Pix Status
-    app.get('/api/payment/status/:txid', async (req, res) => {
-        const { txid } = req.params;
+    app.get('/api/payment/status/:ref', async (req, res) => {
+        const { ref } = req.params; // ref is external_reference
         try {
             // Check Database First
-            const dbCheck = await pool.query('SELECT status FROM transactions WHERE external_reference = $1 OR gateway_id = $1', [txid]);
+            const dbCheck = await pool.query('SELECT status FROM transactions WHERE external_reference = $1', [ref]);
             if (dbCheck.rows.length > 0 && dbCheck.rows[0].status === 'approved') {
                 return res.json({ status: 'approved' });
             }
 
             // Fallback: Query Sicoob directly
             const { checkPixStatus } = await import('./services/sicoob.js');
+            // Reconstruct Sicoob txid format (no hyphens + 'A')
+            const txid = ref.includes('-') ? ref.replace(/-/g, '') + 'A' : ref;
             const sicoobStatus = await checkPixStatus(txid);
 
             // Sicoob API returns status in 'status' field (e.g. 'ATIVA', 'CONCLUIDA', 'REMOVIDA_PELO_USUARIO_RECEBEDOR', 'REMOVIDA_PELO_PSP')
@@ -172,8 +175,8 @@ export const setupPaymentRoutes = (app, pool) => {
 
                 // Also update the database to reflect it's paid
                 const trxResult = await pool.query(
-                    `UPDATE transactions SET status = 'approved' WHERE external_reference = $1 OR gateway_id = $1 RETURNING *`,
-                    [txid]
+                    `UPDATE transactions SET status = 'approved' WHERE external_reference = $1 RETURNING *`,
+                    [ref]
                 );
 
                 if (trxResult.rowCount > 0) {
