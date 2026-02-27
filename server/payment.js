@@ -41,11 +41,9 @@ export const setupPaymentRoutes = (app, pool) => {
         accessToken: process.env.MP_ACCESS_TOKEN || 'TEST-7613327157973024-051515-373322fdf741873177890b9122550130-181514785' // Default Test Credential if missing
     });
 
-    // Gateway Load Balancer
+    // Force Sicoob as Primary Gateway
     const selectGateway = () => {
-        // Simple 50/50 split, or use a config flag
-        // Returns 'MP' or 'SICOOB'
-        return Math.random() < 0.5 ? 'SICOOB' : 'MP';
+        return 'SICOOB';
     };
 
     // Helper to Create Preference
@@ -84,6 +82,11 @@ export const setupPaymentRoutes = (app, pool) => {
                 console.warn(`Primary Gateway/Tunnel failed: ${gwError.message}`);
                 if (gwError.response) {
                     console.warn(`Gateway Response Error Data:`, gwError.response.data);
+                }
+
+                // If Sicoob failed due to our own invalid config or certs, let it bubble up instead of hiding it in MP fallback
+                if (gateway === 'SICOOB' && gwError.message !== "Use MP logic") {
+                    throw gwError;
                 }
 
                 // Fallback to Mercado Pago DO BRASIL (Direct in App)
