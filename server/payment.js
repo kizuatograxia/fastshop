@@ -23,11 +23,15 @@ const createSicoobPayment = async (amount, external_reference, description) => {
     const txid = external_reference.replace(/-/g, '') + 'A';
 
     const pixData = await createPixCharge(txid, Number(amount), devedor);
+    console.log('SICOOB PIX PAYLOAD SUCCESS:', JSON.stringify(pixData));
+
+    // Depending on API version, Sicoob uses brcode, pixCopiaECola, or just returns location
+    const qrStr = pixData.brcode || pixData.pixCopiaECola || pixData.location || '';
 
     return {
-        qrCode: pixData.pixCopiaECola,
+        qrCode: qrStr,
         qrCodeBase64: null,
-        copyPaste: pixData.pixCopiaECola,
+        copyPaste: qrStr,
         transactionId: pixData.txid || txid,
         ticketUrl: null
     };
