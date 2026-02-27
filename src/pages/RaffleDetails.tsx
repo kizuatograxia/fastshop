@@ -28,6 +28,7 @@ const RaffleDetails: React.FC = () => {
     const [raffle, setRaffle] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [activeImage, setActiveImage] = useState<string>("");
 
     useEffect(() => {
         if (id) {
@@ -50,12 +51,14 @@ const RaffleDetails: React.FC = () => {
                         categoria: "geral",
                         raridade: "comum",
                         emoji: "🎫",
+                        image_urls: data.image_urls || [],
                         winner: data.winner_name ? {
                             name: data.winner_name,
                             picture: data.winner_picture
                         } : undefined
                     };
                     setRaffle(mapped);
+                    setActiveImage(mapped.imagem);
                 })
                 .catch(err => {
                     console.error("Error fetching raffle", err);
@@ -243,11 +246,11 @@ const RaffleDetails: React.FC = () => {
                             </div>
                         )}
 
-                        {/* Image & Status */}
+                        {/* Image Gallery */}
                         <div className="space-y-4">
                             <div className="relative aspect-video rounded-2xl overflow-hidden bg-secondary/30 border border-border group">
                                 <img
-                                    src={raffle.imagem}
+                                    src={activeImage || raffle.imagem}
                                     alt={raffle.titulo}
                                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                     onError={(e) => {
@@ -258,6 +261,31 @@ const RaffleDetails: React.FC = () => {
                                     <CountdownBadge targetDate={raffle.dataFim} className="text-sm px-3 py-1.5" />
                                 </div>
                             </div>
+
+                            {/* Thumbnails row if multiple images exist */}
+                            {raffle.image_urls && raffle.image_urls.length > 1 && (
+                                <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
+                                    {raffle.image_urls.map((url: string, idx: number) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => setActiveImage(url)}
+                                            className={`relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden border-2 transition-all ${activeImage === url
+                                                    ? 'border-primary ring-2 ring-primary/50 scale-105 shadow-lg shadow-primary/20'
+                                                    : 'border-transparent opacity-60 hover:opacity-100 hover:scale-105'
+                                                }`}
+                                        >
+                                            <img
+                                                src={url}
+                                                alt={`Thumbnail ${idx}`}
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    e.currentTarget.src = "https://images.unsplash.com/photo-1635326444826-06c8f8d2e61d?w=800&q=80";
+                                                }}
+                                            />
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
 
                             <div className="flex flex-wrap items-center gap-2">
                                 <span className="px-3 py-1 bg-secondary text-secondary-foreground rounded-full text-sm font-medium">

@@ -20,6 +20,7 @@ export interface CreateRaffleDTO {
     draw_date: string;
     category: string;
     rarity: string;
+    image_urls?: string[];
 }
 
 interface RaffleFormProps {
@@ -48,7 +49,8 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
         prize_value: 0,
         draw_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         category: "tech",
-        rarity: "comum"
+        rarity: "comum",
+        image_urls: []
     };
 
     const [formData, setFormData] = useState<CreateRaffleDTO>(defaultFormData);
@@ -65,7 +67,8 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                 prize_value: initialData.premioValor,
                 draw_date: initialData.dataFim,
                 category: initialData.categoria,
-                rarity: initialData.raridade
+                rarity: initialData.raridade,
+                image_urls: initialData.image_urls || []
             });
         }
     }, [initialData]);
@@ -129,16 +132,16 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                     </div>
 
                     <div className="space-y-3">
-                        <Label>Imagem do Prêmio</Label>
+                        <Label>Imagens do Prêmio (Galeria)</Label>
                         <div className="flex gap-4 items-start">
                             <div className="flex-1 space-y-2">
                                 <Input
                                     value={formData.image_url}
                                     onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                                    placeholder="https://... ou faça upload"
+                                    placeholder="https://... (Imagem Principal)"
                                     className="bg-background/50 font-mono text-xs"
                                 />
-                                <p className="text-[10px] text-muted-foreground">Cole uma URL ou envie um arquivo local.</p>
+                                <p className="text-[10px] text-muted-foreground">URL Principal ou faça Upload local abaixo. Você pode adicionar até 5 imagens.</p>
                             </div>
                             <div className="relative">
                                 <input
@@ -146,20 +149,45 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                                     id="image-upload"
                                     className="hidden"
                                     accept="image/*"
+                                    multiple
                                     onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) {
+                                        const files = Array.from(e.target.files || []);
+                                        if (files.length === 0) return;
+
+                                        let currentUrls = [...(formData.image_urls || [])];
+                                        if (formData.image_url && !currentUrls.includes(formData.image_url)) {
+                                            currentUrls.unshift(formData.image_url);
+                                        }
+
+                                        if (currentUrls.length + files.length > 5) {
+                                            toast.error("Máximo de 5 imagens permitidas.");
+                                            return;
+                                        }
+
+                                        files.forEach(file => {
                                             if (file.size > 5000000) {
-                                                toast.error("Imagem muito grande! Máximo 5MB.");
+                                                toast.error(`A imagem ${file.name} é muito grande! Máximo 5MB.`);
                                                 return;
                                             }
                                             const reader = new FileReader();
                                             reader.onloadend = () => {
-                                                setFormData(prev => ({ ...prev, image_url: reader.result as string }));
-                                                toast.success("Imagem carregada!");
+                                                setFormData(prev => {
+                                                    const urls = [...(prev.image_urls || [])];
+                                                    const base64 = reader.result as string;
+                                                    urls.push(base64);
+
+                                                    return {
+                                                        ...prev,
+                                                        image_urls: urls,
+                                                        // Set first as main if no main
+                                                        image_url: prev.image_url || base64
+                                                    };
+                                                });
                                             };
                                             reader.readAsDataURL(file);
-                                        }
+                                        });
+
+                                        toast.success("Imagens processadas!");
                                     }}
                                 />
                                 <Button type="button" variant="outline" onClick={() => document.getElementById('image-upload')?.click()}>
@@ -167,6 +195,42 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                                 </Button>
                             </div>
                         </div>
+
+                        {/* Thumbnail Gallery */}
+                        {(formData.image_urls && formData.image_urls.length > 0) && (
+                            <div className="flex gap-2 mt-3 overflow-x-auto pb-2 custom-scrollbar">
+                                {formData.image_urls.map((url, idx) => (
+                                    <div key={idx} className="relative w-16 h-16 flex-shrink-0 group">
+                                        <img src={url} alt={`Preview ${idx}`} className="w-full h-full object-cover rounded-md border border-border" />
+                                        <button
+                                            type="button"
+                                            className="absolute -top-1 -right-1 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                                            onClick={() => {
+                                                setFormData(prev => {
+                                                    const urls = [...(prev.image_urls || [])];
+                                                    urls.splice(idx, 1);
+
+                                                    // If we deleted the main url, replace it if possible
+                                                    let newMain = prev.image_url;
+                                                    if (prev.image_url === url) {
+                                                        newMain = urls.length > 0 ? urls[0] : "";
+                                                    }
+
+                                                    return { ...prev, image_urls: urls, image_url: newMain };
+                                                });
+                                            }}
+                                        >
+                                            ✕
+                                        </button>
+                                        {formData.image_url === url && (
+                                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-primary text-[8px] font-bold px-1 rounded-full text-white">
+                                                Capa
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-2">

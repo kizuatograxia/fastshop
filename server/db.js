@@ -123,6 +123,7 @@ const initDB = async () => {
             await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS rarity VARCHAR(50) DEFAULT 'comum';`);
             await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS shipping_status VARCHAR(50) DEFAULT 'preparing';`);
             await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS winner_id INTEGER;`);
+            await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS image_urls JSONB DEFAULT '[]'::jsonb;`);
 
             await pool.query(`
                 CREATE TABLE IF NOT EXISTS notifications (

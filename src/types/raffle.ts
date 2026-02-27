@@ -16,6 +16,7 @@ export interface Raffle {
     premio: string;
     premioValor: number;
     imagem: string;
+    image_urls?: string[];
     dataFim: string;
     participantes: number;
     maxParticipantes: number;
