@@ -43,6 +43,12 @@ console.log('CWD:', process.cwd());
 const DIST_DIR = path.resolve(__dirname, '..', 'dist');
 console.log('DIST_DIR resolved to:', DIST_DIR);
 
+// DEBUG: Print all injected environment Variable Keys to check Railway injection
+console.log('--- DETECTED ENVIRONMENT VARIABLE KEYS ---');
+const envKeys = Object.keys(process.env).filter(k => k.includes('SICOOB') || k.includes('RAILWAY') || k.includes('DB') || k.includes('NODE'));
+console.log(envKeys);
+console.log('------------------------------------------');
+
 // Express App Setup
 const app = express();
 const PORT = process.env.PORT || 5050;
