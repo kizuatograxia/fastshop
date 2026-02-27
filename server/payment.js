@@ -67,57 +67,21 @@ export const setupPaymentRoutes = (app, pool) => {
                 [userId, external_reference, amount, facade.title, JSON.stringify(realItems), gateway]
             );
 
-            console.log(`Processing payment via ${gateway} for ref ${external_reference}`);
+            console.log(`Processing payment via SICOOB for ref ${external_reference}`);
 
             let resultData;
 
             try {
                 // Native Gateway Routing
-                if (gateway === 'SICOOB') {
-                    resultData = await createSicoobPayment(amount, external_reference, facade.desc);
-                } else {
-                    throw new Error("Use MP logic");
-                }
+                resultData = await createSicoobPayment(amount, external_reference, facade.desc);
             } catch (gwError) {
-                console.warn(`Primary Gateway/Tunnel failed: ${gwError.message}`);
+                console.warn(`Sicoob Gateway failed: ${gwError.message}`);
                 if (gwError.response) {
                     console.warn(`Gateway Response Error Data:`, gwError.response.data);
                 }
 
-                // If Sicoob failed due to our own invalid config or certs, let it bubble up instead of hiding it in MP fallback
-                if (gateway === 'SICOOB' && gwError.message !== "Use MP logic") {
-                    throw gwError;
-                }
-
-                // Fallback to Mercado Pago DO BRASIL (Direct in App)
-                const payment = new mercadopago.Payment(client);
-                const mpResult = await payment.create({
-                    body: {
-                        transaction_amount: Number(amount),
-                        description: facade.desc,
-                        payment_method_id: 'pix',
-                        payer: {
-                            email: "test_user_123@test.com",
-                            first_name: "Test",
-                            entity_type: "individual",
-                            type: "customer",
-                            identification: { type: "CPF", number: "19119119100" }
-                        },
-                        external_reference: external_reference,
-                        notification_url: "https://cdn.mundopix.com/api/webhook/payment"
-                    }
-                });
-
-                const poi = mpResult.point_of_interaction?.transaction_data;
-                resultData = {
-                    qrCode: poi?.qr_code,
-                    qrCodeBase64: poi?.qr_code_base64,
-                    copyPaste: poi?.qr_code,
-                    transactionId: mpResult.id,
-                    ticketUrl: poi?.ticket_url
-                };
-
-                await pool.query(`UPDATE transactions SET gateway = 'MP_DIRECT_FALLBACK' WHERE external_reference = $1`, [external_reference]);
+                // If Sicoob failed due to our own invalid config or certs, let it bubble up
+                throw gwError;
             }
 
             res.json(resultData);
@@ -131,44 +95,37 @@ export const setupPaymentRoutes = (app, pool) => {
     // Webhook Handler
     app.post('/api/webhook/payment', async (req, res) => {
         const { type, data } = req.body;
-        const topic = req.query.topic || type; // MP sends topic in query or type in body
-        const id = data?.id || req.query.id;
 
-        console.log('Webhook received:', topic, id);
+        // TODO: Sicoob Specific Webhook Verification here
+        // Sicoob webhook format logic
+        console.log('Sicoob Webhook received:', req.body);
 
         try {
-            if (topic === 'payment') {
-                const paymentClient = new mercadopago.Payment(client);
-                const payment = await paymentClient.get({ id });
+            // Placeholder for Sicoob Payload Parse
+            const status = 'pending';
+            const external_reference = '123';
 
-                const { status, external_reference } = payment;
+            if (status === 'approved') {
+                // 1. Update Transaction Status
+                const trxResult = await pool.query(
+                    `UPDATE transactions SET status = 'approved' WHERE external_reference = $1 RETURNING *`,
+                    [external_reference]
+                );
 
-                if (status === 'approved') {
-                    // 1. Update Transaction Status
-                    const trxResult = await pool.query(
-                        `UPDATE transactions SET status = 'approved' WHERE external_reference = $1 RETURNING *`,
-                        [external_reference]
-                    );
+                if (trxResult.rowCount > 0) {
+                    const transaction = trxResult.rows[0];
+                    const items = transaction.items; // { nftId, userId } or array of tickets
 
-                    if (trxResult.rowCount > 0) {
-                        const transaction = trxResult.rows[0];
-                        const items = transaction.items; // { nftId, userId } or array of tickets
+                    // 2. Fulfill the Order (Allocate Raffle Tickets / NFT)
+                    console.log(`Payment approved for ${external_reference}. Fulfilling items:`, items);
 
-                        // 2. Fulfill the Order (Allocate Raffle Tickets / NFT)
-                        // This logic depends on what 'items' contains. 
-                        // Assuming it contains instructions to add to wallet.
-
-                        console.log(`Payment approved for ${external_reference}. Fulfilling items:`, items);
-
-                        // Example Fulfillment: Add to Wallet
-                        if (items.nftId) {
-                            await pool.query(`
+                    if (items.nftId) {
+                        await pool.query(`
                                 INSERT INTO wallets (user_id, nft_id, quantity)
                                 VALUES ($1, $2, 1)
                                 ON CONFLICT (user_id, nft_id) 
                                 DO UPDATE SET quantity = wallets.quantity + 1
                             `, [transaction.user_id, items.nftId]);
-                        }
                     }
                 }
             }
