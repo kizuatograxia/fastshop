@@ -117,6 +117,42 @@ const Checkout: React.FC = () => {
         }
     };
 
+    // Polling effect to check for payment completion automatically
+    React.useEffect(() => {
+        let interval: NodeJS.Timeout;
+
+        if (pixData && pixData.transactionId) {
+            interval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/payment/status/${pixData.transactionId}`);
+                    if (!response.ok) return;
+
+                    const data = await response.json();
+                    if (data.status === 'approved') {
+                        clearInterval(interval);
+
+                        // Proceed to fulfill the cart on the frontend since it's paid
+                        const itemsToBuy = cartItems.map(item => ({ id: item.id, quantity: item.quantidade }));
+                        await buyNFTs(itemsToBuy, appliedCoupon?.code);
+
+                        clearCart();
+                        toast({
+                            title: "Pagamento Aprovado!",
+                            description: "Seus NFTs foram adicionados à sua carteira.",
+                        });
+                        navigate("/profile");
+                    }
+                } catch (error) {
+                    console.error("Polling error:", error);
+                }
+            }, 5000); // Check every 5 seconds
+        }
+
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [pixData, cartItems, appliedCoupon, buyNFTs, clearCart, navigate, toast]);
+
     // Função de teste para simular o callback de sucesso
     const simulateSuccessfulPayment = async () => {
         try {
@@ -126,8 +162,8 @@ const Checkout: React.FC = () => {
 
             clearCart();
             toast({
-                title: "Compra realizada com sucesso!",
-                description: "Seus NFTs foram adicionados à sua carteira.",
+                title: "Compra simulada com sucesso!",
+                description: "Seus NFTs foram adicionados à sua carteira (Modo Teste).",
             });
             navigate("/profile");
         } catch (error) {

@@ -152,4 +152,55 @@ export const setupPaymentRoutes = (app, pool) => {
             cwd: process.cwd()
         });
     });
+
+    // Polling Endpoint for Frontend to check Pix Status
+    app.get('/api/payment/status/:txid', async (req, res) => {
+        const { txid } = req.params;
+        try {
+            // Check Database First
+            const dbCheck = await pool.query('SELECT status FROM transactions WHERE external_reference = $1 OR gateway_id = $1', [txid]);
+            if (dbCheck.rows.length > 0 && dbCheck.rows[0].status === 'approved') {
+                return res.json({ status: 'approved' });
+            }
+
+            // Fallback: Query Sicoob directly
+            const { checkPixStatus } = await import('./services/sicoob.js');
+            const sicoobStatus = await checkPixStatus(txid);
+
+            // Sicoob API returns status in 'status' field (e.g. 'ATIVA', 'CONCLUIDA', 'REMOVIDA_PELO_USUARIO_RECEBEDOR', 'REMOVIDA_PELO_PSP')
+            if (sicoobStatus && sicoobStatus.status === 'CONCLUIDA') {
+
+                // Also update the database to reflect it's paid
+                const trxResult = await pool.query(
+                    `UPDATE transactions SET status = 'approved' WHERE external_reference = $1 OR gateway_id = $1 RETURNING *`,
+                    [txid]
+                );
+
+                if (trxResult.rowCount > 0) {
+                    const transaction = trxResult.rows[0];
+                    const items = typeof transaction.items === 'string' ? JSON.parse(transaction.items) : transaction.items;
+
+                    // Fulfill the order if not already done
+                    if (items && items.nftId && transaction.status !== 'approved_processed') {
+                        await pool.query(`
+                                INSERT INTO wallets (user_id, nft_id, quantity)
+                                VALUES ($1, $2, 1)
+                                ON CONFLICT (user_id, nft_id) 
+                                DO UPDATE SET quantity = wallets.quantity + 1
+                            `, [transaction.user_id, items.nftId]);
+
+                        await pool.query(`UPDATE transactions SET status = 'approved_processed' WHERE id = $1`, [transaction.id]);
+                    }
+                }
+
+                return res.json({ status: 'approved' });
+            }
+
+            return res.json({ status: 'pending', sicoob_raw: sicoobStatus?.status });
+        } catch (error) {
+            console.error('Error checking pix status:', error);
+            res.status(500).json({ status: 'error', message: 'Failed to verify status' });
+        }
+    });
+
 };
