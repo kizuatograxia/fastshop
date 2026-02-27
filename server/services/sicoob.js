@@ -125,8 +125,8 @@ export const createPixCharge = async (txid, valor, devedor) => {
             nome: devedor.nome
         },
         valor: { original: valor.toFixed(2) },
-        chave: config.pixKey, // Your Pix Key
-        solicitacaoPagador: 'Compra Book-Haven'
+        chave: config.pixKey ? config.pixKey.replace(/\D/g, '') : '', // Your Pix Key (No punctuation!)
+        solicitacaoPagador: 'Compra Mundo Pix'
     };
 
     try {
