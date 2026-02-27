@@ -16,6 +16,7 @@ import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import RaffleDetails from "./pages/RaffleDetails";
 import Checkout from "./pages/Checkout";
+import CheckoutSuccess from "./pages/CheckoutSuccess";
 import Admin from "./pages/Admin";
 import WinnersFeed from "./pages/WinnersFeed";
 import Sorteios from "./pages/Sorteios";
@@ -75,6 +76,7 @@ const App = () => {
                           <Route path="/profile" element={<Profile />} />
                           <Route path="/raffle/:id" element={<RaffleDetails />} />
                           <Route path="/checkout" element={<Checkout />} />
+                          <Route path="/checkout/success" element={<CheckoutSuccess />} />
                           <Route path="/winners" element={<WinnersFeed />} />
                         </Route>
 

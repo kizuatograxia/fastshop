@@ -140,7 +140,7 @@ const Checkout: React.FC = () => {
                             title: "Pagamento Aprovado!",
                             description: "Seus NFTs foram adicionados à sua carteira.",
                         });
-                        navigate("/profile");
+                        navigate("/checkout/success");
                     }
                 } catch (error) {
                     console.error("Polling error:", error);
