@@ -159,7 +159,9 @@ const initDB = async () => {
             await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(30);`);
             await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(100);`);
             await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_complete BOOLEAN DEFAULT FALSE;`);
-            console.log('Migration: Added user profile columns');
+            await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token VARCHAR(255);`);
+            await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMP;`);
+            console.log('Migration: Added user profile and password reset columns');
 
             // Tracking columns
             await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS tracking_code VARCHAR(255);`);

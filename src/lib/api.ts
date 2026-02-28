@@ -58,6 +58,26 @@ export const api = {
         return res.json();
     },
 
+    forgotPassword: async (email: string) => {
+        const res = await fetch(`${API_URL}/forgot-password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email }),
+        });
+        if (!res.ok) throw new Error((await res.json()).message);
+        return res.json();
+    },
+
+    resetPassword: async (token: string, password: string) => {
+        const res = await fetch(`${API_URL}/reset-password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token, password }),
+        });
+        if (!res.ok) throw new Error((await res.json()).message);
+        return res.json();
+    },
+
     getWallet: async (userId: number | string) => {
         const token = localStorage.getItem('auth_token');
         const res = await fetch(`${API_URL}/wallet?userId=${userId}`, {

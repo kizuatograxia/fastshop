@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Mail, Lock, Eye, EyeOff, User, Phone, MapPin, Calendar,
@@ -108,13 +108,56 @@ const Field: React.FC<{
 // ─── Page ───────────────────────────────────────────────
 const Register: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const resetToken = searchParams.get('token');
+
+    const initialView = resetToken ? 'reset-password' : (location.pathname.includes('login') ? 'login' : 'register');
     const { register: registerUser, login, googleLogin, user, updateUser } = useAuth();
-    const [view, setView] = useState<'register' | 'login'>('register');
+    const [view, setView] = useState<'register' | 'login' | 'forgot-password' | 'reset-password'>(initialView);
     const [step, setStep] = useState<-1 | 0 | 1 | 2>(-1); // -1 = social/email choice
     const [form, setForm] = useState<FormData>(INITIAL_FORM);
     const [showPassword, setShowPassword] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isGoogleAuth, setIsGoogleAuth] = useState(false);
+
+    // Password Recovery State
+    const [recoveryEmail, setRecoveryEmail] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmNewPassword, setConfirmNewPassword] = useState("");
+
+    const handleForgotPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!recoveryEmail) { toast.error("Informe seu e-mail"); return; }
+        setIsSubmitting(true);
+        try {
+            await api.forgotPassword(recoveryEmail);
+            toast.success("E-mail enviado!", { description: "Verifique sua caixa de entrada para as instruções." });
+            setRecoveryEmail("");
+        } catch (error: any) {
+            toast.error(error.message || "Erro ao solicitar recuperação");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleResetPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (newPassword !== confirmNewPassword) { toast.error("As senhas não coincidem"); return; }
+        if (newPassword.length < 6) { toast.error("A senha deve ter 6+ caracteres"); return; }
+        setIsSubmitting(true);
+        try {
+            if (!resetToken) throw new Error("Token de redefinição ausente");
+            await api.resetPassword(resetToken, newPassword);
+            toast.success("Senha redefinida com sucesso!", { description: "Você já pode fazer login com sua nova senha." });
+            setView('login');
+            navigate('/login');
+        } catch (error: any) {
+            toast.error(error.message || "Erro ao redefinir senha");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     const [cepLoading, setCepLoading] = useState(false);
 
@@ -394,12 +437,84 @@ const Register: React.FC = () => {
                         <Button type="submit" className="w-full h-12 rounded-xl text-lg font-bold" disabled={isSubmitting}>
                             {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "ENTRAR AGORA"}
                         </Button>
+                        <div className="flex justify-center">
+                            <button type="button" onClick={() => setView('forgot-password')} className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                                Esqueci minha senha
+                            </button>
+                        </div>
                     </form>
 
                     <p className="text-center text-xs text-muted-foreground">
                         Não tem conta?{" "}
                         <button onClick={() => setView('register')} className="text-primary font-bold hover:underline">Cadastre-se grátis</button>
                     </p>
+                </motion.div>
+            );
+        }
+
+        if (view === 'forgot-password') {
+            return (
+                <motion.div key="forgot" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="space-y-5">
+                    <div className="text-center space-y-2">
+                        <h2 className="text-2xl font-extrabold text-foreground">Recuperar Senha 🔑</h2>
+                        <p className="text-muted-foreground text-sm">Insira seu e-mail para receber as instruções</p>
+                    </div>
+                    <form onSubmit={handleForgotPassword} className="space-y-4">
+                        <Field
+                            icon={<Mail className="w-4 h-4" />}
+                            label="E-mail"
+                            id="recoveryEmail"
+                            placeholder="seu@email.com"
+                            value={recoveryEmail}
+                            onChange={setRecoveryEmail}
+                            type="email"
+                        />
+                        <Button type="submit" className="w-full h-12 rounded-xl text-lg font-bold" disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "ENVIAR INSTRUÇÕES"}
+                        </Button>
+                    </form>
+                    <button onClick={() => setView('login')} className="w-full text-center text-xs text-muted-foreground hover:text-primary flex items-center justify-center gap-2">
+                        <ChevronLeft className="w-3 h-3" /> Voltar para o Login
+                    </button>
+                </motion.div>
+            );
+        }
+
+        if (view === 'reset-password') {
+            return (
+                <motion.div key="reset" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="space-y-5">
+                    <div className="text-center space-y-2">
+                        <h2 className="text-2xl font-extrabold text-foreground">Nova Senha 🛡️</h2>
+                        <p className="text-muted-foreground text-sm">Crie uma senha forte e segura</p>
+                    </div>
+                    <form onSubmit={handleResetPassword} className="space-y-4">
+                        <Field
+                            icon={<Lock className="w-4 h-4" />}
+                            label="Nova Senha"
+                            id="newPassword"
+                            placeholder="••••••••"
+                            value={newPassword}
+                            onChange={setNewPassword}
+                            type={showPassword ? "text" : "password"}
+                            rightIcon={
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-muted-foreground hover:text-foreground">
+                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                            }
+                        />
+                        <Field
+                            icon={<Lock className="w-4 h-4" />}
+                            label="Confirmar Nova Senha"
+                            id="confirmNewPassword"
+                            placeholder="••••••••"
+                            value={confirmNewPassword}
+                            onChange={setConfirmNewPassword}
+                            type={showPassword ? "text" : "password"}
+                        />
+                        <Button type="submit" className="w-full h-12 rounded-xl text-lg font-bold" disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "ATUALIZAR SENHA"}
+                        </Button>
+                    </form>
                 </motion.div>
             );
         }
