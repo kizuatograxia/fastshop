@@ -53,7 +53,7 @@ const Profile = () => {
 
     useEffect(() => {
         if (!isAuthenticated) {
-            navigate("/register");
+            navigate("/login");
         }
     }, [isAuthenticated, navigate]);
 
