@@ -51,7 +51,7 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
 
     return (
         <article
-            className={`group relative bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 hover:shadow-elevated hover:border-primary/30 hover:-translate-y-1 animate-fade-in flex flex-col h-full sm:h-auto ${disableNavigation ? "" : "cursor-pointer"}`}
+            className={`group relative bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 hover:shadow-elevated hover:border-primary/30 hover:-translate-y-1 animate-fade-in flex flex-col h-full ${disableNavigation ? "" : "cursor-pointer"}`}
             style={{ animationDelay: `${index * 0.1}s` }}
             onClick={() => !disableNavigation && navigate(`/raffle/${raffle.id}`)}
         >
@@ -100,7 +100,7 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
 
             {/* Content */}
             <div className="p-3 md:p-4 flex-1 flex flex-col space-y-2 md:space-y-3">
-                <h3 className="font-bold text-sm md:text-lg text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-2 md:line-clamp-none">
+                <h3 className="font-bold text-sm md:text-lg text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-2 md:line-clamp-none min-h-[2.5rem] md:min-h-0">
                     {raffle.titulo}
                 </h3>
 
