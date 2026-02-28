@@ -80,62 +80,54 @@ const NFTMobilePreview: React.FC<NFTMobilePreviewProps> = ({ nfts }) => {
                 </div>
 
                 {/* NFT Info */}
-                <div className="flex-1 text-center md:text-left">
-                    <div className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors mb-3 ${rarityClasses[currentNFT.raridade] || rarityClasses.comum}`}>
-                        <Star className="h-3 w-3 mr-1 fill-current" />
+                <div className="flex-1 text-center md:text-left pb-8 md:pb-0">
+                    <div className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold transition-colors mb-2 ${rarityClasses[currentNFT.raridade] || rarityClasses.comum}`}>
+                        <Star className="h-2.5 w-2.5 mr-1 fill-current" />
                         {rarityLabels[currentNFT.raridade] || "NFT"}
                     </div>
-                    <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-                        {currentNFT.nome} {currentNFT.preco && `(R$ ${currentNFT.preco})`}
+                    <h3 className="text-xl md:text-3xl font-bold text-foreground mb-1">
+                        {currentNFT.nome}
                     </h3>
-                    <p className="text-muted-foreground mb-4 max-w-md line-clamp-2">
+                    <p className="text-xs text-muted-foreground mb-4 max-w-md line-clamp-1 md:line-clamp-2">
                         {currentNFT.descricao}
                     </p>
-                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-6 mt-4">
-                        <p className="text-3xl font-bold text-gradient">
+                    <div className="flex items-center justify-center md:justify-start gap-4">
+                        <p className="text-2xl font-bold text-gradient">
                             R$ {currentNFT.preco.toFixed(2).replace(".", ",")}
                         </p>
                         <Button
                             onClick={handleBuy}
-                            className="bg-primary text-[#0F172A] hover:bg-primary/90 hover:shadow-[0_0_30px_hsl(162,95%,71%,0.4)] active:scale-[0.98] h-11 px-8 py-2 gap-3"
+                            size="sm"
+                            className="bg-primary/90 text-[#0F172A] hover:bg-primary hover:shadow-glow text-[11px] h-9 px-4 gap-2 rounded-full"
                         >
-                            <ShoppingCart className="h-4 w-4" />
-                            Comprar Agora
+                            <ShoppingCart className="h-3.5 w-3.5" />
+                            Comprar
                         </Button>
                     </div>
                 </div>
 
-                {/* Pagination Dots with Sliding Window and Counter */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-                    <div className="flex gap-2 items-center">
-                        {nfts.map((_, idx) => {
-                            // Sliding window logic: show max 5 dots centered around currentIndex
-                            const maxVisible = 5;
-                            const halfVisible = Math.floor(maxVisible / 2);
-                            let start = Math.max(0, currentIndex - halfVisible);
-                            let end = Math.min(nfts.length, start + maxVisible);
+                {/* Pagination Dots with Sliding Window */}
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 items-center">
+                    {nfts.map((_, idx) => {
+                        const maxVisible = 5;
+                        const halfVisible = Math.floor(maxVisible / 2);
+                        let start = Math.max(0, currentIndex - halfVisible);
+                        let end = Math.min(nfts.length, start + maxVisible);
 
-                            // Adjust start if we're near the end
-                            if (end - start < maxVisible) {
-                                start = Math.max(0, end - maxVisible);
-                            }
+                        if (end - start < maxVisible) {
+                            start = Math.max(0, end - maxVisible);
+                        }
 
-                            if (idx < start || idx >= end) return null;
+                        if (idx < start || idx >= end) return null;
 
-                            return (
-                                <button
-                                    key={idx}
-                                    onClick={() => setCurrentIndex(idx)}
-                                    className={`h-2 rounded-full transition-all duration-300 ${currentIndex === idx ? "bg-primary w-6" : "bg-muted-foreground/30 w-2 hover:bg-muted-foreground/50"}`}
-                                />
-                            );
-                        })}
-                    </div>
-                    {nfts.length > 5 && (
-                        <span className="text-[10px] font-medium text-muted-foreground/80 tracking-widest uppercase">
-                            {currentIndex + 1} / {nfts.length}
-                        </span>
-                    )}
+                        return (
+                            <button
+                                key={idx}
+                                onClick={() => setCurrentIndex(idx)}
+                                className={`h-1.5 rounded-full transition-all duration-300 ${currentIndex === idx ? "bg-primary w-4" : "bg-muted-foreground/20 w-1.5 hover:bg-muted-foreground/40"}`}
+                            />
+                        );
+                    })}
                 </div>
             </div>
 
