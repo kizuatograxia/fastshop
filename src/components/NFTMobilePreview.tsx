@@ -91,13 +91,13 @@ const NFTMobilePreview: React.FC<NFTMobilePreviewProps> = ({ nfts }) => {
                     <p className="text-muted-foreground mb-4 max-w-md line-clamp-2">
                         {currentNFT.descricao}
                     </p>
-                    <div className="flex items-center justify-center md:justify-start gap-4">
+                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-6 mt-4">
                         <p className="text-3xl font-bold text-gradient">
                             R$ {currentNFT.preco.toFixed(2).replace(".", ",")}
                         </p>
                         <Button
                             onClick={handleBuy}
-                            className="bg-primary text-[#0F172A] hover:bg-primary/90 hover:shadow-[0_0_30px_hsl(162,95%,71%,0.4)] active:scale-[0.98] h-11 px-5 py-2 gap-2"
+                            className="bg-primary text-[#0F172A] hover:bg-primary/90 hover:shadow-[0_0_30px_hsl(162,95%,71%,0.4)] active:scale-[0.98] h-11 px-8 py-2 gap-3"
                         >
                             <ShoppingCart className="h-4 w-4" />
                             Comprar Agora
