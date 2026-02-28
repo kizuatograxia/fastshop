@@ -179,7 +179,7 @@ router.post('/forgot-password', async (req, res) => {
             [token, expires, email]
         );
 
-        const frontendUrl = process.env.VITE_FRONTEND_URL || 'http://localhost:5173';
+        const frontendUrl = req.get('origin') || process.env.VITE_FRONTEND_URL || 'http://localhost:5173';
         const resetLink = `${frontendUrl}/login?token=${token}`;
 
         await sendEmail({
