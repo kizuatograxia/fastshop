@@ -9,7 +9,21 @@ const __dirname = path.dirname(__filename);
 // Ensure env vars are loaded if this is called independently
 dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize client lazily to avoid crashes if API key is missing at startup
+let resendClient = null;
+
+const getResendClient = () => {
+    if (resendClient) return resendClient;
+
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+        console.warn('WARNING: RESEND_API_KEY is not defined in environment variables.');
+        return null;
+    }
+
+    resendClient = new Resend(apiKey);
+    return resendClient;
+};
 
 /**
  * Sends an email using Resend
@@ -21,6 +35,11 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  */
 export const sendEmail = async ({ to, subject, html, from = 'onboarding@resend.dev' }) => {
     try {
+        const resend = getResendClient();
+        if (!resend) {
+            throw new Error('E-mail service not configured (missing API Key)');
+        }
+
         const data = await resend.emails.send({
             from,
             to,
