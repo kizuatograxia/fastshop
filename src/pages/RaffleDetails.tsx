@@ -248,11 +248,11 @@ const RaffleDetails: React.FC = () => {
 
                         {/* Image Gallery */}
                         <div className="space-y-4">
-                            <div className="relative aspect-video rounded-2xl overflow-hidden bg-secondary/30 border border-border group">
+                            <div className="relative rounded-2xl overflow-hidden bg-secondary/30 border border-border group">
                                 <img
                                     src={activeImage || raffle.imagem}
                                     alt={raffle.titulo}
-                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                    className="w-full h-auto max-h-[500px] object-contain transition-transform duration-700 group-hover:scale-[1.02]"
                                     onError={(e) => {
                                         e.currentTarget.src = "https://images.unsplash.com/photo-1635326444826-06c8f8d2e61d?w=800&q=80";
                                     }}
@@ -270,8 +270,8 @@ const RaffleDetails: React.FC = () => {
                                             key={idx}
                                             onClick={() => setActiveImage(url)}
                                             className={`relative w-24 h-24 flex-shrink-0 rounded-xl overflow-hidden border-2 transition-all ${activeImage === url
-                                                    ? 'border-primary ring-2 ring-primary/50 scale-105 shadow-lg shadow-primary/20'
-                                                    : 'border-transparent opacity-60 hover:opacity-100 hover:scale-105'
+                                                ? 'border-primary ring-2 ring-primary/50 scale-105 shadow-lg shadow-primary/20'
+                                                : 'border-transparent opacity-60 hover:opacity-100 hover:scale-105'
                                                 }`}
                                         >
                                             <img
