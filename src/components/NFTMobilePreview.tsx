@@ -105,15 +105,37 @@ const NFTMobilePreview: React.FC<NFTMobilePreviewProps> = ({ nfts }) => {
                     </div>
                 </div>
 
-                {/* Pagination Dots */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                    {nfts.slice(0, 5).map((_, idx) => (
-                        <button
-                            key={idx}
-                            onClick={() => setCurrentIndex(idx)}
-                            className={`h-2 rounded-full transition-all ${currentIndex === idx ? "bg-primary w-6" : "bg-muted-foreground/30 w-2"}`}
-                        />
-                    ))}
+                {/* Pagination Dots with Sliding Window and Counter */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+                    <div className="flex gap-2 items-center">
+                        {nfts.map((_, idx) => {
+                            // Sliding window logic: show max 5 dots centered around currentIndex
+                            const maxVisible = 5;
+                            const halfVisible = Math.floor(maxVisible / 2);
+                            let start = Math.max(0, currentIndex - halfVisible);
+                            let end = Math.min(nfts.length, start + maxVisible);
+
+                            // Adjust start if we're near the end
+                            if (end - start < maxVisible) {
+                                start = Math.max(0, end - maxVisible);
+                            }
+
+                            if (idx < start || idx >= end) return null;
+
+                            return (
+                                <button
+                                    key={idx}
+                                    onClick={() => setCurrentIndex(idx)}
+                                    className={`h-2 rounded-full transition-all duration-300 ${currentIndex === idx ? "bg-primary w-6" : "bg-muted-foreground/30 w-2 hover:bg-muted-foreground/50"}`}
+                                />
+                            );
+                        })}
+                    </div>
+                    {nfts.length > 5 && (
+                        <span className="text-[10px] font-medium text-muted-foreground/80 tracking-widest uppercase">
+                            {currentIndex + 1} / {nfts.length}
+                        </span>
+                    )}
                 </div>
             </div>
 
