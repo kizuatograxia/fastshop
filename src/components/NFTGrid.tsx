@@ -1,5 +1,6 @@
 import React from "react";
 import NFTCard from "./NFTCard";
+import NFTMobilePreview from "./NFTMobilePreview";
 import { NFT } from "@/types/raffle";
 import { Gift } from "lucide-react";
 
@@ -23,7 +24,14 @@ const NFTGrid: React.FC<NFTGridProps> = ({ nfts }) => {
                     </p>
                 </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+
+            {/* Mobile View: Custom Preview */}
+            <div className="sm:hidden mt-4">
+                <NFTMobilePreview nfts={nfts} />
+            </div>
+
+            {/* Desktop/Tablet View: Grid */}
+            <div className="hidden sm:grid grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 {nfts.map((nft, index) => (
                     <NFTCard key={nft.id} nft={nft} index={index} />
                 ))}
