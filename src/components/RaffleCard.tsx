@@ -104,9 +104,9 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
                     {raffle.titulo}
                 </h3>
 
-                <p className="text-[11px] md:text-sm text-muted-foreground line-clamp-2 md:line-clamp-none mb-4 md:mb-6 flex-1 md:flex-initial">
+                {/* <p className="text-[11px] md:text-sm text-muted-foreground line-clamp-2 md:line-clamp-none mb-4 md:mb-6 flex-1 md:flex-initial">
                     {raffle.descricao}
-                </p>
+                </p> */}
 
                 <div className="space-y-3 mt-auto">
                     {/* Progress Bar */}

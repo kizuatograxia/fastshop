@@ -33,7 +33,7 @@ const RaffleCardWrapper = ({ raffle, index }: { raffle: Raffle; index: number })
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 + index * 0.05 }}
-      className="w-full inline-block mb-6"
+      className="inline-block w-full break-inside-avoid mb-6"
     >
       <Link to={`/raffle/${raffle.id}`}>
         <Card className="group bg-card border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-glow hover:-translate-y-1 cursor-pointer">
@@ -59,7 +59,6 @@ const RaffleCardWrapper = ({ raffle, index }: { raffle: Raffle; index: number })
             <div className="absolute top-3 right-3">
               <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm gap-1">
                 <Clock className="h-3 w-3" />
-                {/* Re-implementing simplified getTimeRemaining logic inline or passing it, but let's just show status for now or assume active */}
                 Ativo
               </Badge>
             </div>
@@ -283,44 +282,10 @@ const Sorteios: React.FC = () => {
           </div>
         ) : (
           <div className="w-full">
-            {/* Mobile: 1 Column */}
-            <div className="flex flex-col gap-6 sm:hidden">
+            <div className="columns-1 sm:columns-2 lg:columns-3 gap-6">
               {filteredRaffles.map((raffle, index) => (
                 <RaffleCardWrapper key={raffle.id} raffle={raffle} index={index} />
               ))}
-            </div>
-
-            {/* Tablet: 2 Columns */}
-            <div className="hidden sm:flex lg:hidden gap-6">
-              <div className="flex flex-col gap-6 w-1/2">
-                {filteredRaffles.filter((_, i) => i % 2 === 0).map((raffle, index) => (
-                  <RaffleCardWrapper key={raffle.id} raffle={raffle} index={index * 2} />
-                ))}
-              </div>
-              <div className="flex flex-col gap-6 w-1/2">
-                {filteredRaffles.filter((_, i) => i % 2 === 1).map((raffle, index) => (
-                  <RaffleCardWrapper key={raffle.id} raffle={raffle} index={index * 2 + 1} />
-                ))}
-              </div>
-            </div>
-
-            {/* Desktop: 3 Columns */}
-            <div className="hidden lg:flex gap-6">
-              <div className="flex flex-col gap-6 w-1/3">
-                {filteredRaffles.filter((_, i) => i % 3 === 0).map((raffle, index) => (
-                  <RaffleCardWrapper key={raffle.id} raffle={raffle} index={index * 3} />
-                ))}
-              </div>
-              <div className="flex flex-col gap-6 w-1/3">
-                {filteredRaffles.filter((_, i) => i % 3 === 1).map((raffle, index) => (
-                  <RaffleCardWrapper key={raffle.id} raffle={raffle} index={index * 3 + 1} />
-                ))}
-              </div>
-              <div className="flex flex-col gap-6 w-1/3">
-                {filteredRaffles.filter((_, i) => i % 3 === 2).map((raffle, index) => (
-                  <RaffleCardWrapper key={raffle.id} raffle={raffle} index={index * 3 + 2} />
-                ))}
-              </div>
             </div>
           </div>
         )}

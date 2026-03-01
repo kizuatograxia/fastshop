@@ -199,9 +199,9 @@ const NFTs: React.FC = () => {
                   <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
                     {currentFeatured.name}
                   </h3>
-                  <p className="text-muted-foreground mb-4 max-w-md">
+                  {/* <p className="text-muted-foreground mb-4 max-w-md">
                     {currentFeatured.description}
-                  </p>
+                  </p> */}
                   <div className="flex items-center justify-center md:justify-start gap-4">
                     <p className="text-3xl font-bold text-gradient">
                       R$ {currentFeatured.price.toFixed(2).replace(".", ",")}
@@ -248,67 +248,66 @@ const NFTs: React.FC = () => {
           </Badge>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+        <div className="columns-2 sm:columns-3 lg:columns-4 xl:columns-6 gap-4">
           {nfts.map((nft, index) => (
-            <motion.div
-              key={nft.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + index * 0.03 }}
-            >
-              <Card className="group bg-card border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-glow hover:-translate-y-1">
-                {/* Rarity Badge */}
-                <div className="absolute top-2 left-2 z-10">
-                  <Badge className={`${(rarityConfig[nft.rarity] || rarityConfig.comum).badge} text-xs`}>
-                    {(rarityConfig[nft.rarity] || rarityConfig.comum).label}
-                  </Badge>
-                </div>
-
-                {/* Stock Badge */}
-                {nft.stock && nft.stock < 50 && (
-                  <div className="absolute top-2 right-2 z-10">
-                    <Badge className="bg-destructive/20 text-destructive border-destructive/30 text-xs">
-                      <Zap className="h-3 w-3 mr-1" />
-                      {nft.stock} left
+            <div key={nft.id} className="inline-block w-full break-inside-avoid mb-4">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 + index * 0.03 }}
+              >
+                <Card className="group bg-card border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-glow hover:-translate-y-1">
+                  {/* ... contents below ... */}
+                  <div className="absolute top-2 left-2 z-10">
+                    <Badge className={`${(rarityConfig[nft.rarity] || rarityConfig.comum).badge} text-xs`}>
+                      {(rarityConfig[nft.rarity] || rarityConfig.comum).label}
                     </Badge>
                   </div>
-                )}
 
-                {/* NFT Display */}
-                <div className={`relative aspect-square bg-gradient-to-br ${nft.gradient} flex items-center justify-center overflow-hidden`}>
-                  {nft.image ? (
-                    <img src={nft.image} alt={nft.name} className="w-4/5 h-4/5 object-contain transition-transform duration-300 group-hover:scale-110 drop-shadow-lg" />
-                  ) : (
-                    <span className="text-5xl md:text-6xl transition-transform duration-300 group-hover:scale-125 drop-shadow-lg">
-                      {nft.emoji}
-                    </span>
+                  {nft.stock && nft.stock < 50 && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <Badge className="bg-destructive/20 text-destructive border-destructive/30 text-xs">
+                        <Zap className="h-3 w-3 mr-1" />
+                        {nft.stock} left
+                      </Badge>
+                    </div>
                   )}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                </div>
 
-                <CardContent className="p-3 space-y-2">
-                  <h3 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors truncate">
-                    {nft.name}
-                  </h3>
-                  <p className="text-xs text-muted-foreground line-clamp-1">
-                    {nft.description}
-                  </p>
-                  <div className="flex items-center justify-between pt-1">
-                    <p className="font-bold text-gradient">
-                      R$ {nft.price.toFixed(2).replace(".", ",")}
-                    </p>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 w-8 p-0 hover:bg-primary/20"
-                      onClick={() => handleBuy(nft)}
-                    >
-                      <ShoppingCart className="h-4 w-4" />
-                    </Button>
+                  <div className={`relative aspect-square bg-gradient-to-br ${nft.gradient} flex items-center justify-center overflow-hidden`}>
+                    {nft.image ? (
+                      <img src={nft.image} alt={nft.name} className="w-4/5 h-4/5 object-contain transition-transform duration-300 group-hover:scale-110 drop-shadow-lg" />
+                    ) : (
+                      <span className="text-5xl md:text-6xl transition-transform duration-300 group-hover:scale-125 drop-shadow-lg">
+                        {nft.emoji}
+                      </span>
+                    )}
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+
+                  <CardContent className="p-3 space-y-2">
+                    <h3 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors truncate">
+                      {nft.name}
+                    </h3>
+                    {/* <p className="text-xs text-muted-foreground line-clamp-1">
+                      {nft.description}
+                    </p> */}
+                    <div className="flex items-center justify-between pt-1">
+                      <p className="font-bold text-gradient">
+                        R$ {nft.price.toFixed(2).replace(".", ",")}
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0 hover:bg-primary/20"
+                        onClick={() => handleBuy(nft)}
+                      >
+                        <ShoppingCart className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
           ))}
         </div>
       </main>
