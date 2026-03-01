@@ -31,9 +31,11 @@ const NFTGrid: React.FC<NFTGridProps> = ({ nfts }) => {
             </div>
 
             {/* Desktop/Tablet View: Grid */}
-            <div className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div className="hidden sm:block columns-3 lg:columns-4 gap-4 md:gap-6">
                 {nfts.map((nft, index) => (
-                    <NFTCard key={nft.id} nft={nft} index={index} />
+                    <div key={nft.id} className="inline-block w-full break-inside-avoid mb-6">
+                        <NFTCard nft={nft} index={index} />
+                    </div>
                 ))}
             </div>
         </section>

@@ -52,12 +52,8 @@ export const TicketVisualizer: React.FC<TicketVisualizerProps> = ({
       i++;
     }
 
-    // Shuffle pool blocks slightly but keep user near the start for visibility
-    return list.sort((a, b) => {
-      if (a.type === "user") return -1;
-      if (b.type === "user") return 1;
-      return 0.5 - Math.random();
-    });
+    // Sort blocks by count descending for a more organized look
+    return list.sort((a, b) => b.count - a.count);
   }, [totalTickets, userTickets, maxDisplay]);
 
   // Calculate size based on count (Area = count * BASE_UNIT^2)
