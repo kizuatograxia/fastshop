@@ -21,7 +21,7 @@ const rarityColors: Record<string, string> = {
 };
 
 // Circular countdown component
-const CircularCountdown: React.FC<{ targetDate: string, onExpire?: () => void }> = ({ targetDate, onExpire }) => {
+const CircularCountdown: React.FC<{ targetDate: string, onExpire?: () => void, minimal?: boolean }> = ({ targetDate, onExpire, minimal = false }) => {
     // ...
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, progress: 0, total: 1 });
 
@@ -57,9 +57,72 @@ const CircularCountdown: React.FC<{ targetDate: string, onExpire?: () => void }>
     const circumference = 2 * Math.PI * 90;
     const strokeDashoffset = circumference * (1 - timeLeft.progress);
 
+    // Shared SVG ring + time display (used in both variants)
+    const ringDisplay = (
+        <div className="relative w-full h-full">
+            <svg className="w-full h-full -rotate-90" viewBox="0 0 200 200">
+                <circle cx="100" cy="100" r="90" fill="none"
+                    stroke={minimal ? "rgba(255,255,255,0.1)" : "hsl(var(--border))"}
+                    strokeWidth={minimal ? 6 : 8} />
+                <circle cx="100" cy="100" r="90" fill="none"
+                    stroke="hsl(var(--primary))" strokeWidth={minimal ? 6 : 8}
+                    strokeLinecap="round" strokeDasharray={circumference}
+                    strokeDashoffset={strokeDashoffset}
+                    className="transition-all duration-1000 ease-linear" />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                {isExpired ? (
+                    <div className="text-center">
+                        <Activity className="w-10 h-10 text-primary animate-spin mx-auto mb-1" />
+                        <span className="text-xs font-bold text-primary uppercase tracking-widest">SORTEANDO</span>
+                    </div>
+                ) : timeLeft.days > 0 ? (
+                    <>
+                        <div className={`font-black tracking-tight tabular-nums ${minimal ? "text-4xl text-white" : "text-5xl text-foreground"}`}>
+                            {String(timeLeft.days).padStart(2, "0")}
+                            <span className={minimal ? "text-white/40 mx-1" : "text-muted-foreground mx-1"}>:</span>
+                            {String(timeLeft.hours).padStart(2, "0")}
+                        </div>
+                        <span className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${minimal ? "text-white/50" : "text-muted-foreground"}`}>DIAS</span>
+                    </>
+                ) : (
+                    <>
+                        <div className={`font-black tracking-tight tabular-nums ${minimal ? "text-4xl text-white" : "text-5xl text-foreground"}`}>
+                            {String(timeLeft.hours).padStart(2, "0")}
+                            <span className={`mx-1 animate-pulse ${minimal ? "text-white/40" : "text-muted-foreground"}`}>:</span>
+                            {String(timeLeft.minutes).padStart(2, "0")}
+                        </div>
+                        <span className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${minimal ? "text-white/50" : "text-muted-foreground"}`}>
+                            {timeLeft.hours > 0 ? "HORAS" : "MINUTOS"}
+                        </span>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+
+    // MINIMAL variant — just the ring, no card/buttons/title
+    if (minimal) {
+        return (
+            <div className="relative w-full aspect-square flex items-center justify-center">
+                {/* Subtle dark glass backing */}
+                <div className="absolute inset-4 rounded-full bg-black/50 backdrop-blur-md border border-white/10" />
+                <div className="relative w-full h-full">
+                    {ringDisplay}
+                </div>
+                {isEnding && !isExpired && (
+                    <div className="absolute bottom-6 flex items-center gap-1.5 bg-red-500/20 text-red-300 px-2.5 py-1 rounded-full text-[10px] font-bold border border-red-500/30">
+                        <Clock className="w-2.5 h-2.5" />
+                        ENCERRA EM BREVE
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    // FULL variant — card with title and buttons
     return (
         <div className="bg-card rounded-2xl border border-border p-6 flex flex-col items-center relative overflow-hidden">
-            {/* Ending soon badge */}
             {isEnding && !isExpired && (
                 <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-destructive/20 text-destructive px-2.5 py-1 rounded-full text-xs font-bold border border-destructive/30">
                     <Clock className="w-3 h-3" />
@@ -71,64 +134,8 @@ const CircularCountdown: React.FC<{ targetDate: string, onExpire?: () => void }>
                 {isExpired ? "O Sorteio Está em Andamento!" : "O Próximo Ganhador Será Definido em..."}
             </h3>
 
-            {/* Circular Progress */}
-            <div className="relative w-52 h-52 mb-4">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 200 200">
-                    {/* Background track */}
-                    <circle
-                        cx="100" cy="100" r="90"
-                        fill="none"
-                        stroke="hsl(var(--border))"
-                        strokeWidth="8"
-                    />
-                    {/* Progress arc */}
-                    <circle
-                        cx="100" cy="100" r="90"
-                        fill="none"
-                        stroke="hsl(var(--primary))"
-                        strokeWidth="8"
-                        strokeLinecap="round"
-                        strokeDasharray={circumference}
-                        strokeDashoffset={strokeDashoffset}
-                        className="transition-all duration-1000 ease-linear"
-                    />
-                </svg>
-                {/* Time display */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    {isExpired ? (
-                        <div className="text-center">
-                            <Activity className="w-12 h-12 text-primary animate-spin mx-auto mb-2" />
-                            <span className="text-sm font-bold text-primary uppercase tracking-widest">
-                                SORTEANDO
-                            </span>
-                        </div>
-                    ) : timeLeft.days > 0 ? (
-                        <>
-                            <div className="text-5xl font-black text-foreground tracking-tight tabular-nums">
-                                {String(timeLeft.days).padStart(2, "0")}
-                                <span className="text-muted-foreground mx-1">:</span>
-                                {String(timeLeft.hours).padStart(2, "0")}
-                            </div>
-                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
-                                DIAS RESTANTES
-                            </span>
-                        </>
-                    ) : (
-                        <>
-                            <div className="text-5xl font-black text-foreground tracking-tight tabular-nums">
-                                {String(timeLeft.hours).padStart(2, "0")}
-                                <span className="text-muted-foreground mx-1 animate-pulse">:</span>
-                                {String(timeLeft.minutes).padStart(2, "0")}
-                            </div>
-                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">
-                                MINUTOS RESTANTES
-                            </span>
-                        </>
-                    )}
-                </div>
-            </div>
+            <div className="relative w-52 h-52 mb-4">{ringDisplay}</div>
 
-            {/* Action buttons */}
             <div className="flex gap-3 w-full mt-2">
                 <Button variant="hero" className="flex-1 h-12 text-base font-bold gap-2" disabled={isExpired} onClick={() => {
                     document.getElementById("nft-selection")?.scrollIntoView({ behavior: "smooth" });
@@ -419,6 +426,7 @@ const RaffleDetails: React.FC = () => {
                                                     <CircularCountdown
                                                         targetDate={raffle.dataFim}
                                                         onExpire={() => setIsDrawing(true)}
+                                                        minimal
                                                     />
                                                 </div>
                                             </div>
