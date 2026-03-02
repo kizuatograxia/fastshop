@@ -370,31 +370,37 @@ const RaffleDetails: React.FC = () => {
 
                         <main className="flex-1 overflow-y-auto px-4 py-8 custom-scrollbar">
                             <div className="max-w-4xl mx-auto space-y-8">
-                                {/* Large Visualization Section */}
-                                <div className="space-y-6">
-                                    {/* Countdown in Live View */}
-                                    <div className="max-w-sm mx-auto">
-                                        <CircularCountdown
-                                            targetDate={raffle.dataFim}
-                                            onExpire={() => setIsDrawing(true)}
-                                        />
-                                    </div>
+                                {/* Large Visualization Section (Circular) */}
+                                <div className="relative flex items-center justify-center min-h-[500px]">
+                                    {/* Background Glow */}
+                                    <div className="absolute w-[600px] h-[600px] bg-primary/5 blur-[100px] rounded-full pointer-events-none" />
 
-                                    <div className="relative group">
-                                        <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 to-accent/30 rounded-3xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity" />
-                                        <div className="relative">
-                                            {isDrawing ? (
-                                                <TicketRoulette
-                                                    totalTickets={Math.max(raffle.participantes, 50)}
-                                                    userTickets={userTickets}
-                                                />
-                                            ) : (
-                                                <TicketVisualizer
-                                                    totalTickets={Math.max(raffle.participantes, 50)}
-                                                    userTickets={userTickets}
-                                                />
-                                            )}
+                                    {/* Proportional Mempool (Circular) */}
+                                    {!isDrawing && (
+                                        <div className="absolute w-[480px] h-[480px] z-0 opacity-80">
+                                            <TicketVisualizer
+                                                totalTickets={raffle.participantes}
+                                                userTickets={userTickets}
+                                                variant="circular"
+                                            />
                                         </div>
+                                    )}
+
+                                    {/* Central Interactive UI */}
+                                    <div className="relative z-10 w-full max-w-sm">
+                                        {isDrawing ? (
+                                            <TicketRoulette
+                                                totalTickets={Math.max(raffle.participantes, 50)}
+                                                userTickets={userTickets}
+                                            />
+                                        ) : (
+                                            <div className="scale-110 drop-shadow-2xl">
+                                                <CircularCountdown
+                                                    targetDate={raffle.dataFim}
+                                                    onExpire={() => setIsDrawing(true)}
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
