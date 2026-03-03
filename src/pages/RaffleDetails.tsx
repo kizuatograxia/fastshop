@@ -22,36 +22,71 @@ const rarityColors: Record<string, string> = {
 
 
 
-// Activity Feed component
+// Activity Feed — shows real participants from API
 const ActivityFeed: React.FC<{ raffleId: string }> = ({ raffleId }) => {
-    const mockActivity = [
-        { name: "João D.", action: "+3 tickets comprados", time: "2m", isYou: false },
-        { name: "Maria A.", action: "+10 tickets (Bulk)", time: "5m", isYou: false },
-        { name: "Você", action: "Entrada confirmada (4 tickets)", time: "12m", isYou: true },
-        { name: "Pedro S.", action: "+1 ticket comprado", time: "18m", isYou: false },
-        { name: "Ana L.", action: "+5 tickets (Bulk)", time: "25m", isYou: false },
-    ];
+    const [participants, setParticipants] = useState<any[]>([]);
+    const [loadingParticipants, setLoadingParticipants] = useState(true);
 
-    return (
-        <div className="bg-card rounded-2xl border border-border p-4 space-y-3">
-            <h3 className="font-bold text-sm text-foreground uppercase tracking-wider">
-                Atividade Recente
-            </h3>
-            <div className="space-y-3">
-                {mockActivity.map((item, i) => (
-                    <div key={i} className="flex items-start gap-3 group">
-                        <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${item.isYou ? "bg-primary" : "bg-muted-foreground/40"
-                            }`} />
-                        <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-medium ${item.isYou ? "text-primary" : "text-foreground"}`}>
-                                {item.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">{item.action}</p>
-                        </div>
-                        <span className="text-xs text-muted-foreground flex-shrink-0">{item.time}</span>
+    useEffect(() => {
+        api.getRaffleParticipants(raffleId)
+            .then((data) => {
+                // API returns array of { user_name, ticket_count, joined_at } or similar
+                setParticipants(Array.isArray(data) ? data.slice(0, 10) : []);
+            })
+            .catch(() => setParticipants([]))
+            .finally(() => setLoadingParticipants(false));
+    }, [raffleId]);
+
+    const formatTime = (dateStr: string) => {
+        if (!dateStr) return "";
+        const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
+        if (diff < 1) return "agora";
+        if (diff < 60) return `${diff}m`;
+        if (diff < 1440) return `${Math.floor(diff / 60)}h`;
+        return `${Math.floor(diff / 1440)}d`;
+    };
+
+    if (loadingParticipants) {
+        return (
+            <div className="p-4 space-y-2">
+                {[...Array(4)].map((_, i) => (
+                    <div key={i} className="flex gap-3 items-center animate-pulse">
+                        <div className="w-2 h-2 rounded-full bg-white/10 flex-shrink-0" />
+                        <div className="h-3 bg-white/10 rounded flex-1" />
+                        <div className="h-3 bg-white/10 rounded w-8" />
                     </div>
                 ))}
             </div>
+        );
+    }
+
+    if (participants.length === 0) {
+        return (
+            <div className="p-6 text-center text-white/30 text-sm">
+                Nenhuma atividade ainda
+            </div>
+        );
+    }
+
+    return (
+        <div className="p-4 space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+            {participants.map((p, i) => {
+                const name = p.user_name || p.name || p.username || `Participante ${i + 1}`;
+                const tickets = p.ticket_count || p.tickets || 1;
+                const joinedAt = p.joined_at || p.created_at || p.date;
+                return (
+                    <div key={i} className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-blue-400/50 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                            <span className="text-xs font-bold text-white/70 truncate block">{name}</span>
+                            <span className="text-[10px] text-white/30">{tickets} ticket{tickets !== 1 ? 's' : ''}</span>
+                        </div>
+                        {joinedAt && (
+                            <span className="text-[10px] text-white/30 flex-shrink-0">{formatTime(joinedAt)}</span>
+                        )}
+                    </div>
+                );
+            })}
         </div>
     );
 };
@@ -144,12 +179,29 @@ const RaffleDetails: React.FC = () => {
         return { count, value };
     }, [availableNFTs, selectedNFTs]);
 
-    const calculateChance = (userVal: number) => {
-        const prizeValue = raffle?.premioValor || 0;
-        if (prizeValue === 0) return 0;
-        const chance = (userVal / prizeValue) * 75;
-        return Math.min(chance, 100);
+    const calculateChance = (tickets: number) => {
+        const total = raffle?.participantes || 0;
+        if (total === 0 || tickets === 0) return 0;
+        return Math.min((tickets / total) * 100, 100);
     };
+
+    // Real-time refresh: poll raffle data every 30s while live view is open
+    useEffect(() => {
+        if (!isLiveViewActive || !id) return;
+        const poll = setInterval(async () => {
+            try {
+                const data = await api.getRaffle(id);
+                if (data?.tickets_sold) {
+                    setRaffle((prev: any) => ({
+                        ...prev,
+                        participantes: parseInt(data.tickets_sold) || prev.participantes,
+                    }));
+                }
+            } catch { /* silent */ }
+        }, 30_000);
+        return () => clearInterval(poll);
+    }, [isLiveViewActive, id]);
+
 
     if (loading) {
         return (
@@ -174,13 +226,11 @@ const RaffleDetails: React.FC = () => {
     }
 
     const { count: selectedCount, value: selectedValue } = selectionStats;
-    const currentChance = calculateChance(userCurrentValue);
-    const potentialChance = calculateChance(userCurrentValue + selectedValue);
     const ticketPrice = raffle.custoNFT;
     const ticketsToReceive = Math.floor(selectedValue / ticketPrice);
-
-    // User tickets calculation (for visualizer)
     const userTickets = ticketPrice > 0 ? Math.floor(userCurrentValue / ticketPrice) : 0;
+    const currentChance = calculateChance(userTickets);
+    const potentialChance = calculateChance(userTickets + ticketsToReceive);
 
     const handleParticipate = async () => {
         if (isProcessing) return;
