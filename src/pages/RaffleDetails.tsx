@@ -7,10 +7,20 @@ import { useWallet } from "@/contexts/WalletContext";
 import { useUserRaffles } from "@/contexts/UserRafflesContext";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { OwnedNFT } from "@/types/raffle";
+import { OwnedNFT, NFT } from "@/types/raffle";
 import { Progress } from "@/components/ui/progress";
 import { TicketVisualizer } from "@/components/TicketVisualizer";
 import { CircularCountdown, MempoolLayoutSideBySide } from "@/components/MempoolLayout";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 // ... rarityColors ...
 const rarityColors: Record<string, string> = {
@@ -143,6 +153,14 @@ const RaffleDetails: React.FC = () => {
         }
     }, [id]);
 
+    const [pendingChangeDialog, setPendingChangeDialog] = useState<{
+        open: boolean;
+        emptySlots: number;
+        selectedValue: number;
+        changeValue: number;
+        changeNFTs: NFT[];
+    } | null>(null);
+
     const userCurrentValue = raffle ? getUserValue(raffle.id) : 0;
     // Use the higher of two independent methods to guard against either returning 0 incorrectly
     const userTicketsFromCount = raffle ? getTicketCount(raffle.id) : 0;
@@ -242,8 +260,50 @@ const RaffleDetails: React.FC = () => {
     const { count: selectedCount, value: selectedValue } = selectionStats;
     const ticketPrice = raffle.custoNFT;
     const ticketsToReceive = Math.floor(selectedValue / ticketPrice);
+    const emptySlots = raffle ? Math.max(0, (raffle.maxParticipantes || raffle.participantes * 2) - raffle.participantes) : 0;
+
     const currentChance = calculateChance(userTickets);
     const potentialChance = calculateChance(userTickets + ticketsToReceive);
+
+    const executeParticipation = async (finalTicketsToReceive: number, finalSelectedValue: number, changeNFTsToIssue: NFT[] = []) => {
+        setIsProcessing(true);
+        try {
+            await addUserRaffle(raffle, finalTicketsToReceive, finalSelectedValue, selectedNFTs);
+            setRaffle((prev: any) => ({ ...prev, participantes: prev.participantes + finalTicketsToReceive }));
+
+            // Issue change NFTs if needed
+            if (changeNFTsToIssue.length > 0) {
+                // Assuming `api.addToWallet` takes (userId, nftObject)
+                const userId = JSON.parse(localStorage.getItem("fastshop_user") || "{}")?.id;
+                if (userId) {
+                    await Promise.all(changeNFTsToIssue.map(changeNFT =>
+                        api.addToWallet(Number(userId), changeNFT)
+                    ));
+                    toast.success("Troco de NFTs Enviado!", {
+                        description: `Foram adicionados R$ ${changeNFTsToIssue.reduce((acc, nft) => acc + nft.preco, 0).toFixed(2)} em novos NFTs à sua carteira.`,
+                    });
+                }
+            }
+
+            await refreshWallet();
+            setSelectedNFTs({});
+            setPendingChangeDialog(null);
+            try {
+                const data = await api.getRaffle(raffle.id);
+                if (data && data.tickets_sold) {
+                    setRaffle((prev: any) => ({ ...prev, participantes: parseInt(data.tickets_sold) || 0 }));
+                }
+            } catch (error) { console.error("Failed to refresh raffle stats", error); }
+            toast.success(`Você entrou no sorteio com ${finalTicketsToReceive} Bilhetes!`, {
+                description: `Valor em cotas: R$ ${finalSelectedValue.toFixed(2)}`,
+            });
+        } catch (error) {
+            console.error("Erro ao participar do sorteio", error);
+            toast.error("Ocorreu um erro ao processar sua participação. Tente novamente.");
+        } finally {
+            setIsProcessing(false);
+        }
+    };
 
     const handleParticipate = async () => {
         if (isProcessing) return;
@@ -259,31 +319,103 @@ const RaffleDetails: React.FC = () => {
             toast.error(`O valor selecionado (R$ ${selectedValue.toFixed(2)}) é insuficiente para um bilhete (R$ ${ticketPrice})`);
             return;
         }
-        setIsProcessing(true);
-        try {
-            await addUserRaffle(raffle, ticketsToReceive, selectedValue, selectedNFTs);
-            setRaffle((prev: any) => ({ ...prev, participantes: prev.participantes + ticketsToReceive }));
-            await refreshWallet();
-            setSelectedNFTs({});
+
+        if (ticketsToReceive > emptySlots) {
+            if (emptySlots === 0) {
+                toast.error(`Este sorteio já atingiu o limite máximo de ${raffle.maxParticipantes} bilhetes!`);
+                return;
+            }
+
+            // Perform change logic
+            setIsProcessing(true);
             try {
-                const data = await api.getRaffle(raffle.id);
-                if (data && data.tickets_sold) {
-                    setRaffle((prev: any) => ({ ...prev, participantes: parseInt(data.tickets_sold) || 0 }));
+                const allowedValue = emptySlots * ticketPrice;
+                let changeValue = selectedValue - allowedValue;
+
+                // Fetch catalog to find NFTs for change
+                const catalog = await api.getNFTCatalog();
+                // Sort descending by price
+                const sortedCatalog = catalog.sort((a: any, b: any) => b.preco - a.preco);
+
+                const changeNFTs: NFT[] = [];
+                let remainingChange = changeValue;
+
+                // Greedy algorithm to pick NFTs for change
+                for (let i = 0; i < sortedCatalog.length; i++) {
+                    const nft = sortedCatalog[i];
+                    while (remainingChange >= nft.preco && nft.preco > 0) {
+                        changeNFTs.push(nft);
+                        remainingChange -= nft.preco;
+                    }
                 }
-            } catch (error) { console.error("Failed to refresh raffle stats", error); }
-            toast.success(`Você entrou no sorteio com ${ticketsToReceive} Bilhetes!`, {
-                description: `Valor total adicionado: R$ ${selectedValue.toFixed(2)}`,
-            });
-        } catch (error) {
-            console.error("Erro ao participar do sorteio", error);
-            toast.error("Ocorreu um erro ao processar sua participação. Tente novamente.");
-        } finally {
-            setIsProcessing(false);
+
+                // Truncate tiny precise math errors
+                if (remainingChange > 0.01) {
+                    // Could not fully refund perfectly with available catalog denominations
+                    // Default to returning the logic but warn or continue with what we can
+                    console.warn(`Could not perfectly refund. Remaining non-refundable change: ${remainingChange}`);
+                }
+
+                setPendingChangeDialog({
+                    open: true,
+                    emptySlots,
+                    selectedValue,
+                    changeValue: selectedValue - allowedValue - remainingChange,
+                    changeNFTs,
+                });
+            } catch (e) {
+                console.error("Erro ao calcular troco", e);
+                toast.error("Erro interno ao simular troco. Tente novamente ou feche bilhetes exatos.");
+            } finally {
+                setIsProcessing(false);
+            }
+            return;
         }
+
+        await executeParticipation(ticketsToReceive, selectedValue);
     };
 
     return (
         <div className="min-h-screen bg-background pb-24 lg:pb-8">
+            {/* Change Confirmation Dialog */}
+            <AlertDialog open={pendingChangeDialog?.open} onOpenChange={(open) => { if (!open) setPendingChangeDialog(null); }}>
+                <AlertDialogContent className="bg-card border-border max-w-md">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-xl font-black uppercase tracking-tighter text-foreground">
+                            Limite de Cotas Alcançado
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-muted-foreground">
+                            Nós usaremos R$ {(pendingChangeDialog?.emptySlots! * ticketPrice).toFixed(2)} das suas NFTs selecionadas para comprar as últimas {pendingChangeDialog?.emptySlots} cotas.
+                            <br /><br />
+                            Você receberá <strong>R$ {pendingChangeDialog?.changeValue.toFixed(2)}</strong> de troco nos seguintes NFTs:
+                            <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
+                                {pendingChangeDialog?.changeNFTs.map((nft, idx) => (
+                                    <div key={idx} className="flex justify-between items-center text-xs bg-secondary/20 p-2 rounded-lg">
+                                        <span className="font-bold flex items-center gap-1">{nft.emoji} {nft.nome}</span>
+                                        <span className="text-primary font-black">R$ {nft.preco.toFixed(2)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter className="mt-6">
+                        <AlertDialogCancel className="font-bold uppercase tracking-widest text-xs h-12">
+                            Mudar Seleção
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-xs h-12"
+                            onClick={() => {
+                                if (pendingChangeDialog) {
+                                    executeParticipation(pendingChangeDialog.emptySlots, pendingChangeDialog.emptySlots * ticketPrice, pendingChangeDialog.changeNFTs);
+                                }
+                            }}
+                        >
+                            Confirmar Entrada
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
             {/* Dedicated Live View Overlay */}
             <AnimatePresence>
                 {isLiveViewActive && (
