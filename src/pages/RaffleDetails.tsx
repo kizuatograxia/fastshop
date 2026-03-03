@@ -331,6 +331,7 @@ const RaffleDetails: React.FC = () => {
                                             targetDate={raffle.dataFim}
                                             onExpire={() => setIsDrawing(true)}
                                             isDrawing={isDrawing}
+                                            winner={raffle.winner}
                                             onDrawComplete={async () => {
                                                 // Reload raffle to get real winner from backend
                                                 try {
@@ -340,12 +341,15 @@ const RaffleDetails: React.FC = () => {
                                                             ...prev, ...data,
                                                             participantes: parseInt(data.tickets_sold) || prev.participantes,
                                                             status: data.status,
-                                                            winner: data.winner,
+                                                            winner: data.winner_name ? {
+                                                                name: data.winner_name,
+                                                                picture: data.winner_picture
+                                                            } : data.winner,
                                                         }));
                                                     }
                                                 } catch { /* silent */ }
                                                 setIsDrawing(false);
-                                                setIsLiveViewActive(false); // Go back to main page to see winner card
+                                                // setIsLiveViewActive(false); // Do not close live view anymore, let them see the winner!
                                             }}
                                         />
                                     </div>

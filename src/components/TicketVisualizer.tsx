@@ -15,6 +15,8 @@ interface TicketVisualizerProps {
   isDrawing?: boolean;
   /** Callback when draw animation completes */
   onDrawComplete?: (winnerIndex: number) => void;
+  /** Winner information to display at the end */
+  winner?: { name: string; picture: string };
 }
 
 // Seeded PRNG for deterministic shuffle
@@ -33,6 +35,7 @@ export const TicketVisualizer: React.FC<TicketVisualizerProps> = ({
   variant = "square",
   isDrawing = false,
   onDrawComplete,
+  winner,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -326,7 +329,7 @@ export const TicketVisualizer: React.FC<TicketVisualizerProps> = ({
   // Draw animation
   useEffect(() => {
     if (!isDrawing || cells.length === 0) return;
-    
+
     // Find valid sold cells for scanning
     const soldIndices = cells
       .map((c, i) => ({ c, i }))
@@ -380,14 +383,14 @@ export const TicketVisualizer: React.FC<TicketVisualizerProps> = ({
 
   // Real-time "pulse" animation on random sold cells
   const [pulsingCells, setPulsingCells] = useState<Set<number>>(new Set());
-  
+
   useEffect(() => {
     if (isDrawing) return;
     const soldIndices = cells
       .map((c, i) => ({ c, i }))
       .filter(x => x.c === "user" || x.c === "pool")
       .map(x => x.i);
-    
+
     if (soldIndices.length === 0) return;
 
     // Periodically "pulse" a random cell to simulate activity
@@ -473,13 +476,25 @@ export const TicketVisualizer: React.FC<TicketVisualizerProps> = ({
               className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none"
             >
               <motion.div
-                animate={{ scale: [1, 1.08, 1] }}
-                transition={{ repeat: Infinity, duration: 1.2 }}
-                className="bg-black/80 backdrop-blur-md rounded-full flex flex-col items-center justify-center gap-2 border border-yellow-500/40"
-                style={{ width: "40%", aspectRatio: "1" }}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+                className="bg-black/90 backdrop-blur-xl rounded-full flex flex-col items-center justify-center gap-3 border-2 border-yellow-500/60 shadow-[0_0_50px_rgba(234,179,8,0.4)] overflow-hidden"
+                style={{ width: "45%", aspectRatio: "1", padding: winner ? "0" : "1.5rem" }}
               >
-                <Trophy className="w-8 h-8 text-yellow-400" />
-                <p className="text-xs font-black text-yellow-300 uppercase tracking-[0.2em]">Vencedor!</p>
+                {winner ? (
+                  <>
+                    <img src={winner.picture} alt={winner.name} className="absolute inset-0 w-full h-full object-cover opacity-80 mix-blend-luminosity" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col items-center justify-end pb-6">
+                      <Trophy className="w-8 h-8 text-yellow-400 mb-1 drop-shadow-[0_0_8px_rgba(0,0,0,0.8)]" />
+                      <p className="text-[10px] font-black text-yellow-300 uppercase tracking-[0.2em] relative z-10 drop-shadow-[0_0_8px_rgba(0,0,0,0.8)] px-2 text-center line-clamp-1">{winner.name}</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Trophy className="w-10 h-10 text-yellow-400" />
+                    <p className="text-[11px] font-black text-yellow-300 uppercase tracking-[0.2em]">Vencedor!</p>
+                  </>
+                )}
               </motion.div>
             </motion.div>
           )}
