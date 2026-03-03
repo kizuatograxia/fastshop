@@ -33,7 +33,7 @@ const RaffleCardWrapper = ({ raffle, index }: { raffle: Raffle; index: number })
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 + index * 0.05 }}
-      className="inline-block w-full break-inside-avoid mb-6"
+      className="w-full h-full flex flex-col"
     >
       <Link to={`/raffle/${raffle.id}`}>
         <Card className="group bg-card border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-glow hover:-translate-y-1 cursor-pointer">
@@ -282,9 +282,9 @@ const Sorteios: React.FC = () => {
           </div>
         ) : (
           <div className="w-full">
-            <div className="columns-2 lg:columns-3 gap-3 md:gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 items-stretch">
               {filteredRaffles.map((raffle, index) => (
-                <div key={raffle.id} className="inline-block w-full break-inside-avoid mb-6">
+                <div key={raffle.id} className="w-full h-full">
                   <RaffleCardWrapper raffle={raffle} index={index} />
                 </div>
               ))}
