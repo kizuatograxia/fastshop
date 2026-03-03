@@ -397,7 +397,14 @@ const RaffleDetails: React.FC = () => {
                             <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
                                 {pendingChangeDialog?.changeNFTs.map((nft, idx) => (
                                     <div key={idx} className="flex justify-between items-center text-xs bg-secondary/20 p-2 rounded-lg">
-                                        <span className="font-bold flex items-center gap-1">{nft.emoji} {nft.nome}</span>
+                                        <div className="flex items-center gap-3">
+                                            {nft.image ? (
+                                                <img src={nft.image} alt={nft.nome} className="w-8 h-8 rounded-md object-cover shadow-sm bg-black/20" />
+                                            ) : (
+                                                <span className="text-xl">{nft.emoji}</span>
+                                            )}
+                                            <span className="font-bold">{nft.nome}</span>
+                                        </div>
                                         <span className="text-primary font-black">R$ {nft.preco.toFixed(2)}</span>
                                     </div>
                                 ))}
