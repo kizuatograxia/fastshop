@@ -506,7 +506,10 @@ export const api = {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ password }),
         });
-        if (!res.ok) throw new Error("Falha ao realizar sorteio");
+        if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body?.message || body?.error || `Falha ao realizar sorteio (${res.status})`);
+        }
         return res.json();
     },
 
