@@ -292,7 +292,7 @@ const RaffleDetails: React.FC = () => {
             setRaffle((prev: any) => ({ ...prev, participantes: prev.participantes + finalTicketsToReceive }));
 
             if (changeNFTsToIssue.length > 0) {
-                const userId = JSON.parse(localStorage.getItem("fastshop_user") || "{}")?.id;
+                const userId = JSON.parse(localStorage.getItem("luckynft_session") || "{}")?.id;
                 if (userId) {
                     await Promise.all(changeNFTsToIssue.map(changeNFT =>
                         api.addToWallet(Number(userId), changeNFT)
