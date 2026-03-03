@@ -233,10 +233,18 @@ const Admin = () => {
         // Confirm before action
         if (!confirm("Isso irá realizar o sorteio e definir um vencedor permanentemente. Continuar?")) return;
 
+        // Get admin password — use stored key or prompt if RBAC admin
+        let adminPassword = password || localStorage.getItem("admin_key") || "";
+        if (!adminPassword) {
+            const entered = prompt("Digite a senha de administrador para realizar o sorteio:");
+            if (!entered) return;
+            adminPassword = entered;
+        }
+
         setIsLoading(true);
         try {
             // 1. Perform the draw on the backend first
-            const data = await api.drawRaffle(localStorage.getItem("admin_key") || "", selectedRaffle.id);
+            const data = await api.drawRaffle(adminPassword, selectedRaffle.id);
 
             // 2. Update the raffle with the winner info locally
             const updatedRaffle = { ...selectedRaffle, winner: data.winner, status: 'encerrado' };
@@ -246,12 +254,13 @@ const Admin = () => {
             setShowRoulette(true);
             toast.success("Resultado obtido! Iniciando animação...");
         } catch (error) {
-            toast.error("Erro ao realizar sorteio. Tente novamente.");
+            toast.error(error instanceof Error ? error.message : "Erro ao realizar sorteio. Tente novamente.");
             console.error(error);
         } finally {
             setIsLoading(false);
         }
     };
+
 
     // --- RENDER LOGIN ---
     if (!isAuthenticated) {
