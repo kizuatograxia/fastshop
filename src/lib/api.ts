@@ -239,12 +239,6 @@ export const api = {
         });
         if (!res.ok) throw new Error("Failed to fetch user raffles");
         const data = await res.json();
-        // DEBUG: show only top-level keys + non-raffle values (avoid base64 flood)
-        if (data.length > 0) {
-            const { raffle: _, ...rest } = data[0];
-            console.log("[DEBUG] user/raffles top-level keys:", Object.keys(data[0]));
-            console.log("[DEBUG] user/raffles non-raffle fields:", JSON.stringify(rest));
-        }
         // Ensure IDs are strings to match frontend types
         return data.map((ur: any) => ({
             ...ur,
