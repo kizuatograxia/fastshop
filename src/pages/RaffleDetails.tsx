@@ -95,7 +95,7 @@ const RaffleDetails: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { ownedNFTs, removeNFT, refreshWallet } = useWallet();
-    const { addUserRaffle, getUserValue } = useUserRaffles();
+    const { addUserRaffle, getUserValue, getTicketCount } = useUserRaffles();
 
     const [selectedNFTs, setSelectedNFTs] = useState<Record<string, number>>({});
     const [raffle, setRaffle] = useState<any>(null);
@@ -143,6 +143,7 @@ const RaffleDetails: React.FC = () => {
     }, [id]);
 
     const userCurrentValue = raffle ? getUserValue(raffle.id) : 0;
+    const userTickets = raffle ? getTicketCount(raffle.id) : 0; // exact ticket count from backend
     const availableNFTs = ownedNFTs.filter(nft => nft.quantidade > 0);
 
     const handleQuantityChange = (nftId: string, delta: number, max: number) => {
@@ -228,7 +229,6 @@ const RaffleDetails: React.FC = () => {
     const { count: selectedCount, value: selectedValue } = selectionStats;
     const ticketPrice = raffle.custoNFT;
     const ticketsToReceive = Math.floor(selectedValue / ticketPrice);
-    const userTickets = ticketPrice > 0 ? Math.floor(userCurrentValue / ticketPrice) : 0;
     const currentChance = calculateChance(userTickets);
     const potentialChance = calculateChance(userTickets + ticketsToReceive);
 
@@ -426,35 +426,42 @@ const RaffleDetails: React.FC = () => {
                     {/* Visual Area (LEFT) */}
                     <div className="lg:col-span-7 space-y-8">
                         {/* Huge Prize Photo */}
-                        <div className="bg-card rounded-[2rem] border-2 border-border p-2 overflow-hidden shadow-elegant group">
-                            <div className="relative aspect-video md:aspect-auto md:h-[500px] overflow-hidden rounded-[1.5rem]">
-                                <img
-                                    src={activeImage}
-                                    alt={raffle.titulo}
-                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <div className="absolute bottom-6 left-6 text-white translate-y-4 group-hover:translate-y-0 transition-transform">
-                                    <h3 className="text-2xl font-black">{raffle.titulo}</h3>
-                                    <p className="text-sm opacity-80">Prêmio: {raffle.premio}</p>
+                        <div className="bg-card rounded-[2rem] border-2 border-border p-3 shadow-elegant group">
+                            <div className="flex gap-3">
+                                {/* Thumbnail column — LEFT side, only shown when multiple images */}
+                                {raffle.image_urls && raffle.image_urls.length > 1 && (
+                                    <div className="flex flex-col gap-2 flex-shrink-0">
+                                        {raffle.image_urls.map((url: string, idx: number) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => setActiveImage(url)}
+                                                className={`relative w-16 h-16 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${activeImage === url
+                                                        ? "border-primary scale-105 shadow-glow"
+                                                        : "border-transparent opacity-50 hover:opacity-100 hover:border-border"
+                                                    }`}
+                                            >
+                                                <img src={url} alt={`${raffle.titulo} ${idx + 1}`} className="w-full h-full object-cover" />
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Main image — adapts to natural aspect ratio, no cropping */}
+                                <div className="relative flex-1 overflow-hidden rounded-[1.3rem] min-h-[280px] max-h-[560px] flex items-center justify-center bg-black/40">
+                                    <img
+                                        src={activeImage}
+                                        alt={raffle.titulo}
+                                        className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                                    <div className="absolute bottom-5 left-5 text-white translate-y-4 group-hover:translate-y-0 transition-transform pointer-events-none">
+                                        <h3 className="text-xl font-black drop-shadow">{raffle.titulo}</h3>
+                                        <p className="text-sm opacity-80">{raffle.premio}</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Thumbnails Gallery */}
-                        {raffle.image_urls && raffle.image_urls.length > 1 && (
-                            <div className="flex gap-4 overflow-x-auto pb-4 px-2 custom-scrollbar">
-                                {raffle.image_urls.map((url: string, idx: number) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => setActiveImage(url)}
-                                        className={`relative w-24 h-24 flex-shrink-0 rounded-2xl overflow-hidden border-2 transition-all ${activeImage === url ? "border-primary scale-105 shadow-glow" : "border-transparent opacity-60 hover:opacity-100"}`}
-                                    >
-                                        <img src={url} alt={`${raffle.titulo} ${idx + 1}`} className="w-full h-full object-cover" />
-                                    </button>
-                                ))}
-                            </div>
-                        )}
 
                         {/* Description */}
                         <div className="bg-card/50 rounded-3xl p-8 border border-border space-y-4">
