@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Clock, Users, Ticket, Trophy, Target, Info, CheckCircle2, Minus, Plus, Loader2, Share2, ShoppingCart, Activity, Hash, ChevronRight, Eye } from "lucide-react";
+import { ArrowLeft, Clock, Users, Ticket, Trophy, Target, Info, CheckCircle2, Minus, Plus, Loader2, Share2, ShoppingCart, Activity, Hash, ChevronRight, Eye, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useWallet } from "@/contexts/WalletContext";
 import { useUserRaffles } from "@/contexts/UserRafflesContext";

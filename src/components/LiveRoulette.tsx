@@ -189,7 +189,7 @@ export function LiveRoulette({ raffle, onClose }: LiveRouletteProps) {
 
     // Auto-start
     useEffect(() => {
-        if (status === 'ready' && extendedList.length > 0 && CARD_WIDTH > 0) {
+        if (status === 'ready' && extendedList.length > 0 && containerWidth > 0) {
             const timer = setTimeout(startSpin, 1000);
             return () => clearTimeout(timer);
         }
