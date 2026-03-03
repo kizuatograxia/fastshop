@@ -507,9 +507,9 @@ const RaffleDetails: React.FC = () => {
                                     <div className="flex flex-col gap-5">
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="bg-white/5 rounded-2xl p-5 border border-white/8 space-y-1">
-                                                <Users className="w-5 h-5 text-blue-400 mb-2" />
+                                                <Ticket className="w-5 h-5 text-blue-400 mb-2" />
                                                 <p className="text-3xl font-black text-white">{raffle.participantes}</p>
-                                                <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Participantes</p>
+                                                <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Cotas Vendidas</p>
                                             </div>
                                             <div className="bg-green-500/10 rounded-2xl p-5 border border-green-500/20 space-y-1">
                                                 <Target className="w-5 h-5 text-green-500 mb-2" />
@@ -685,8 +685,8 @@ const RaffleDetails: React.FC = () => {
                             <div className="flex items-center justify-between">
                                 <div className="space-y-1">
                                     <div className="flex items-center gap-2 text-muted-foreground">
-                                        <Users className="w-4 h-4" />
-                                        <span className="text-xs uppercase font-bold tracking-widest">Participantes</span>
+                                        <Ticket className="w-4 h-4" />
+                                        <span className="text-xs uppercase font-bold tracking-widest">Cotas Vendidas</span>
                                     </div>
                                     <p className="font-black text-3xl text-foreground">{raffle.participantes}</p>
                                 </div>

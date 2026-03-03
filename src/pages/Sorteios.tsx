@@ -95,8 +95,8 @@ const RaffleCardWrapper = ({ raffle, index }: { raffle: Raffle; index: number })
               {/* Footer */}
               <div className="flex items-center justify-between pt-2">
                 <div className="flex items-center gap-2 text-muted-foreground">
-                  <Users className="h-4 w-4" />
-                  <span className="text-sm">{raffle.participantes} participantes</span>
+                  <Ticket className="h-4 w-4" />
+                  <span className="text-sm">{raffle.participantes} <span className="hidden sm:inline">cotas vendidas</span></span>
                 </div>
                 <Badge className="bg-primary/10 text-primary border-0">
                   <Ticket className="h-3 w-3 mr-1" />

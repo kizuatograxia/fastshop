@@ -113,8 +113,8 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
                     <div className="space-y-1">
                         <div className="flex justify-between text-[10px] md:text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">
-                                <Users className="h-3 w-3" />
-                                <span>{raffle.participantes} <span className="hidden sm:inline">bilhetes vendidos</span></span>
+                                <Ticket className="h-3 w-3" />
+                                <span>{raffle.participantes} <span className="hidden sm:inline">cotas vendidas</span></span>
                             </span>
                             <span>{Math.round(progressPercent)}%</span>
                         </div>
