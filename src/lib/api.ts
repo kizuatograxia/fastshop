@@ -239,6 +239,8 @@ export const api = {
         });
         if (!res.ok) throw new Error("Failed to fetch user raffles");
         const data = await res.json();
+        // DEBUG: log raw field names to fix ticket count mapping
+        if (data.length > 0) console.log("[DEBUG] user/raffles raw first item:", JSON.stringify(data[0], null, 2));
         // Ensure IDs are strings to match frontend types
         return data.map((ur: any) => ({
             ...ur,
