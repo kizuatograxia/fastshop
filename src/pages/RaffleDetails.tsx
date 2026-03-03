@@ -210,7 +210,7 @@ const RaffleDetails: React.FC = () => {
                     setIsDrawing(true);
                 }
             } catch { /* silent */ }
-        }, isLiveViewActive ? 10_000 : 30_000); // 10s if watching live, 30s if just on page
+        }, isLiveViewActive ? 3_000 : 5_000); // Poll fast for immediate reaction (3s in live view, 5s normal)
 
         return () => clearInterval(poll);
     }, [id, isDrawing, isLiveViewActive, raffle?.status]);
