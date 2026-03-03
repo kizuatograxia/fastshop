@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { OwnedNFT } from "@/types/raffle";
 import { Progress } from "@/components/ui/progress";
 import { TicketVisualizer } from "@/components/TicketVisualizer";
-import { TicketRoulette } from "@/components/TicketRoulette";
+import { CircularCountdown, MempoolLayoutSideBySide } from "@/components/MempoolLayout";
 
 // ... rarityColors ...
 const rarityColors: Record<string, string> = {
@@ -20,139 +20,7 @@ const rarityColors: Record<string, string> = {
     lendario: "from-yellow-400 to-orange-500",
 };
 
-// Circular countdown component
-const CircularCountdown: React.FC<{ targetDate: string, onExpire?: () => void, minimal?: boolean }> = ({ targetDate, onExpire, minimal = false }) => {
-    // ...
-    const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, progress: 0, total: 1 });
 
-    useEffect(() => {
-        const update = () => {
-            const now = Date.now();
-            const end = new Date(targetDate).getTime();
-            const diff = Math.max(0, end - now);
-
-            if (diff === 0 && onExpire) {
-                onExpire();
-            }
-
-            // Assume raffle started 30 days before end
-            const totalDuration = 30 * 24 * 60 * 60 * 1000;
-            const elapsed = totalDuration - diff;
-            const progress = Math.min(Math.max(elapsed / totalDuration, 0), 1);
-
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            setTimeLeft({ days, hours, minutes, seconds, progress, total: diff });
-        };
-        update();
-        const interval = setInterval(update, 1000);
-        return () => clearInterval(interval);
-    }, [targetDate, onExpire]);
-
-    const isEnding = timeLeft.days === 0 && timeLeft.hours < 1;
-    const isExpired = timeLeft.total === 0;
-    const circumference = 2 * Math.PI * 90;
-    const strokeDashoffset = circumference * (1 - timeLeft.progress);
-
-    // Shared SVG ring + time display (used in both variants)
-    const ringDisplay = (
-        <div className="relative w-full h-full">
-            <svg className="w-full h-full -rotate-90" viewBox="0 0 200 200">
-                <circle cx="100" cy="100" r="90" fill="none"
-                    stroke={minimal ? "rgba(255,255,255,0.1)" : "hsl(var(--border))"}
-                    strokeWidth={minimal ? 6 : 8} />
-                <circle cx="100" cy="100" r="90" fill="none"
-                    stroke="hsl(var(--primary))" strokeWidth={minimal ? 6 : 8}
-                    strokeLinecap="round" strokeDasharray={circumference}
-                    strokeDashoffset={strokeDashoffset}
-                    className="transition-all duration-1000 ease-linear" />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                {isExpired ? (
-                    <div className="text-center">
-                        <Activity className="w-10 h-10 text-primary animate-spin mx-auto mb-1" />
-                        <span className="text-xs font-bold text-primary uppercase tracking-widest">SORTEANDO</span>
-                    </div>
-                ) : timeLeft.days > 0 ? (
-                    <>
-                        <div className={`font-black tracking-tight tabular-nums ${minimal ? "text-4xl text-white" : "text-5xl text-foreground"}`}>
-                            {String(timeLeft.days).padStart(2, "0")}
-                            <span className={minimal ? "text-white/40 mx-1" : "text-muted-foreground mx-1"}>:</span>
-                            {String(timeLeft.hours).padStart(2, "0")}
-                        </div>
-                        <span className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${minimal ? "text-white/50" : "text-muted-foreground"}`}>DIAS</span>
-                    </>
-                ) : (
-                    <>
-                        <div className={`font-black tracking-tight tabular-nums ${minimal ? "text-4xl text-white" : "text-5xl text-foreground"}`}>
-                            {String(timeLeft.hours).padStart(2, "0")}
-                            <span className={`mx-1 animate-pulse ${minimal ? "text-white/40" : "text-muted-foreground"}`}>:</span>
-                            {String(timeLeft.minutes).padStart(2, "0")}
-                        </div>
-                        <span className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${minimal ? "text-white/50" : "text-muted-foreground"}`}>
-                            {timeLeft.hours > 0 ? "HORAS" : "MINUTOS"}
-                        </span>
-                    </>
-                )}
-            </div>
-        </div>
-    );
-
-    // MINIMAL variant — just the ring, no card/buttons/title
-    if (minimal) {
-        return (
-            <div className="relative w-full aspect-square flex items-center justify-center">
-                {/* Subtle dark glass backing */}
-                <div className="absolute inset-4 rounded-full bg-black/50 backdrop-blur-md border border-white/10" />
-                <div className="relative w-full h-full">
-                    {ringDisplay}
-                </div>
-                {isEnding && !isExpired && (
-                    <div className="absolute bottom-6 flex items-center gap-1.5 bg-red-500/20 text-red-300 px-2.5 py-1 rounded-full text-[10px] font-bold border border-red-500/30">
-                        <Clock className="w-2.5 h-2.5" />
-                        ENCERRA EM BREVE
-                    </div>
-                )}
-            </div>
-        );
-    }
-
-    // FULL variant — card with title and buttons
-    return (
-        <div className="bg-card rounded-2xl border border-border p-6 flex flex-col items-center relative overflow-hidden">
-            {isEnding && !isExpired && (
-                <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-destructive/20 text-destructive px-2.5 py-1 rounded-full text-xs font-bold border border-destructive/30">
-                    <Clock className="w-3 h-3" />
-                    ENCERRA EM BREVE
-                </div>
-            )}
-
-            <h3 className="text-base font-bold text-foreground mb-6">
-                {isExpired ? "O Sorteio Está em Andamento!" : "O Próximo Ganhador Será Definido em..."}
-            </h3>
-
-            <div className="relative w-52 h-52 mb-4">{ringDisplay}</div>
-
-            <div className="flex gap-3 w-full mt-2">
-                <Button variant="hero" className="flex-1 h-12 text-base font-bold gap-2" disabled={isExpired} onClick={() => {
-                    document.getElementById("nft-selection")?.scrollIntoView({ behavior: "smooth" });
-                }}>
-                    <ShoppingCart className="w-4 h-4" />
-                    Comprar Tickets
-                </Button>
-                <Button variant="outline" size="icon" className="h-12 w-12" onClick={() => {
-                    navigator.clipboard.writeText(window.location.href);
-                    toast.success("Link copiado!");
-                }}>
-                    <Share2 className="w-4 h-4" />
-                </Button>
-            </div>
-        </div>
-    );
-};
 
 // Activity Feed component
 const ActivityFeed: React.FC<{ raffleId: string }> = ({ raffleId }) => {
@@ -390,72 +258,44 @@ const RaffleDetails: React.FC = () => {
                                     >
                                         <div className="text-center space-y-2">
                                             <h3 className="font-black text-3xl text-white uppercase tracking-tighter">Sorteio em Andamento</h3>
-                                            <p className="text-white/40 text-sm">Aguarde o resultado...</p>
+                                            <p className="text-white/40 text-sm animate-pulse">Os quadrados estão sendo sorteados...</p>
                                         </div>
-                                        <div className="bg-white/5 rounded-3xl border border-white/10 p-8 backdrop-blur-sm">
-                                            <TicketRoulette
-                                                totalTickets={Math.max(raffle.participantes, 50)}
-                                                userTickets={userTickets}
-                                            />
-                                        </div>
+                                        <MempoolLayoutSideBySide
+                                            totalTickets={raffle.participantes}
+                                            userTickets={userTickets}
+                                            targetDate={raffle.dataFim}
+                                            isDrawing={true}
+                                        />
                                     </motion.div>
                                 ) : (
                                     /* ---- LIVE VIEW MODE ---- */
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-                                        {/* LEFT: Circular Mempool + Timer */}
-                                        <div className="flex flex-col items-center gap-6">
-                                            <div className="text-center">
+                                        {/* LEFT: MempoolLayoutSideBySide (circle + timer stacked) */}
+                                        <div>
+                                            <div className="text-center mb-6">
                                                 <h3 className="font-black text-2xl text-white uppercase tracking-tighter">Visualização em Tempo Real</h3>
-                                                <p className="text-white/40 text-xs mt-1 uppercase tracking-widest">Tickets proporcional por participante</p>
+                                                <p className="text-white/40 text-xs mt-1 uppercase tracking-widest">Quadrados proporcionais ao número de tickets</p>
                                             </div>
-                                            <div className="relative flex items-center justify-center w-full max-w-[440px] aspect-square">
-                                                {/* Glow */}
-                                                <div className="absolute inset-0 bg-primary/5 blur-[80px] rounded-full pointer-events-none" />
-
-                                                {/* Circular Mempool behind the timer */}
-                                                <div className="absolute inset-0 z-0">
-                                                    <TicketVisualizer
-                                                        totalTickets={raffle.participantes}
-                                                        userTickets={userTickets}
-                                                        variant="circular"
-                                                    />
-                                                </div>
-
-                                                {/* Countdown in Center */}
-                                                <div className="relative z-10 w-[72%]">
-                                                    <CircularCountdown
-                                                        targetDate={raffle.dataFim}
-                                                        onExpire={() => setIsDrawing(true)}
-                                                        minimal
-                                                    />
-                                                </div>
-                                            </div>
-                                            {/* Legend */}
-                                            <div className="flex items-center gap-6 text-xs font-black uppercase tracking-widest">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-3 h-3 rounded-sm bg-primary shadow-[0_0_8px_hsl(var(--primary)/0.5)]" />
-                                                    <span className="text-primary">Seus tickets</span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-3 h-3 rounded-sm bg-blue-600/60 border border-white/10" />
-                                                    <span className="text-white/50">Outros</span>
-                                                </div>
-                                            </div>
+                                            <MempoolLayoutSideBySide
+                                                totalTickets={raffle.participantes}
+                                                userTickets={userTickets}
+                                                targetDate={raffle.dataFim}
+                                                onExpire={() => setIsDrawing(true)}
+                                            />
                                         </div>
 
                                         {/* RIGHT: Stats + Activity */}
                                         <div className="flex flex-col gap-5">
-                                            {/* Stat Cards */}
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="bg-white/5 rounded-2xl p-5 border border-white/8 space-y-1">
                                                     <Users className="w-5 h-5 text-blue-400 mb-2" />
                                                     <p className="text-3xl font-black text-white">{raffle.participantes}</p>
                                                     <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Participantes</p>
                                                 </div>
-                                                <div className="bg-primary/10 rounded-2xl p-5 border border-primary/20 space-y-1">
-                                                    <Target className="w-5 h-5 text-primary mb-2" />
-                                                    <p className="text-3xl font-black text-primary">{currentChance.toFixed(1)}%</p>
-                                                    <p className="text-[10px] font-bold text-primary/50 uppercase tracking-widest">Sua Chance</p>
+                                                <div className="bg-green-500/10 rounded-2xl p-5 border border-green-500/20 space-y-1">
+                                                    <Target className="w-5 h-5 text-green-500 mb-2" />
+                                                    <p className="text-3xl font-black text-green-400">{currentChance.toFixed(1)}%</p>
+                                                    <p className="text-[10px] font-bold text-green-500/60 uppercase tracking-widest">Sua Chance</p>
                                                 </div>
                                                 <div className="bg-white/5 rounded-2xl p-5 border border-white/8 space-y-1">
                                                     <Ticket className="w-5 h-5 text-purple-400 mb-2" />
@@ -468,7 +308,6 @@ const RaffleDetails: React.FC = () => {
                                                     <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Prêmio</p>
                                                 </div>
                                             </div>
-                                            {/* Activity Feed */}
                                             <div className="bg-white/5 rounded-2xl border border-white/8 overflow-hidden">
                                                 <div className="flex items-center justify-between px-5 py-4 border-b border-white/8">
                                                     <div className="flex items-center gap-2">
@@ -479,8 +318,6 @@ const RaffleDetails: React.FC = () => {
                                                 </div>
                                                 <ActivityFeed raffleId={raffle.id} />
                                             </div>
-
-                                            {/* CTA */}
                                             <Button
                                                 variant="hero"
                                                 className="h-14 text-base font-black gap-3 rounded-2xl"
