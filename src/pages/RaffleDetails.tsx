@@ -191,9 +191,10 @@ const RaffleDetails: React.FC = () => {
         return Math.min((tickets / total) * 100, 100);
     };
 
-    // Real-time refresh: poll raffle data every 30s while live view is open
+    // Real-time refresh: poll raffle data
     useEffect(() => {
-        if (!isLiveViewActive || !id) return;
+        if (!id || raffle?.status === 'encerrado') return;
+
         const poll = setInterval(async () => {
             try {
                 const data = await api.getRaffle(id);
@@ -203,14 +204,16 @@ const RaffleDetails: React.FC = () => {
                         participantes: parseInt(data.tickets_sold) || prev.participantes,
                     }));
                 }
-                // Detect when admin draws → trigger roulette animation
+                // Detect when admin draws → force open live view and trigger roulette animation
                 if (data?.status === 'encerrado' && !isDrawing) {
+                    setIsLiveViewActive(true);
                     setIsDrawing(true);
                 }
             } catch { /* silent */ }
-        }, 10_000); // Poll every 10s for faster draw detection
+        }, isLiveViewActive ? 10_000 : 30_000); // 10s if watching live, 30s if just on page
+
         return () => clearInterval(poll);
-    }, [isLiveViewActive, id, isDrawing]);
+    }, [id, isDrawing, isLiveViewActive, raffle?.status]);
 
 
 
