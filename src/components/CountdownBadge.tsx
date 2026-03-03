@@ -12,34 +12,26 @@ export function CountdownBadge({ targetDate, className }: CountdownBadgeProps) {
 
     useEffect(() => {
         const normalizeDate = (date: string | Date) => {
-            let d;
-
             if (date instanceof Date) {
-                d = new Date(date);
-            } else {
-                // FORCE LOCAL TIME INTERPRETATION for strings
-                let dateStr = date;
-
-                // If the string contains a 'Z' (UTC marker), remove it to treat the time as Local.
-                // This fixes the issue where users enter "05:57" (Local) but the system treats it as "05:57 UTC" (02:57 Local), causing early expiry.
-                if (typeof dateStr === 'string' && dateStr.endsWith('Z')) {
-                    dateStr = dateStr.slice(0, -1);
-                }
-
-                // If date-only string (YYYY-MM-DD), default to End of Day
-                if (dateStr.length <= 10 && !dateStr.includes('T') && !dateStr.includes(':')) {
-                    return new Date(`${dateStr}T23:59:59`);
-                }
-
-                d = new Date(dateStr);
+                return new Date(date);
             }
 
-            // Heuristic check for "Midnight" -> "End of Day"
-            // If the time is exactly 00:00:00, default to 23:59:59
-            if (d.getHours() === 0 && d.getMinutes() === 0 && d.getSeconds() === 0) {
-                d.setHours(23, 59, 59, 999);
+            const dateStr = date.trim();
+
+            // Date-only string (YYYY-MM-DD): default to end of day in LOCAL time
+            if (dateStr.length <= 10 && !dateStr.includes('T') && !dateStr.includes(':')) {
+                return new Date(`${dateStr}T23:59:59`);
             }
-            return d;
+
+            // Full ISO datetime string: ensure it's treated as UTC.
+            // If the string has no timezone indicator (no 'Z' and no '+'/'-' offset),
+            // append 'Z' to prevent browsers from interpreting it as local time.
+            // This fixes a 3-hour offset bug in UTC-3 (Brazil) timezones.
+            if (dateStr.includes('T') && !dateStr.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(dateStr)) {
+                return new Date(dateStr + 'Z');
+            }
+
+            return new Date(dateStr);
         };
 
         const target = normalizeDate(targetDate);

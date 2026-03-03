@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Book Marketplace Design System
+   Primary: Vibrant cyan blue
+   Accent: Soft pink for warmth
+   Clean, professional, book-focused aesthetic
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
+@layer base {
+  :root {
+    /* Primary - Vibrant Cyan Blue */
+    --primary: 195 100% 45%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Accent - Soft Pink */
+    --accent: 346 100% 87%;
+    --accent-foreground: 346 60% 25%;
+    
+    /* Secondary - Light gray */
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 220 20% 25%;
+    
+    /* Background */
+    --background: 0 0% 100%;
+    --foreground: 220 20% 20%;
+    
+    /* Card */
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 20%;
+    
+    /* Popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 20%;
+    
+    /* Muted */
+    --muted: 210 20% 96%;
+    --muted-foreground: 220 10% 50%;
+    
+    /* Destructive */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Success */
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    
+    /* Warning */
+    --warning: 45 93% 47%;
+    --warning-foreground: 45 90% 10%;
+    
+    /* Border */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 195 100% 45%;
+    
+    --radius: 0.75rem;
+    
+    /* Custom tokens */
+    --gradient-primary: linear-gradient(135deg, hsl(195 100% 45%) 0%, hsl(200 100% 50%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(220 25% 10%) 0%, hsl(220 30% 18%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(346 100% 87%) 0%, hsl(340 100% 90%) 100%);
+    --shadow-book: 0 10px 40px -10px hsl(220 30% 20% / 0.25), 0 4px 6px -4px hsl(220 30% 20% / 0.1);
+    --shadow-card: 0 4px 20px -4px hsl(220 30% 20% / 0.1);
+    --shadow-card-hover: 0 20px 40px -10px hsl(220 30% 20% / 0.2);
+    
+    /* Sidebar */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 195 100% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 20% 96%;
+    --sidebar-accent-foreground: 220 20% 25%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 195 100% 45%;
+  }
+
+  .dark {
+    --primary: 195 100% 50%;
+    --primary-foreground: 220 25% 10%;
+    
+    --accent: 346 80% 75%;
+    --accent-foreground: 346 100% 95%;
+    
+    --secondary: 220 20% 18%;
+    --secondary-foreground: 220 10% 90%;
+    
+    --background: 220 25% 8%;
+    --foreground: 220 10% 95%;
+    
+    --card: 220 25% 12%;
+    --card-foreground: 220 10% 95%;
+    
+    --popover: 220 25% 12%;
+    --popover-foreground: 220 10% 95%;
+    
+    --muted: 220 20% 18%;
+    --muted-foreground: 220 10% 60%;
+    
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 195 100% 50%;
+    
+    --gradient-hero: linear-gradient(135deg, hsl(220 30% 6%) 0%, hsl(220 35% 12%) 100%);
+    --shadow-book: 0 10px 40px -10px hsl(0 0% 0% / 0.5);
+    --shadow-card: 0 4px 20px -4px hsl(0 0% 0% / 0.3);
+    --shadow-card-hover: 0 20px 40px -10px hsl(0 0% 0% / 0.5);
+    
+    --sidebar-background: 220 25% 10%;
+    --sidebar-foreground: 220 10% 90%;
+    --sidebar-primary: 195 100% 50%;
+    --sidebar-primary-foreground: 220 25% 10%;
+    --sidebar-accent: 220 20% 18%;
+    --sidebar-accent-foreground: 220 10% 90%;
+    --sidebar-border: 220 20% 20%;
+    --sidebar-ring: 195 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Nunito', system-ui, -apple-system, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Nunito', system-ui, sans-serif;
+    @apply font-bold tracking-tight;
+  }
+}
+
+@layer components {
+  .hero-gradient {
+    background: var(--gradient-hero);
+  }
+  
+  .primary-gradient {
+    background: var(--gradient-primary);
+  }
+  
+  .accent-gradient {
+    background: var(--gradient-accent);
+  }
+  
+  .book-shadow {
+    box-shadow: var(--shadow-book);
+  }
+  
+  .card-shadow {
+    box-shadow: var(--shadow-card);
+  }
+  
+  .card-shadow-hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+  
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-primary);
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+  
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}

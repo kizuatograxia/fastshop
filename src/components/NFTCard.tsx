@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles } from "lucide-react";
+import { Sparkles, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NFT } from "@/types/raffle";
 import { useWallet } from "@/contexts/WalletContext";
@@ -56,9 +56,17 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft, index }) => {
 
             {/* NFT Display */}
             <div className={`relative aspect-square overflow-hidden bg-gradient-to-br ${nft.cor} flex items-center justify-center`}>
-                <span className="text-7xl md:text-8xl transition-transform duration-500 group-hover:scale-125 drop-shadow-lg">
-                    {nft.emoji}
-                </span>
+                {nft.image ? (
+                    <img
+                        src={nft.image}
+                        alt={nft.nome}
+                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+                    />
+                ) : (
+                    <span className="text-7xl md:text-8xl transition-transform duration-500 group-hover:scale-125 drop-shadow-lg">
+                        {nft.emoji}
+                    </span>
+                )}
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
             </div>
 
@@ -68,24 +76,23 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft, index }) => {
                     <h3 className="font-bold text-foreground group-hover:text-primary transition-colors">
                         {nft.nome}
                     </h3>
-                    <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                    {/* <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
                         {nft.descricao}
-                    </p>
+                    </p> */}
                 </div>
 
-                <div className="flex items-center justify-between">
-                    <p className="text-xl font-bold text-gradient">
+                <div className="flex items-center justify-between pb-1">
+                    <p className="text-lg font-bold text-gradient">
                         R$ {nft.preco.toFixed(2).replace(".", ",")}
                     </p>
                 </div>
 
                 <Button
                     variant="cart"
-                    size="default"
-                    className="w-full"
+                    className="w-full h-10 rounded text-xs gap-1"
                     onClick={handleBuy}
                 >
-                    <Sparkles className="h-4 w-4" />
+                    <ShoppingCart className="h-4 w-4" />
                     Comprar NFT
                 </Button>
             </div>

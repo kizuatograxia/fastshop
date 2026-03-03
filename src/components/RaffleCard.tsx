@@ -11,9 +11,10 @@ import { CountdownBadge } from "@/components/CountdownBadge";
 interface RaffleCardProps {
     raffle: Raffle;
     index: number;
+    disableNavigation?: boolean;
 }
 
-const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index }) => {
+const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigation = false }) => {
     const { getTotalNFTs } = useWallet();
     const { addUserRaffle, isParticipating } = useUserRaffles();
     const navigate = useNavigate();
@@ -35,7 +36,7 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index }) => {
             return;
         }
 
-        addUserRaffle(raffle, 1, raffle.custoNFT);
+        addUserRaffle(raffle, 1, raffle.custoNFT, {});
         toast.success(`Você entrou no sorteio: ${raffle.titulo}!`, {
             description: `Custo: ${raffle.custoNFT} NFT(s)`,
         });
@@ -50,26 +51,26 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index }) => {
 
     return (
         <article
-            className="group relative bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 hover:shadow-elevated hover:border-primary/30 hover:-translate-y-1 animate-fade-in cursor-pointer"
+            className={`group relative bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 hover:shadow-elevated hover:border-primary/30 hover:-translate-y-1 animate-fade-in flex flex-col h-full ${disableNavigation ? "" : "cursor-pointer"}`}
             style={{ animationDelay: `${index * 0.1}s` }}
-            onClick={() => navigate(`/raffle/${raffle.id}`)}
+            onClick={() => !disableNavigation && navigate(`/raffle/${raffle.id}`)}
         >
             {/* Status Badge */}
-            <div className="absolute top-4 left-4 z-10">
+            <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10 scale-[0.85] md:scale-100 origin-top-left">
                 <CountdownBadge targetDate={raffle.dataFim} />
             </div>
 
             {/* Prize Value Badge */}
-            <div className="absolute top-4 right-4 z-10 bg-background/80 backdrop-blur-sm text-foreground px-2 py-1 rounded-lg text-xs font-bold border border-border">
+            <div className="absolute top-2 right-2 md:top-4 md:right-4 z-10 bg-background/80 backdrop-blur-sm text-foreground px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg text-[10px] md:text-xs font-bold border border-border">
                 R$ {raffle.premioValor.toLocaleString("pt-BR")}
             </div>
 
             {/* Image Container */}
-            <div className="relative aspect-square overflow-hidden bg-secondary/30">
+            <div className="relative w-full aspect-video md:aspect-auto md:h-auto overflow-hidden bg-secondary/30 border-b border-border/50">
                 <img
                     src={raffle.imagem}
                     alt={raffle.titulo}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    className="w-full h-full md:h-auto object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                     onError={(e) => {
                         e.currentTarget.src = "https://images.unsplash.com/photo-1635326444826-06c8f8d2e61d?w=800&q=80";
@@ -98,59 +99,63 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index }) => {
             </div>
 
             {/* Content */}
-            <div className="p-4 space-y-3">
-                <h3 className="font-bold text-lg text-foreground leading-tight group-hover:text-primary transition-colors">
+            <div className="p-3 md:p-4 flex-1 flex flex-col">
+                <h3 className="font-bold text-sm md:text-lg text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-2 mb-2">
                     {raffle.titulo}
                 </h3>
 
-                <p className="text-sm text-muted-foreground line-clamp-2">
+                {/* <p className="text-[11px] md:text-sm text-muted-foreground line-clamp-2 md:line-clamp-none mb-4 md:mb-6 flex-1 md:flex-initial">
                     {raffle.descricao}
-                </p>
+                </p> */}
 
-                {/* Progress Bar */}
-                <div className="space-y-1">
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            {raffle.participantes} bilhetes vendidos
+                <div className="space-y-3 mt-auto">
+                    {/* Progress Bar */}
+                    <div className="space-y-1">
+                        <div className="flex justify-between text-[10px] md:text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                                <Ticket className="h-3 w-3" />
+                                <span>{raffle.participantes} <span className="hidden sm:inline">cotas vendidas</span></span>
+                            </span>
+                            <span>{Math.round(progressPercent)}%</span>
+                        </div>
+                        <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500"
+                                style={{ width: `${progressPercent}%` }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* NFT Cost */}
+                    <div className="flex items-center justify-between py-1.5 px-2 md:py-2 md:px-3 bg-secondary/50 rounded-md md:rounded-lg">
+                        <span className="text-[10px] md:text-xs text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis mr-2">
+                            Custo <span className="hidden sm:inline">para participar</span>
                         </span>
-                        <span>{Math.round(progressPercent)}%</span>
+                        <span className="font-bold text-[11px] md:text-sm text-primary whitespace-nowrap">{raffle.custoNFT} NFT</span>
                     </div>
-                    <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500"
-                            style={{ width: `${progressPercent}%` }}
-                        />
-                    </div>
-                </div>
 
-                {/* NFT Cost */}
-                <div className="flex items-center justify-between py-2 px-3 bg-secondary/50 rounded-lg">
-                    <span className="text-xs text-muted-foreground">Custo para participar</span>
-                    <span className="font-bold text-primary">{raffle.custoNFT} NFT</span>
-                </div>
-
-                {/* Buttons */}
-                <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        size="default"
-                        className="flex-1"
-                        onClick={handleMoreInfo}
-                    >
-                        <Info className="h-4 w-4" />
-                        Mais informações
-                    </Button>
-                    <Button
-                        variant="hero"
-                        size="default"
-                        className="flex-1"
-                        onClick={handleParticipate}
-                        disabled={alreadyParticipating}
-                    >
-                        <Ticket className="h-4 w-4" />
-                        {alreadyParticipating ? "Participando" : "Participar"}
-                    </Button>
+                    {/* Buttons - Hidden if disabled */}
+                    {!disableNavigation && (
+                        <div className="flex gap-1.5 md:gap-2">
+                            <Button
+                                variant="outline"
+                                className="flex-1 hidden sm:flex h-8 md:h-10 text-xs md:text-sm px-2"
+                                onClick={handleMoreInfo}
+                            >
+                                <Info className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                                Mais Info
+                            </Button>
+                            <Button
+                                variant="hero"
+                                className="flex-1 h-8 md:h-10 text-xs md:text-sm px-2"
+                                onClick={handleParticipate}
+                                disabled={alreadyParticipating}
+                            >
+                                <Ticket className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                                {alreadyParticipating ? "Participando" : "Participar"}
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </div>
         </article>

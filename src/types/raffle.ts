@@ -2,6 +2,7 @@ export interface NFT {
     id: string;
     nome: string;
     emoji: string;
+    image?: string;
     preco: number;
     raridade: "comum" | "raro" | "epico" | "lendario";
     descricao: string;
@@ -15,6 +16,7 @@ export interface Raffle {
     premio: string;
     premioValor: number;
     imagem: string;
+    image_urls?: string[];
     dataFim: string;
     participantes: number;
     maxParticipantes: number;
@@ -24,6 +26,10 @@ export interface Raffle {
     raridade?: string;
     winner_id?: number;
     winner?: RaffleWinner;
+    trackingCode?: string;
+    carrier?: string;
+    shippingStatus?: 'preparing' | 'shipped' | 'in_transit' | 'delivered';
+    shippedAt?: string;
 }
 
 export interface RaffleWinner {
@@ -31,6 +37,13 @@ export interface RaffleWinner {
     user_id?: string | number;
     name: string;
     picture?: string;
+    email?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    cep?: string;
+    number?: string;
+    district?: string;
 }
 
 export interface OwnedNFT extends NFT {

@@ -3,6 +3,16 @@ import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { Raffle } from '@/types/raffle';
 
+// Defensive UTC date parsing: if a date string has no timezone indicator, treat it as UTC.
+// This prevents a 3-hour offset in UTC-3 (Brazil) browsers.
+const parseAsUTC = (dateStr: string): Date => {
+    const trimmed = dateStr.trim();
+    if (trimmed.includes('T') && !trimmed.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(trimmed)) {
+        return new Date(trimmed + 'Z');
+    }
+    return new Date(trimmed);
+};
+
 interface RaffleEventContextType {
     activeRaffles: Raffle[];
     triggeringRaffle: Raffle | null;
@@ -32,15 +42,15 @@ export const RaffleEventsProvider = ({ children }: { children: ReactNode }) => {
         // Polling Interval
         const interval = setInterval(() => {
             fetchRaffles();
-        }, 5000); // Check every 5 seconds
+        }, 30000); // Check every 30 seconds
 
         return () => clearInterval(interval);
     }, []);
 
     const fetchRaffles = async () => {
         try {
-            // Fetch all known raffles to detect changes
-            const allRaffles = await api.getAdminRaffles();
+            // Use public endpoint instead of admin-only endpoint
+            const allRaffles = await api.getActiveRaffles();
 
             allRaffles.forEach((raffle: Raffle) => {
                 const oldStatus = lastKnownStatus[raffle.id];
@@ -50,7 +60,7 @@ export const RaffleEventsProvider = ({ children }: { children: ReactNode }) => {
                 checkCountdown(raffle);
 
                 // 2. Check for WINNER DRAWN event
-                const isRecent = new Date().getTime() - new Date(raffle.dataFim).getTime() < 3600000; // 1 hour
+                const isRecent = new Date().getTime() - parseAsUTC(raffle.dataFim).getTime() < 3600000; // 1 hour
                 const notificationKey = `winner-${raffle.id}`;
 
                 // Get local storage history
@@ -83,7 +93,7 @@ export const RaffleEventsProvider = ({ children }: { children: ReactNode }) => {
         if (raffle.status !== 'ativo' && raffle.status !== 'active') return;
 
         const now = new Date();
-        const drawDate = new Date(raffle.dataFim);
+        const drawDate = parseAsUTC(raffle.dataFim);
         const diff = drawDate.getTime() - now.getTime();
         const minutesLeft = Math.ceil(diff / 60000);
 

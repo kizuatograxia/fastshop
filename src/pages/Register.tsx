@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Mail, Lock, Eye, EyeOff, User, Phone, MapPin, Calendar,
@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { GoogleLogin } from "@react-oauth/google";
+import { api } from "@/lib/api";
+import { CPFGate } from "@/components/gate/CPFGate";
 import mascotZe from "@/assets/mascot-ze.png";
 
 // ─── Types ──────────────────────────────────────────────
@@ -24,7 +26,10 @@ interface FormData {
     cpf: string;
     gender: string;
     address: string;
+    number: string;
+    district: string;
     city: string;
+    state: string;
     cep: string;
     country: string;
     phone: string;
@@ -37,7 +42,7 @@ interface FormData {
 
 const INITIAL_FORM: FormData = {
     email: "", confirmEmail: "", birthDate: "", cpf: "", gender: "",
-    address: "", city: "", cep: "", country: "brasil", phone: "",
+    address: "", number: "", district: "", city: "", state: "", cep: "", country: "brasil", phone: "",
     username: "", password: "", promoCode: "", acceptTerms: false, acceptBonus: true,
 };
 
@@ -103,13 +108,58 @@ const Field: React.FC<{
 // ─── Page ───────────────────────────────────────────────
 const Register: React.FC = () => {
     const navigate = useNavigate();
-    const { register: registerUser, login, googleLogin, user } = useAuth();
-    const [view, setView] = useState<'register' | 'login'>('register');
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const resetToken = searchParams.get('token');
+
+    const initialView = resetToken ? 'reset-password' : (location.pathname.includes('login') ? 'login' : 'register');
+    const { register: registerUser, login, googleLogin, user, updateUser } = useAuth();
+    const [view, setView] = useState<'register' | 'login' | 'forgot-password' | 'reset-password'>(initialView);
     const [step, setStep] = useState<-1 | 0 | 1 | 2>(-1); // -1 = social/email choice
     const [form, setForm] = useState<FormData>(INITIAL_FORM);
     const [showPassword, setShowPassword] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isGoogleAuth, setIsGoogleAuth] = useState(false);
+
+    // Password Recovery State
+    const [recoveryEmail, setRecoveryEmail] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmNewPassword, setConfirmNewPassword] = useState("");
+
+    const handleForgotPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!recoveryEmail) { toast.error("Informe seu e-mail"); return; }
+        setIsSubmitting(true);
+        try {
+            await api.forgotPassword(recoveryEmail);
+            toast.success("E-mail enviado!", { description: "Verifique sua caixa de entrada para as instruções." });
+            setRecoveryEmail("");
+        } catch (error: any) {
+            toast.error(error.message || "Erro ao solicitar recuperação");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleResetPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (newPassword !== confirmNewPassword) { toast.error("As senhas não coincidem"); return; }
+        if (newPassword.length < 6) { toast.error("A senha deve ter 6+ caracteres"); return; }
+        setIsSubmitting(true);
+        try {
+            if (!resetToken) throw new Error("Token de redefinição ausente");
+            await api.resetPassword(resetToken, newPassword);
+            toast.success("Senha redefinida com sucesso!", { description: "Você já pode fazer login com sua nova senha." });
+            setView('login');
+            navigate('/login');
+        } catch (error: any) {
+            toast.error(error.message || "Erro ao redefinir senha");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const [cepLoading, setCepLoading] = useState(false);
 
     // Login state
     const [loginEmail, setLoginEmail] = useState("");
@@ -118,6 +168,34 @@ const Register: React.FC = () => {
     const set = useCallback((field: keyof FormData, value: string | boolean) => {
         setForm(prev => ({ ...prev, [field]: value }));
     }, []);
+
+    const handleBlurCep = async () => {
+        const rawCep = form.cep.replace(/\D/g, '');
+        if (rawCep.length === 8) {
+            setCepLoading(true);
+            try {
+                const response = await fetch(`https://viacep.com.br/ws/${rawCep}/json/`);
+                const data = await response.json();
+                if (!data.erro) {
+                    setForm(prev => ({
+                        ...prev,
+                        address: data.logradouro,
+                        district: data.bairro,
+                        city: data.localidade,
+                        state: data.uf,
+                    }));
+                    // Focus number field if possible
+                    document.getElementById('number')?.focus();
+                } else {
+                    toast.error("CEP não encontrado");
+                }
+            } catch (error) {
+                toast.error("Erro ao buscar CEP");
+            } finally {
+                setCepLoading(false);
+            }
+        }
+    };
 
     // Validation per step
     const validateStep = (s: number): boolean => {
@@ -136,8 +214,12 @@ const Register: React.FC = () => {
             return true;
         }
         if (s === 1) {
+            if (!form.cep || form.cep.replace(/\D/g, "").length < 8) { toast.error("CEP inválido"); return false; }
             if (!form.address) { toast.error("Informe seu endereço"); return false; }
+            if (!form.number) { toast.error("Informe o número"); return false; }
+            if (!form.district) { toast.error("Informe o bairro"); return false; }
             if (!form.city) { toast.error("Informe sua cidade"); return false; }
+            if (!form.state) { toast.error("Informe o estado"); return false; }
             if (!form.phone || form.phone.replace(/\D/g, "").length < 10) { toast.error("Celular inválido"); return false; }
             return true;
         }
@@ -164,13 +246,73 @@ const Register: React.FC = () => {
         setIsSubmitting(true);
         try {
             if (isGoogleAuth) {
-                // If Google Auth, user is already created/logged in via context
-                // We just finish the wizard flow
+                // Google Auth: user already created, just save profile data
+                if (user?.id) {
+                    await api.updateProfile(user.id, {
+                        cpf: form.cpf,
+                        birthDate: form.birthDate,
+                        gender: form.gender,
+                        address: form.address,
+                        number: form.number,
+                        district: form.district,
+                        city: form.city,
+                        state: form.state,
+                        cep: form.cep,
+                        country: form.country,
+                        phone: form.phone,
+                        username: form.username,
+                    });
+                    // Update context — single source of truth
+                    updateUser({
+                        profile_complete: true,
+                        cpf: form.cpf,
+                        address: form.address,
+                        number: form.number,
+                        district: form.district,
+                        city: form.city,
+                        state: form.state,
+                        cep: form.cep,
+                    });
+                }
                 toast.success("Perfil completo e conta criada! 🎉");
                 navigate("/");
             } else {
                 const result = await registerUser(form.email, form.password);
                 if (result.success) {
+                    // After registration, save profile data
+                    const sessionData = JSON.parse(localStorage.getItem("luckynft_session") || "{}");
+                    if (sessionData.id) {
+                        try {
+                            await api.updateProfile(sessionData.id, {
+                                cpf: form.cpf,
+                                birthDate: form.birthDate,
+                                gender: form.gender,
+                                address: form.address,
+                                number: form.number,
+                                district: form.district,
+                                city: form.city,
+                                state: form.state,
+                                cep: form.cep,
+                                country: form.country,
+                                phone: form.phone,
+                                username: form.username,
+                            });
+
+                            // Update context — single source of truth
+                            updateUser({
+                                profile_complete: true,
+                                cpf: form.cpf,
+                                address: form.address,
+                                number: form.number,
+                                district: form.district,
+                                city: form.city,
+                                state: form.state,
+                                cep: form.cep,
+                            });
+                        } catch (profileErr) {
+                            console.warn("Profile save failed, continuing:", profileErr);
+                        }
+                    }
                     toast.success("Conta criada com sucesso! 🎉");
                     navigate("/");
                 } else {
@@ -211,9 +353,15 @@ const Register: React.FC = () => {
                 if (view === 'login') {
                     navigate("/");
                 } else {
-                    // Register flow logic
-                    setIsGoogleAuth(true);
-                    setStep(0);
+                    // Register flow: check if profile is already complete
+                    const userData = JSON.parse(localStorage.getItem("luckynft_session") || "{}");
+                    if (userData.profile_complete) {
+                        toast.success("Perfil já completo! Redirecionando...");
+                        navigate("/");
+                    } else {
+                        setIsGoogleAuth(true);
+                        setStep(0);
+                    }
                 }
             }
         } catch { toast.error("Falha no login com Google"); }
@@ -289,12 +437,84 @@ const Register: React.FC = () => {
                         <Button type="submit" className="w-full h-12 rounded-xl text-lg font-bold" disabled={isSubmitting}>
                             {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "ENTRAR AGORA"}
                         </Button>
+                        <div className="flex justify-center">
+                            <button type="button" onClick={() => setView('forgot-password')} className="text-xs text-muted-foreground hover:text-primary transition-colors">
+                                Esqueci minha senha
+                            </button>
+                        </div>
                     </form>
 
                     <p className="text-center text-xs text-muted-foreground">
                         Não tem conta?{" "}
                         <button onClick={() => setView('register')} className="text-primary font-bold hover:underline">Cadastre-se grátis</button>
                     </p>
+                </motion.div>
+            );
+        }
+
+        if (view === 'forgot-password') {
+            return (
+                <motion.div key="forgot" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="space-y-5">
+                    <div className="text-center space-y-2">
+                        <h2 className="text-2xl font-extrabold text-foreground">Recuperar Senha 🔑</h2>
+                        <p className="text-muted-foreground text-sm">Insira seu e-mail para receber as instruções</p>
+                    </div>
+                    <form onSubmit={handleForgotPassword} className="space-y-4">
+                        <Field
+                            icon={<Mail className="w-4 h-4" />}
+                            label="E-mail"
+                            id="recoveryEmail"
+                            placeholder="seu@email.com"
+                            value={recoveryEmail}
+                            onChange={setRecoveryEmail}
+                            type="email"
+                        />
+                        <Button type="submit" className="w-full h-12 rounded-xl text-lg font-bold" disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "ENVIAR INSTRUÇÕES"}
+                        </Button>
+                    </form>
+                    <button onClick={() => setView('login')} className="w-full text-center text-xs text-muted-foreground hover:text-primary flex items-center justify-center gap-2">
+                        <ChevronLeft className="w-3 h-3" /> Voltar para o Login
+                    </button>
+                </motion.div>
+            );
+        }
+
+        if (view === 'reset-password') {
+            return (
+                <motion.div key="reset" variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.3 }} className="space-y-5">
+                    <div className="text-center space-y-2">
+                        <h2 className="text-2xl font-extrabold text-foreground">Nova Senha 🛡️</h2>
+                        <p className="text-muted-foreground text-sm">Crie uma senha forte e segura</p>
+                    </div>
+                    <form onSubmit={handleResetPassword} className="space-y-4">
+                        <Field
+                            icon={<Lock className="w-4 h-4" />}
+                            label="Nova Senha"
+                            id="newPassword"
+                            placeholder="••••••••"
+                            value={newPassword}
+                            onChange={setNewPassword}
+                            type={showPassword ? "text" : "password"}
+                            rightIcon={
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-muted-foreground hover:text-foreground">
+                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                            }
+                        />
+                        <Field
+                            icon={<Lock className="w-4 h-4" />}
+                            label="Confirmar Nova Senha"
+                            id="confirmNewPassword"
+                            placeholder="••••••••"
+                            value={confirmNewPassword}
+                            onChange={setConfirmNewPassword}
+                            type={showPassword ? "text" : "password"}
+                        />
+                        <Button type="submit" className="w-full h-12 rounded-xl text-lg font-bold" disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "ATUALIZAR SENHA"}
+                        </Button>
+                    </form>
                 </motion.div>
             );
         }
@@ -396,9 +616,36 @@ const Register: React.FC = () => {
                         <h2 className="text-xl font-extrabold text-foreground">Quase lá! 📍</h2>
                         <p className="text-muted-foreground text-xs">Onde a sorte te encontra?</p>
                     </div>
-                    <Field icon={<MapPin className="w-4 h-4" />} label="Endereço" id="address" placeholder="Rua da Sorte, 777" value={form.address} onChange={v => set("address", v)} />
-                    <Field icon={<MapPin className="w-4 h-4" />} label="Cidade" id="city" placeholder="Sua cidade" value={form.city} onChange={v => set("city", v)} />
-                    <Field icon={<MapPin className="w-4 h-4" />} label="CEP" id="cep" placeholder="00000-000" value={form.cep} onChange={v => set("cep", maskCEP(v))} />
+
+                    <div className="space-y-1.5">
+                        <Label htmlFor="cep" className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">CEP</Label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                                {cepLoading ? <Loader2 className="w-4 h-4 animate-spin text-primary" /> : <MapPin className="w-4 h-4" />}
+                            </span>
+                            <input
+                                id="cep" type="text" placeholder="00000-000" value={form.cep}
+                                onChange={e => {
+                                    const v = maskCEP(e.target.value);
+                                    set("cep", v);
+                                }}
+                                onBlur={handleBlurCep}
+                                className="w-full h-12 pl-11 pr-4 rounded-xl border border-input bg-background/50 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm font-medium"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-[1fr,100px] gap-4">
+                        <Field icon={<MapPin className="w-4 h-4" />} label="Endereço (Rua)" id="address" placeholder="Rua da Sorte" value={form.address} onChange={v => set("address", v)} />
+                        <Field icon={<MapPin className="w-4 h-4" />} label="Número" id="number" placeholder="123" value={form.number} onChange={v => set("number", v)} />
+                    </div>
+
+                    <Field icon={<MapPin className="w-4 h-4" />} label="Bairro" id="district" placeholder="Centro" value={form.district} onChange={v => set("district", v)} />
+
+                    <div className="grid grid-cols-[1fr,80px] gap-4">
+                        <Field icon={<MapPin className="w-4 h-4" />} label="Cidade" id="city" placeholder="Sua cidade" value={form.city} onChange={v => set("city", v)} />
+                        <Field icon={<MapPin className="w-4 h-4" />} label="Estado" id="state" placeholder="UF" value={form.state} onChange={v => set("state", v)} />
+                    </div>
                     <div className="space-y-1.5">
                         <Label className="text-muted-foreground font-semibold text-xs uppercase tracking-wider">País</Label>
                         <Select value={form.country} onValueChange={v => set("country", v)}>
@@ -470,6 +717,13 @@ const Register: React.FC = () => {
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-background p-4 font-sans">
+            {/* CPF Gate only for Registration */}
+            {view === 'register' && (
+                <CPFGate>
+                    <></>
+                </CPFGate>
+            )}
+
             <div className="w-full max-w-md">
                 {/* Stepper (only for wizard steps and IF in register view) */}
                 {view === 'register' && step >= 0 && <Stepper current={step} />}

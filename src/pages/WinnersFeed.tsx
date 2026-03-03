@@ -20,24 +20,23 @@ const WinnersFeed = () => {
       try {
         if (!isPolling) setLoading(true);
 
-        // Fetch approved reviews from localStorage (connected to Admin)
-        const approvedReviews = await api.getApprovedReviews();
+        const approvedReviews = await api.getApprovedReviews(); // Now calls /winners API inside
 
         const mappedWinners: WinnerTestimonial[] = approvedReviews.map((r: any) => ({
           id: r.id,
-          name: r.userName || "Usuário",
-          prize: r.prizeName || r.raffleName || "Prêmio",
-          image: r.photoUrl || "/placeholder.svg",
-          avatar: r.userAvatar || "/placeholder.svg",
-          date: r.createdAt || new Date().toISOString(),
-          testimonial: r.comment || "",
+          name: r.userName || r.user_name || "Usuário",
+          prize: r.prizeName || r.prize_name || r.raffleName || r.raffle_title || "Prêmio",
+          image: r.photoUrl || r.photo_url || "/placeholder.svg",
+          avatar: r.userAvatar || r.user_avatar || r.user_picture || "/placeholder.svg", // Added fallbacks
+          date: r.createdAt || r.created_at || new Date().toISOString(),
+          testimonial: r.comment || r.testimonial || "",
           rating: r.rating || 5,
-          verified: true, // Approved by admin = verified
-          likes: 0,
-          prizeImage: r.photoUrl || "/placeholder.svg" // Show user's photo as the main card image
+          verified: true,
+          likes: r.likes || 0,
+          prizeImage: r.photoUrl || r.photo_url || r.image_url || "/placeholder.svg" // Use uploaded photo OR raffle image
         }));
 
-        setWinners(mappedWinners.reverse()); // Show newest first
+        setWinners(mappedWinners.reverse());
       } catch (error) {
         console.error("Failed to fetch winners:", error);
         if (!isPolling) toast.error("Não foi possível carregar os ganhadores.");
@@ -100,34 +99,40 @@ const WinnersFeed = () => {
           </Button>
         </motion.section>
 
-        {/* Stats Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12"
-        >
-          {[
-            { label: "Prêmios Entregues", value: "1.234+", icon: Trophy },
-            { label: "Valor Total", value: "R$ 2.5M+", icon: Sparkles },
-            { label: "Ganhadores Felizes", value: "890+", icon: Trophy },
-            { label: "Avaliação Média", value: "4.9/5", icon: Sparkles },
-          ].map((stat, index) => (
+        {/* Stats Section - Shows real count from loaded data */}
+        {winners.length > 0 && (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="grid grid-cols-2 gap-4 mb-12"
+          >
             <motion.div
-              key={stat.label}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4 + index * 0.1 }}
+              transition={{ delay: 0.4 }}
               className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 text-center hover:border-primary/30 transition-colors"
             >
-              <stat.icon className="w-6 h-6 text-primary mx-auto mb-2" />
+              <Trophy className="w-6 h-6 text-primary mx-auto mb-2" />
               <p className="text-2xl md:text-3xl font-bold text-foreground">
-                {stat.value}
+                {winners.length}
               </p>
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
+              <p className="text-sm text-muted-foreground">Depoimentos Verificados</p>
             </motion.div>
-          ))}
-        </motion.section>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5 }}
+              className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 text-center hover:border-primary/30 transition-colors"
+            >
+              <Sparkles className="w-6 h-6 text-primary mx-auto mb-2" />
+              <p className="text-2xl md:text-3xl font-bold text-foreground">
+                {(winners.reduce((sum, w) => sum + w.rating, 0) / winners.length).toFixed(1)}/5
+              </p>
+              <p className="text-sm text-muted-foreground">Avaliação Média</p>
+            </motion.div>
+          </motion.section>
+        )}
 
         {/* Winners Grid */}
         <section>

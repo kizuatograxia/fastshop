@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -17,10 +18,13 @@ import { ParticipantsTable } from "@/components/admin/ParticipantsTable";
 import { AdminRaffleDetails } from "@/components/admin/AdminRaffleDetails";
 import { ReviewsList, Review } from "@/components/admin/ReviewsList";
 
-type ViewMode = 'dashboard' | 'create' | 'participants' | 'raffles' | 'settings' | 'details' | 'reviews';
+import { CouponsManager } from "@/components/admin/CouponsManager";
+
+type ViewMode = 'dashboard' | 'create' | 'participants' | 'raffles' | 'settings' | 'details' | 'reviews' | 'coupons';
 
 const Admin = () => {
     // --- AUTH STATE ---
+    const { user } = useAuth();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -31,15 +35,26 @@ const Admin = () => {
     const [selectedRaffle, setSelectedRaffle] = useState<Raffle | null>(null);
     const [participants, setParticipants] = useState<any[]>([]);
     const [reviews, setReviews] = useState<Review[]>([]);
+    const [approvedReviews, setApprovedReviews] = useState<Review[]>([]);
 
     // --- ROULETTE STATE ---
     const [showRoulette, setShowRoulette] = useState(false);
     const [winnerId, setWinnerId] = useState<number | null>(null);
 
     useEffect(() => {
-        // Auto-login if session persists
+        // Auto-login if session persists OR USER HAS ADMIN ROLE
         const checkAuth = async () => {
             const storedKey = localStorage.getItem("admin_key");
+
+            // Check if user is admin via RBAC
+            if (user && user.role === 'admin') {
+                setIsAuthenticated(true);
+                toast.success(`Bem-vindo, Admin ${user.name}`);
+                const data = await api.getAdminRaffles();
+                setRaffles(data);
+                return;
+            }
+
             if (storedKey) {
                 try {
                     await api.verifyAdmin(storedKey);
@@ -55,7 +70,7 @@ const Admin = () => {
             }
         };
         checkAuth();
-    }, []);
+    }, [user]); // Re-run when user loads
 
     // Update handlers to fetch reviews when view changes
     useEffect(() => {
@@ -100,11 +115,17 @@ const Admin = () => {
     };
 
     const fetchReviews = async () => {
+        setIsLoading(true);
         try {
-            const data = await api.getPendingReviews(password);
-            setReviews(data);
+            const pending = await api.getPendingReviews(password);
+            const approved = await api.getApprovedReviews();
+            setReviews(pending);
+            setApprovedReviews(approved);
         } catch (error) {
             toast.error("Erro ao carregar depoimentos.");
+        } finally {
+            setIsLoading(true); // Wait, should be false? Fix it while I'm at it.
+            setIsLoading(false);
         }
     };
 
@@ -112,7 +133,7 @@ const Admin = () => {
         try {
             await api.approveReview(password, id);
             toast.success("Depoimento aprovado!");
-            setReviews(prev => prev.filter(r => r.id !== id));
+            fetchReviews(); // Refresh both lists
         } catch (error) {
             toast.error("Erro ao aprovar depoimento.");
         }
@@ -126,6 +147,18 @@ const Admin = () => {
             setReviews(prev => prev.filter(r => r.id !== id));
         } catch (error) {
             toast.error("Erro ao rejeitar depoimento.");
+        }
+    };
+
+    const handleDeleteReview = async (id: string) => {
+        if (!confirm("Tem certeza que deseja deletar este depoimento permanentemente?")) return;
+        try {
+            await api.deleteReview(password, id);
+            toast.success("Depoimento deletado com sucesso.");
+            setReviews(prev => prev.filter(r => r.id !== id));
+            setApprovedReviews(prev => prev.filter(r => r.id !== id));
+        } catch (error) {
+            toast.error("Erro ao deletar depoimento.");
         }
     };
 
@@ -200,10 +233,18 @@ const Admin = () => {
         // Confirm before action
         if (!confirm("Isso irá realizar o sorteio e definir um vencedor permanentemente. Continuar?")) return;
 
+        // Get admin password — use stored key or prompt if RBAC admin
+        let adminPassword = password || localStorage.getItem("admin_key") || "";
+        if (!adminPassword) {
+            const entered = prompt("Digite a senha de administrador para realizar o sorteio:");
+            if (!entered) return;
+            adminPassword = entered;
+        }
+
         setIsLoading(true);
         try {
             // 1. Perform the draw on the backend first
-            const data = await api.drawRaffle(localStorage.getItem("admin_key") || "", selectedRaffle.id);
+            const data = await api.drawRaffle(adminPassword, selectedRaffle.id);
 
             // 2. Update the raffle with the winner info locally
             const updatedRaffle = { ...selectedRaffle, winner: data.winner, status: 'encerrado' };
@@ -213,12 +254,13 @@ const Admin = () => {
             setShowRoulette(true);
             toast.success("Resultado obtido! Iniciando animação...");
         } catch (error) {
-            toast.error("Erro ao realizar sorteio. Tente novamente.");
+            toast.error(error instanceof Error ? error.message : "Erro ao realizar sorteio. Tente novamente.");
             console.error(error);
         } finally {
             setIsLoading(false);
         }
     };
+
 
     // --- RENDER LOGIN ---
     if (!isAuthenticated) {
@@ -243,6 +285,7 @@ const Admin = () => {
                                 className="bg-background/50 border-white/10 h-12 text-lg"
                                 placeholder="••••••••"
                                 autoFocus
+                                autoComplete="current-password"
                             />
                         </div>
                         <Button type="submit" className="w-full h-12 text-lg font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all" disabled={isLoading}>
@@ -263,6 +306,7 @@ const Admin = () => {
                 setView(v);
             }}
             onLogout={handleLogout}
+            pendingReviews={reviews.length}
         >
             {view === 'dashboard' && (
                 <div className="space-y-8">
@@ -328,18 +372,39 @@ const Admin = () => {
             )}
 
             {view === 'reviews' && (
-                <div className="space-y-6">
-                    <div className="flex justify-between items-center">
-                        <h2 className="text-2xl font-bold">Análise de Depoimentos</h2>
-                        <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium">
-                            {reviews.length} pendentes
+                <div className="space-y-8">
+                    <div className="space-y-6">
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-2xl font-bold">Análise de Depoimentos</h2>
+                            <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium">
+                                {reviews.length} pendentes
+                            </div>
                         </div>
+                        <ReviewsList
+                            reviews={reviews}
+                            onApprove={handleApproveReview}
+                            onReject={handleRejectReview}
+                            onDelete={handleDeleteReview}
+                            isLoading={isLoading}
+                        />
                     </div>
-                    <ReviewsList
-                        reviews={reviews}
-                        onApprove={handleApproveReview}
-                        onReject={handleRejectReview}
-                    />
+
+                    <div className="space-y-6 pt-8 border-t border-white/5">
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-2xl font-bold">Depoimentos Publicados</h2>
+                            <div className="bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-xs font-medium">
+                                {approvedReviews.length} ativos
+                            </div>
+                        </div>
+                        <ReviewsList
+                            reviews={approvedReviews}
+                            onApprove={handleApproveReview}
+                            onReject={handleRejectReview}
+                            onDelete={handleDeleteReview}
+                            showActions={false}
+                            isLoading={isLoading}
+                        />
+                    </div>
                 </div>
             )}
 
@@ -347,6 +412,10 @@ const Admin = () => {
                 <div className="flex items-center justify-center p-12 text-muted-foreground border border-dashed border-white/10 rounded-xl">
                     <p>Configurações do sistema em breve.</p>
                 </div>
+            )}
+
+            {view === 'coupons' && (
+                <CouponsManager />
             )}
 
             {/* LIVE ROULETTE OVERLAY */}

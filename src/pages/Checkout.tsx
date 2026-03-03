@@ -10,6 +10,7 @@ import { useWallet } from "@/contexts/WalletContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 const rarityColors: Record<string, string> = {
     comum: "from-gray-400 to-gray-500",
@@ -29,56 +30,149 @@ interface PixPayment {
 
 const Checkout: React.FC = () => {
     const navigate = useNavigate();
-    const { cartItems, getTotalNFTs, addNFT, clearCart, ownedNFTs } = useWallet();
+    const { cartItems, getTotalNFTs, addNFT, buyNFTs, clearCart, ownedNFTs } = useWallet();
     const { toast } = useToast();
+    const { user, login } = useAuth(); // Need login to refresh user data if profile updates
 
     const [isLoading, setIsLoading] = useState(false);
     const [pixData, setPixData] = useState<PixPayment | null>(null);
     const [copied, setCopied] = useState(false);
 
+    // Coupon State (Restored)
+    const [couponCode, setCouponCode] = useState("");
+    const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; type: string } | null>(null);
+    const [couponLoading, setCouponLoading] = useState(false);
+
     const totalNFTs = getTotalNFTs();
     const totalPrice = cartItems.reduce((sum, nft) => sum + nft.preco * nft.quantidade, 0);
-    const totalPriceInBRL = totalPrice; // Valor já está em BRL
 
-    const { user } = useAuth(); // We need user info for the payment
+    // Recalculate totals
+    const itemsTotal = appliedCoupon ? Math.max(0, totalPrice - appliedCoupon.discount) : totalPrice;
+    const finalPrice = itemsTotal; // No shipping cost
+
+    const handleApplyCoupon = async () => {
+        if (!couponCode.trim()) return;
+        setCouponLoading(true);
+        try {
+            const res = await api.validateCoupon(couponCode, totalPrice);
+            setAppliedCoupon({
+                code: res.coupon.code,
+                discount: res.discount,
+                type: res.coupon.type
+            });
+            toast({
+                title: "Cupom aplicado!",
+                description: `Desconto de R$ ${res.discount.toFixed(2)}`,
+            });
+        } catch (error: any) {
+            setAppliedCoupon(null);
+            toast({
+                title: "Erro no cupom",
+                description: error.message || "Cupom inválido",
+                variant: "destructive"
+            });
+        } finally {
+            setCouponLoading(false);
+        }
+    };
 
     const handlePayWithPix = async () => {
+        if (!user) {
+            toast({ title: "Login necessário", description: "Faça login para continuar.", variant: "destructive" });
+            navigate("/login");
+            return;
+        }
+
         setIsLoading(true);
 
-        // Simulação de resposta (MOCK para Sicoob futuro)
-        setTimeout(async () => {
+        try {
+            const itemsToBuy = cartItems.map(item => ({ id: item.id, quantity: item.quantidade }));
+
+            // Call Backend to Generate Pix
+            // We pass 'itemsToBuy' as 'realItems' for internal tracking
+            const data = await api.createPayment(user.id, finalPrice, itemsToBuy);
+
             setPixData({
-                qrCode: "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=00020126580014br.gov.bcb.pix0136exemplo-pix-luckynft5204000053039865802BR5913LUCKYNFT6008SAOPAULO62070503***6304ABCD",
-                qrCodeBase64: "",
-                copyPasteCode: "00020126580014br.gov.bcb.pix0136exemplo-pix-luckynft5204000053039865802BR5913LUCKYNFT6008SAOPAULO62070503***6304ABCD",
-                expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-                transactionId: `txn_${Date.now()}`,
+                qrCode: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.qrCode)}`, // Generate visual QR from code if base64 missing, or use base64
+                qrCodeBase64: data.qrCodeBase64,
+                copyPasteCode: data.copyPaste,
+                expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 mins expiry default
+                transactionId: data.transactionId,
             });
-            setIsLoading(false);
 
-            // Simular aprovação automática para teste
             toast({
-                title: "Aguardando Pagamento",
-                description: "Realize o pagamento do PIX para liberar seus NFTs.",
+                title: "PIX Gerado!",
+                description: "Escaneie o QR Code ou use o Copia e Cola.",
             });
 
-            // Aqui poderíamos ter um botão "Simular Pagamento Confirmado" na UI para testes
-        }, 1500);
+        } catch (error) {
+            console.error("Payment Error:", error);
+            toast({
+                title: "Erro no Pagamento",
+                description: "Não foi possível gerar o PIX. Tente novamente.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsLoading(false);
+        }
     };
+
+    // Polling effect to check for payment completion automatically
+    React.useEffect(() => {
+        let interval: NodeJS.Timeout;
+
+        if (pixData && pixData.transactionId) {
+            interval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/payment/status/${pixData.transactionId}`);
+                    if (!response.ok) return;
+
+                    const data = await response.json();
+                    if (data.status === 'approved') {
+                        clearInterval(interval);
+
+                        // Proceed to fulfill the cart on the frontend since it's paid
+                        const itemsToBuy = cartItems.map(item => ({ id: item.id, quantity: item.quantidade }));
+                        await buyNFTs(itemsToBuy, appliedCoupon?.code);
+
+                        clearCart();
+                        toast({
+                            title: "Pagamento Aprovado!",
+                            description: "Seus NFTs foram adicionados à sua carteira.",
+                        });
+                        navigate("/checkout/success");
+                    }
+                } catch (error) {
+                    console.error("Polling error:", error);
+                }
+            }, 5000); // Check every 5 seconds
+        }
+
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [pixData, cartItems, appliedCoupon, buyNFTs, clearCart, navigate, toast]);
 
     // Função de teste para simular o callback de sucesso
     const simulateSuccessfulPayment = async () => {
-        for (const item of cartItems) {
-            for (let i = 0; i < item.quantidade; i++) {
-                await addNFT(item);
-            }
+        try {
+            const itemsToBuy = cartItems.map(item => ({ id: item.id, quantity: item.quantidade }));
+            // Pass couponCode if applied
+            await buyNFTs(itemsToBuy, appliedCoupon?.code);
+
+            clearCart();
+            toast({
+                title: "Compra simulada com sucesso!",
+                description: "Seus NFTs foram adicionados à sua carteira (Modo Teste).",
+            });
+            navigate("/profile");
+        } catch (error) {
+            toast({
+                title: "Erro na compra",
+                description: "Não foi possível finalizar a compra. Tente novamente.",
+                variant: "destructive"
+            });
         }
-        clearCart();
-        toast({
-            title: "Compra realizada com sucesso!",
-            description: "Seus NFTs foram adicionados à sua carteira.",
-        });
-        navigate("/profile");
     };
 
     const handleCopyPixCode = () => {
@@ -167,9 +261,50 @@ const Checkout: React.FC = () => {
 
                                 <Separator />
 
-                                <div className="flex justify-between items-center text-lg font-bold">
-                                    <span>Total</span>
-                                    <span className="text-gradient">R$ {totalPriceInBRL.toFixed(2)}</span>
+                                {/* Shipping Section Removed */}
+
+                                <Separator />
+
+                                {/* Coupon Input */}
+                                <div className="flex gap-2">
+                                    <Input
+                                        placeholder="Cupom de desconto"
+                                        value={couponCode}
+                                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                        disabled={!!appliedCoupon || isLoading || !!pixData}
+                                    />
+                                    {appliedCoupon ? (
+                                        <Button variant="destructive" onClick={() => { setAppliedCoupon(null); setCouponCode(""); }}>
+                                            Remover
+                                        </Button>
+                                    ) : (
+                                        <Button onClick={handleApplyCoupon} disabled={!couponCode || couponLoading || !!pixData}>
+                                            {couponLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Aplicar"}
+                                        </Button>
+                                    )}
+                                </div>
+
+                                {appliedCoupon && (
+                                    <div className="flex justify-between text-green-400 font-medium text-sm">
+                                        <span>Desconto ({appliedCoupon.code})</span>
+                                        <span>- R$ {appliedCoupon.discount.toFixed(2)}</span>
+                                    </div>
+                                )}
+
+                                <Separator className="bg-white/10" />
+
+                                <div className="space-y-1">
+                                    <div className="flex justify-between text-sm text-muted-foreground">
+                                        <span>Subtotal</span>
+                                        <span>R$ {totalPrice.toFixed(2)}</span>
+                                    </div>
+
+                                    <div className="flex justify-between items-center text-lg font-bold pt-2">
+                                        <span>Total</span>
+                                        <span className={appliedCoupon ? "text-primary" : "text-gradient"}>
+                                            R$ {finalPrice.toFixed(2)}
+                                        </span>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
@@ -237,7 +372,7 @@ const Checkout: React.FC = () => {
                             {/* Info */}
                             <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm">
                                 <p className="text-muted-foreground">
-                                    <strong className="text-foreground">Valor:</strong> R$ {totalPriceInBRL.toFixed(2)}
+                                    <strong className="text-foreground">Valor:</strong> R$ {finalPrice.toFixed(2)}
                                 </p>
                                 <p className="text-muted-foreground">
                                     <strong className="text-foreground">Validade:</strong> 30 minutos

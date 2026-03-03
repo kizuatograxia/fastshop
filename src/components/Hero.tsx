@@ -14,13 +14,6 @@ const Hero: React.FC = () => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
       </div>
 
-      {/* Floating Emojis */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <span className="absolute top-32 right-[15%] text-3xl animate-float opacity-40" style={{ animationDelay: "0.5s" }}>🦊</span>
-        <span className="absolute bottom-20 left-[20%] text-3xl animate-float opacity-30" style={{ animationDelay: "1s" }}>⭐</span>
-        <span className="absolute bottom-32 right-[25%] text-4xl animate-float opacity-40" style={{ animationDelay: "1.5s" }}>🐱</span>
-      </div>
-
       <div className="container mx-auto px-4 py-16 md:py-24 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-full px-4 py-2 mb-6 animate-fade-in">

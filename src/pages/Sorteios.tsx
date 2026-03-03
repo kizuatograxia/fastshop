@@ -27,41 +27,126 @@ import { api } from "@/lib/api";
 import { Raffle } from "@/types/raffle";
 import { toast } from "sonner";
 
-const categories = [
-  { id: "all", label: "Todos", icon: Sparkles },
-  { id: "tech", label: "Tech", icon: null },
-  { id: "gaming", label: "Gaming", icon: null },
-  { id: "lifestyle", label: "Lifestyle", icon: null },
-  { id: "pix", label: "PIX", icon: null },
-  { id: "rare", label: "Raros", icon: Trophy },
-];
+const RaffleCardWrapper = ({ raffle, index }: { raffle: Raffle; index: number }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 + index * 0.05 }}
+      className="inline-block w-full break-inside-avoid mb-6"
+    >
+      <Link to={`/raffle/${raffle.id}`}>
+        <Card className="group bg-card border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-glow hover:-translate-y-1 cursor-pointer">
+          {/* Image */}
+          <div className="relative w-full overflow-hidden">
+            <img
+              src={raffle.imagem}
+              alt={raffle.titulo}
+              className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
+
+            {/* Badges */}
+            <div className="absolute top-3 left-3 flex gap-2">
+              {raffle.participantes && raffle.participantes > 100 && (
+                <Badge className="bg-destructive text-destructive-foreground animate-pulse">
+                  🔥 HOT
+                </Badge>
+              )}
+            </div>
+
+            {/* Time Badge */}
+            <div className="absolute top-3 right-3">
+              <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm gap-1">
+                <Clock className="h-3 w-3" />
+                Ativo
+              </Badge>
+            </div>
+
+            {/* Prize Value */}
+            <div className="absolute bottom-3 left-3">
+              <p className="text-2xl font-bold text-gradient">
+                R$ {raffle.premioValor.toLocaleString("pt-BR")}
+              </p>
+            </div>
+          </div>
+
+          <CardContent className="p-4 space-y-4">
+            {/* Title */}
+            <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors line-clamp-1 pb-2">
+              {raffle.titulo}
+            </h3>
+
+            <div className="space-y-4">
+              {/* Progress */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Progresso</span>
+                  <span className="text-foreground font-medium">
+                    {raffle.participantes}/{raffle.maxParticipantes}
+                  </span>
+                </div>
+                <Progress
+                  value={(raffle.participantes / raffle.maxParticipantes) * 100}
+                  className="h-2 bg-secondary"
+                />
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Ticket className="h-4 w-4" />
+                  <span className="text-sm">{raffle.participantes} <span className="hidden sm:inline">cotas vendidas</span></span>
+                </div>
+                <Badge className="bg-primary/10 text-primary border-0">
+                  <Ticket className="h-3 w-3 mr-1" />
+                  R$ {raffle.custoNFT}
+                </Badge>
+              </div>
+
+              {/* CTA Button */}
+              <Button className="w-full" variant="default">
+                Participar Agora
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+    </motion.div>
+  );
+};
 
 const Sorteios: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [activeCategory, setActiveCategory] = useState("todos");
   const [sortBy, setSortBy] = useState<"price" | "ending" | "popular">("ending");
   const [raffles, setRaffles] = useState<Raffle[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadRaffles = async () => {
+    const loadData = async () => {
       try {
         setLoading(true);
-        const data = await api.getActiveRaffles();
-        setRaffles(data);
+        const [rafflesData, categoriesData] = await Promise.all([
+          api.getActiveRaffles(),
+          api.getCategories()
+        ]);
+        setRaffles(rafflesData);
+        setCategories(categoriesData);
       } catch (error) {
-        console.error("Failed to load raffles:", error);
-        toast.error("Erro ao carregar sorteios. Tente novamente.");
+        console.error("Failed to load data:", error);
+        toast.error("Erro ao carregar dados. Tente novamente.");
       } finally {
         setLoading(false);
       }
     };
 
-    loadRaffles();
+    loadData();
   }, []);
 
   const filteredRaffles = useMemo(() => {
-    let result = [...raffles];
+    let result = raffles.filter(r => r.status === 'ativo');
 
     // Filter by search
     if (searchQuery) {
@@ -72,7 +157,7 @@ const Sorteios: React.FC = () => {
     }
 
     // Filter by category
-    if (activeCategory !== "all") {
+    if (activeCategory !== "todos") {
       result = result.filter(r => r.categoria === activeCategory);
     }
 
@@ -94,8 +179,13 @@ const Sorteios: React.FC = () => {
   }, [searchQuery, activeCategory, sortBy, raffles]);
 
   // Helper to calculate ends in (simplified)
+  // Defensive UTC handling: if no timezone indicator, treat as UTC
   const getTimeRemaining = (endDate: string) => {
-    const diff = new Date(endDate).getTime() - new Date().getTime();
+    let dateStr = endDate.trim();
+    if (dateStr.includes('T') && !dateStr.endsWith('Z') && !/[+-]\d{2}:\d{2}$/.test(dateStr)) {
+      dateStr = dateStr + 'Z';
+    }
+    const diff = new Date(dateStr).getTime() - new Date().getTime();
     if (diff <= 0) return "Encerrado";
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -178,8 +268,8 @@ const Sorteios: React.FC = () => {
                   : "bg-card border-border hover:border-primary/50"
                   }`}
               >
-                {cat.icon && <cat.icon className="h-4 w-4" />}
-                {cat.label}
+                <span>{cat.emoji}</span>
+                {cat.nome}
               </Button>
             ))}
           </div>
@@ -191,92 +281,14 @@ const Sorteios: React.FC = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredRaffles.map((raffle, index) => (
-              <motion.div
-                key={raffle.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 + index * 0.05 }}
-              >
-                <Link to={`/raffle/${raffle.id}`}>
-                  <Card className="group bg-card border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-glow hover:-translate-y-1 cursor-pointer">
-                    {/* Image */}
-                    <div className="relative aspect-video overflow-hidden">
-                      <img
-                        src={raffle.imagem}
-                        alt={raffle.titulo}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
-
-                      {/* Badges */}
-                      <div className="absolute top-3 left-3 flex gap-2">
-                        {/* Hot badge could be derived from logic, e.g. lots of participants */}
-                        {raffle.participantes && raffle.participantes > 100 && (
-                          <Badge className="bg-destructive text-destructive-foreground animate-pulse">
-                            🔥 HOT
-                          </Badge>
-                        )}
-                      </div>
-
-                      {/* Time Badge */}
-                      <div className="absolute top-3 right-3">
-                        <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm gap-1">
-                          <Clock className="h-3 w-3" />
-                          {getTimeRemaining(raffle.dataFim)}
-                        </Badge>
-                      </div>
-
-                      {/* Prize Value */}
-                      <div className="absolute bottom-3 left-3">
-                        <p className="text-2xl font-bold text-gradient">
-                          R$ {raffle.premioValor.toLocaleString("pt-BR")}
-                        </p>
-                      </div>
-                    </div>
-
-                    <CardContent className="p-4 space-y-4">
-                      {/* Title */}
-                      <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors line-clamp-1">
-                        {raffle.titulo}
-                      </h3>
-
-                      {/* Progress */}
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Progresso</span>
-                          <span className="text-foreground font-medium">
-                            {raffle.participantes}/{raffle.maxParticipantes}
-                          </span>
-                        </div>
-                        <Progress
-                          value={(raffle.participantes / raffle.maxParticipantes) * 100}
-                          className="h-2 bg-secondary"
-                        />
-                      </div>
-
-                      {/* Footer */}
-                      <div className="flex items-center justify-between pt-2">
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <Users className="h-4 w-4" />
-                          <span className="text-sm">{raffle.participantes} participantes</span>
-                        </div>
-                        <Badge className="bg-primary/10 text-primary border-0">
-                          <Ticket className="h-3 w-3 mr-1" />
-                          R$ {raffle.custoNFT}
-                        </Badge>
-                      </div>
-
-                      {/* CTA Button */}
-                      <Button className="w-full" variant="default">
-                        Participar Agora
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </motion.div>
-            ))}
+          <div className="w-full">
+            <div className="columns-1 sm:columns-2 lg:columns-3 gap-6">
+              {filteredRaffles.map((raffle, index) => (
+                <div key={raffle.id} className="inline-block w-full break-inside-avoid mb-6">
+                  <RaffleCardWrapper raffle={raffle} index={index} />
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -298,7 +310,7 @@ const Sorteios: React.FC = () => {
             </p>
             <Button variant="outline" onClick={() => {
               setSearchQuery("");
-              setActiveCategory("all");
+              setActiveCategory("todos");
             }}>
               Limpar filtros
             </Button>

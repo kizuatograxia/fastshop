@@ -23,5 +23,15 @@ services:
       - db
     restart: always
 
+  book-haven:
+    build: ./book-haven/server
+    ports:
+      - "3000:3000"
+    environment:
+      - JWT_SECRET=bookhaven-ultra-secret-key-2026
+      - MP_ACCESS_TOKEN=APP_USR-7613327157973024-021918-6c8a2e5d7f4b3c9a1e8d7f6c5b4a3f2e-181514785
+      - TUNNEL_SECRET=secret-tunnel-key-123
+    restart: always
+
 volumes:
   postgres_data:

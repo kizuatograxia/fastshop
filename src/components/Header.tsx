@@ -16,6 +16,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import NotificationList from "@/components/NotificationList";
 import { Bell } from "lucide-react";
 
+import ThemeToggle from "./ThemeToggle";
+
 interface HeaderProps {
   onMenuClick: () => void;
   onWalletClick: () => void;
@@ -67,13 +69,11 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
               <Link to="/winners" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
                 Ganhadores
               </Link>
-              <Link to="/como-funciona" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-                Como Funciona
-              </Link>
             </nav>
           </div>
 
           <div className="flex items-center gap-2">
+            <ThemeToggle />
 
             {/* Notification Bell */}
             {isAuthenticated && (
@@ -143,7 +143,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
               <Button
                 variant="default"
                 size="sm"
-                onClick={() => navigate("/register")}
+                onClick={() => navigate("/login")}
               >
                 Entrar
               </Button>
@@ -151,7 +151,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
           </div>
         </div>
       </div>
-    </header>
+    </header >
   );
 };
 

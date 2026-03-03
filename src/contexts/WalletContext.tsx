@@ -12,16 +12,18 @@ interface WalletContextType {
     ownedNFTs: OwnedNFT[];
     balance: number;
     addNFT: (nft: NFT) => Promise<void>;
+    buyNFTs: (items: { id: string; quantity: number }[], couponCode?: string) => Promise<void>;
     removeNFT: (nftId: string, quantidade?: number) => Promise<void>;
     getTotalNFTs: () => number;
     hasNFT: (nftId: string) => boolean;
     getNFTCount: (nftId: string) => number;
+    refreshWallet: () => Promise<void>;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const [ownedNFTs, setOwnedNFTs] = useState<OwnedNFT[]>([]);
     const [cartItems, setCartItems] = useState<OwnedNFT[]>([]);
     const [balance] = useState(0);
@@ -31,7 +33,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (user) {
             api.getWallet(Number(user.id))
                 .then((data) => setOwnedNFTs(data))
-                .catch((err) => console.error("Failed to load wallet", err));
+                .catch((err) => {
+                    console.error("Failed to load wallet", err);
+                    // Automatic logout on wallet fetch failure (likely invalid token)
+                    // This prevents "zombie" sessions
+                    logout();
+                    toast.error("Sessão expirada. Por favor entre novamente.");
+                });
         } else {
             setOwnedNFTs([]);
         }
@@ -149,6 +157,19 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     }, [user]);
 
+    const buyNFTs = useCallback(async (items: { id: string; quantity: number }[], couponCode?: string) => {
+        if (!user) return;
+        try {
+            await api.buyNFTs(Number(user.id), items, couponCode);
+            // Refresh wallet
+            const data = await api.getWallet(Number(user.id));
+            setOwnedNFTs(data);
+        } catch (error) {
+            console.error("Failed to buy NFTs", error);
+            throw error;
+        }
+    }, [user]);
+
     const getTotalNFTs = useCallback(() => {
         return cartItems.reduce((sum, nft) => sum + nft.quantidade, 0);
     }, [cartItems]);
@@ -172,10 +193,12 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 ownedNFTs,
                 balance,
                 addNFT,
+                buyNFTs,
                 removeNFT,
                 getTotalNFTs,
                 hasNFT,
                 getNFTCount,
+                refreshWallet: () => api.getWallet(Number(user?.id)).then(setOwnedNFTs),
             }}
         >
             {children}

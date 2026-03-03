@@ -88,10 +88,14 @@ const WalletDrawer: React.FC<WalletDrawerProps> = ({ isOpen, onClose }) => {
                             cartItems.map((nft) => (
                                 <div
                                     key={nft.id}
-                                    className="flex gap-4 bg-secondary/30 rounded-xl p-3 border border-border"
+                                    className="flex gap-4 bg-secondary/30 rounded-xl p-3 border border-border items-center"
                                 >
-                                    <div className={`w-16 h-16 rounded-lg bg-gradient-to-br ${rarityColors[nft.raridade]} flex items-center justify-center flex-shrink-0`}>
-                                        <span className="text-3xl">{nft.emoji}</span>
+                                    <div className={`w-16 h-16 rounded-lg bg-gradient-to-br ${rarityColors[nft.raridade]} flex items-center justify-center flex-shrink-0 overflow-hidden`}>
+                                        {nft.image ? (
+                                            <img src={nft.image} alt={nft.nome} className="w-full h-full object-contain" />
+                                        ) : (
+                                            <span className="text-3xl">{nft.emoji}</span>
+                                        )}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h4 className="font-medium text-sm text-foreground">
