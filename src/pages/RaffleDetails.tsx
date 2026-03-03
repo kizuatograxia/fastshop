@@ -143,7 +143,11 @@ const RaffleDetails: React.FC = () => {
     }, [id]);
 
     const userCurrentValue = raffle ? getUserValue(raffle.id) : 0;
-    const userTickets = raffle ? getTicketCount(raffle.id) : 0; // exact ticket count from backend
+    // Use the higher of two independent methods to guard against either returning 0 incorrectly
+    const userTicketsFromCount = raffle ? getTicketCount(raffle.id) : 0;
+    const userTicketsFromValue = raffle?.custoNFT > 0 ? Math.floor(userCurrentValue / raffle.custoNFT) : 0;
+    const userTickets = Math.max(userTicketsFromCount, userTicketsFromValue);
+
     const availableNFTs = ownedNFTs.filter(nft => nft.quantidade > 0);
 
     const handleQuantityChange = (nftId: string, delta: number, max: number) => {
