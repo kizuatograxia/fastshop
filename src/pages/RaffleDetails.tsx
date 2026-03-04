@@ -538,14 +538,14 @@ const RaffleDetails: React.FC = () => {
               <StarRating rating={4.8} count={raffle.participantes > 0 ? raffle.participantes : 42} />
 
               {/* Price */}
-              <div className="mt-4 mb-1">
-                <span className="text-[36px] font-light text-foreground tracking-tight">
-                  R$ {raffle.custoNFT?.toFixed?.(2) || raffle.custoNFT}
-                </span>
+              <div className="mt-4 mb-2">
+                <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1">Valor da Cota</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-[36px] font-light text-foreground tracking-tight">
+                    R$ {raffle.custoNFT?.toFixed?.(2) || raffle.custoNFT}
+                  </span>
+                </div>
               </div>
-              <p className="text-base text-green-600 dark:text-green-500 font-semibold">
-                em 10x R$ {(raffle.custoNFT / 10).toFixed(2)} sem juros
-              </p>
 
               {/* Shipping */}
               <div className="mt-5 flex items-start gap-2">
