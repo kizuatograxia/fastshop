@@ -59,12 +59,12 @@ const Index: React.FC = () => {
         <HowItWorks />
       </main>
 
-      <footer className="border-t border-border py-8 mt-12">
-        <div className="container mx-auto px-4 text-center">
+      <footer className="relative overflow-hidden border-t border-border py-12 mt-12 bg-gradient-ocean">
+        <div className="container mx-auto px-4 text-center relative z-10">
           <div className="flex items-center justify-center gap-2 mb-2">
             <p className="text-gradient font-bold text-xl">MundoPix</p>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-white/50">
             © 2026 MundoPix. Colecione, participe e ganhe!
           </p>
         </div>
