@@ -24,8 +24,10 @@ export interface Raffle {
     status: "ativo" | "encerrado" | "em_breve" | "active";
     categoria: string;
     raridade?: string;
+    winnersAmount?: number;
     winner_id?: number;
     winner?: RaffleWinner;
+    winners?: RaffleWinner[];
     trackingCode?: string;
     carrier?: string;
     shippingStatus?: 'preparing' | 'shipped' | 'in_transit' | 'delivered';
@@ -37,6 +39,7 @@ export interface RaffleWinner {
     user_id?: string | number;
     name: string;
     picture?: string;
+    position?: number;
     email?: string;
     address?: string;
     city?: string;

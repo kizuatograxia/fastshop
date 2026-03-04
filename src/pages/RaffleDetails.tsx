@@ -595,6 +595,7 @@ const RaffleDetails: React.FC = () => {
                 <p className="text-sm font-semibold text-foreground mb-2">O que você precisa saber:</p>
                 <ul className="space-y-1.5 text-sm text-muted-foreground">
                   <li className="flex items-start gap-2"><span className="text-foreground">•</span> Prêmio Total: <strong className="text-foreground">{raffle.premio}</strong></li>
+                  <li className="flex items-start gap-2"><span className="text-foreground">•</span> Vencedores: <strong className="text-foreground">{raffle.winnersAmount > 1 ? `${raffle.winnersAmount} prêmios disponíveis` : '1'}</strong></li>
                   <li className="flex items-start gap-2"><span className="text-foreground">•</span> Oportunidade Atual: <strong className="text-foreground">{currentChance.toFixed(1)}%</strong></li>
                   <li className="flex items-start gap-2"><span className="text-foreground">•</span> Encerramento: <strong className="text-foreground">{dataFimFormatted}</strong></li>
                   <li className="flex items-start gap-2"><span className="text-foreground">•</span> Prêmio de luxo • Sorteio auditado</li>

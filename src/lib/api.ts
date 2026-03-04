@@ -156,7 +156,8 @@ export const api = {
                 custoNFT: r.ticket_price,
                 status: r.status === 'active' ? 'ativo' : 'encerrado',
                 categoria: r.category || 'tech',
-                raridade: r.rarity || 'comum'
+                raridade: r.rarity || 'comum',
+                winnersAmount: r.winners_amount || 1
             }));
     },
 
@@ -259,6 +260,7 @@ export const api = {
                 status: ur.raffle.status === 'active' ? 'ativo' : 'encerrado',
                 categoria: "geral",
                 raridade: "comum",
+                winnersAmount: ur.raffle.winners_amount || 1,
                 winner_id: ur.raffle.winner_id,
                 winner: ur.raffle.winner ? {
                     id: ur.raffle.winner.id,
@@ -447,6 +449,7 @@ export const api = {
             status: r.status === 'active' ? 'ativo' : 'encerrado',
             categoria: r.category || 'tech',
             raridade: r.rarity || 'comum',
+            winnersAmount: r.winners_amount || 1,
             winner: r.winner_name ? {
                 id: r.winner_id,
                 name: r.winner_name,

@@ -32,7 +32,18 @@ router.get('/raffles/:id', async (req, res) => {
         const query = `
             SELECT r.*, 
                    u.name as winner_name, 
-                   u.picture as winner_picture 
+                   u.picture as winner_picture,
+                   (
+                       SELECT json_agg(json_build_object(
+                           'id', rw.user_id,
+                           'name', wu.name,
+                           'picture', wu.picture,
+                           'position', rw.position
+                       ) ORDER BY rw.position)
+                       FROM raffle_winners rw
+                       JOIN users wu ON rw.user_id = wu.id
+                       WHERE rw.raffle_id = r.id
+                   ) as winners
             FROM raffles r
             LEFT JOIN users u ON r.winner_id = u.id
             WHERE r.id = $1
@@ -176,11 +187,16 @@ router.post('/raffles/:id/join', authenticateToken, async (req, res) => {
     }
 });
 
-// Helper: Perform Raffle Draw
 export const performRaffleDraw = async (raffleId) => {
     if (!pool) throw new Error('Database pool not ready');
 
     try {
+        // Get raffle details to know how many winners we need
+        const raffleRes = await pool.query('SELECT * FROM raffles WHERE id = $1', [raffleId]);
+        if (raffleRes.rows.length === 0) throw new Error('Sorteio não encontrado');
+        const raffle = raffleRes.rows[0];
+        const winnersAmount = parseInt(raffle.winners_amount) || 1;
+
         const ticketsResult = await pool.query(`
             SELECT t.id, t.user_id, u.name, u.picture
             FROM tickets t
@@ -189,7 +205,7 @@ export const performRaffleDraw = async (raffleId) => {
             ORDER BY t.id ASC
         `, [raffleId]);
 
-        const tickets = ticketsResult.rows;
+        let tickets = ticketsResult.rows;
         const totalTickets = tickets.length;
 
         if (totalTickets === 0) {
@@ -198,34 +214,81 @@ export const performRaffleDraw = async (raffleId) => {
             return { status: 'cancelled', message: "Não há participantes." };
         }
 
-        const winningIndex = crypto.randomInt(0, totalTickets);
-        const winningTicket = tickets[winningIndex];
+        const pickedWinners = [];
+        const excludedUserIds = new Set();
+        let currentPosition = 1;
 
-        await pool.query('UPDATE raffles SET status = $1, prize_value = prize_value, winner_id = $2 WHERE id = $3', ['encerrado', winningTicket.user_id, raffleId]);
+        for (let i = 0; i < winnersAmount; i++) {
+            // Filter out tickets belonging to users who already won this specific draw
+            const validTickets = tickets.filter(t => !excludedUserIds.has(t.user_id));
 
-        // Create Notification for Winner
-        try {
-            await pool.query(`
-                INSERT INTO notifications (user_id, title, message)
-                VALUES ($1, $2, $3)
-            `, [winningTicket.user_id, 'Você Ganhou! 🎉', `Parabéns! Você foi o vencedor do sorteio #${raffleId}. Entre em contato para resgatar seu prêmio!`]);
-            console.log(`Notification created for user ${winningTicket.user_id}`);
-        } catch (notifErr) {
-            console.error('Error creating notification:', notifErr);
+            if (validTickets.length === 0) {
+                console.log(`Broke winner loop early for raffle ${raffleId}. Not enough unique participants.`);
+                break;
+            }
+
+            const winningIndex = crypto.randomInt(0, validTickets.length);
+            const winningTicket = validTickets[winningIndex];
+
+            // Register winner
+            pickedWinners.push({
+                user_id: winningTicket.user_id,
+                name: winningTicket.name,
+                picture: winningTicket.picture,
+                ticketId: winningTicket.id,
+                position: currentPosition
+            });
+            excludedUserIds.add(winningTicket.user_id);
+            currentPosition++;
         }
 
-        console.log(`Draw executed for Raffle ${raffleId}: User ${winningTicket.name} wins!`);
+        if (pickedWinners.length === 0) {
+            return { status: 'cancelled', message: "Não foi possível sortear ganhadores." };
+        }
+
+        // The first winner is the "primary" winner for backwards compatibility
+        const primaryWinner = pickedWinners[0];
+
+        await pool.query('UPDATE raffles SET status = $1, prize_value = prize_value, winner_id = $2 WHERE id = $3', ['encerrado', primaryWinner.user_id, raffleId]);
+
+        // Save all winners into raffle_winners table
+        for (const winner of pickedWinners) {
+            await pool.query(
+                `INSERT INTO raffle_winners (raffle_id, user_id, position) VALUES ($1, $2, $3)`,
+                [raffleId, winner.user_id, winner.position]
+            );
+
+            // Create Notification for Winner
+            try {
+                let prizeName = (winnersAmount > 1) ? `o ${winner.position}º prêmio do sorteio #${raffleId}` : `o sorteio #${raffleId}`;
+                await pool.query(`
+                    INSERT INTO notifications (user_id, title, message)
+                    VALUES ($1, $2, $3)
+                `, [winner.user_id, 'Você Ganhou! 🎉', `Parabéns! Você ganhou ${prizeName}. Entre em contato para resgatar seu prêmio!`]);
+                console.log(`Notification created for user ${winner.user_id} (pos ${winner.position})`);
+            } catch (notifErr) {
+                console.error('Error creating notification:', notifErr);
+            }
+        }
+
+        console.log(`Draw executed for Raffle ${raffleId}: ${pickedWinners.length} winners drawn!`);
 
         return {
             status: 'completed',
             winner: {
-                id: winningTicket.user_id,
-                name: winningTicket.name,
-                picture: winningTicket.picture,
-                ticketId: winningTicket.id
+                id: primaryWinner.user_id,
+                name: primaryWinner.name,
+                picture: primaryWinner.picture,
+                ticketId: primaryWinner.ticketId
             },
-            totalTickets,
-            winningTicketIndex: winningIndex
+            winners: pickedWinners.map(w => ({
+                id: w.user_id,
+                name: w.name,
+                picture: w.picture,
+                ticketId: w.ticketId,
+                position: w.position
+            })),
+            totalTickets
         };
     } catch (error) {
         console.error(`Error performing draw logic for raffle ${raffleId}:`, error);

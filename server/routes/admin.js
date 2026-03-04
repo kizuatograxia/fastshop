@@ -49,8 +49,8 @@ router.post('/raffles', async (req, res) => {
 
     try {
         const query = `
-            INSERT INTO raffles (title, description, prize_pool, ticket_price, max_tickets, draw_date, image_url, prize_value, category, rarity, image_urls)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            INSERT INTO raffles (title, description, prize_pool, ticket_price, max_tickets, draw_date, image_url, prize_value, category, rarity, image_urls, winners_amount)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
             RETURNING *
         `;
         const values = [
@@ -64,7 +64,8 @@ router.post('/raffles', async (req, res) => {
             raffle.prize_value || 0,
             raffle.category || 'tech',
             raffle.rarity || 'comum',
-            JSON.stringify(raffle.image_urls || [])
+            JSON.stringify(raffle.image_urls || []),
+            raffle.winners_amount || 1
         ];
 
         const result = await pool.query(query, values);
@@ -104,15 +105,15 @@ router.put('/raffles/:id', async (req, res) => {
     }
 
     try {
-        const { title, description, image_url, ticket_price, prize_pool, max_tickets, prize_value, draw_date, category, rarity, image_urls } = raffle;
+        const { title, description, image_url, ticket_price, prize_pool, max_tickets, prize_value, draw_date, category, rarity, image_urls, winners_amount } = raffle;
 
         const result = await pool.query(
             `UPDATE raffles SET 
                 title = $1, description = $2, image_url = $3, ticket_price = $4, 
                 prize_pool = $5, max_tickets = $6, prize_value = $7, draw_date = $8, 
-                category = $9, rarity = $10, image_urls = $11 
-             WHERE id = $12 RETURNING *`,
-            [title, description, image_url, ticket_price, prize_pool, max_tickets, prize_value, draw_date, category || 'tech', rarity || 'comum', JSON.stringify(image_urls || []), id]
+                category = $9, rarity = $10, image_urls = $11, winners_amount = $12
+             WHERE id = $13 RETURNING *`,
+            [title, description, image_url, ticket_price, prize_pool, max_tickets, prize_value, draw_date, category || 'tech', rarity || 'comum', JSON.stringify(image_urls || []), winners_amount || 1, id]
         );
 
         if (result.rows.length === 0) {

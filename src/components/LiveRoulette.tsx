@@ -131,11 +131,11 @@ export function LiveRoulette({ raffle, onClose }: LiveRouletteProps) {
     useEffect(() => {
         if (participants.length === 0 || isLoading) return;
 
-        const winner = raffle.winner;
-        const winnerParticipant: Participant = winner ? {
-            user_id: String(winner.id || winner.user_id),
-            name: winner.name || 'Vencedor',
-            picture: winner.picture
+        const primaryWinner = (raffle.winners && raffle.winners.length > 0) ? raffle.winners[0] : raffle.winner;
+        const winnerParticipant: Participant = primaryWinner ? {
+            user_id: String(primaryWinner.id || primaryWinner.user_id),
+            name: primaryWinner.name || 'Vencedor',
+            picture: primaryWinner.picture
         } : participants[Math.floor(Math.random() * participants.length)];
 
         const ANIMATION_CARDS = 80;
@@ -252,7 +252,7 @@ export function LiveRoulette({ raffle, onClose }: LiveRouletteProps) {
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ type: 'spring', stiffness: 200, damping: 15 }}
                         >
-                            🎉 TEMOS UM VENCEDOR! 🎉
+                            {raffle.winners && raffle.winners.length > 1 ? `🎉 TEMOS ${raffle.winners.length} VENCEDORES! 🎉` : '🎉 TEMOS UM VENCEDOR! 🎉'}
                         </motion.span>
                     ) : (
                         <motion.span
@@ -368,7 +368,45 @@ export function LiveRoulette({ raffle, onClose }: LiveRouletteProps) {
             </div>
 
             {/* Winner Details */}
-            {status === 'winner' && winner && (
+            {status === 'winner' && (raffle.winners && raffle.winners.length > 1) ? (
+                <motion.div
+                    className="mt-6 md:mt-12 text-center space-y-4 md:space-y-6 px-4"
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5, duration: 0.6, type: 'spring' }}
+                >
+                    <div className="flex flex-wrap items-center justify-center gap-4 p-4 bg-white/5 rounded-2xl md:rounded-3xl border border-white/10 backdrop-blur-md max-w-4xl mx-auto max-h-[40vh] overflow-y-auto">
+                        {raffle.winners.map((w, i) => (
+                            <div key={i} className="flex flex-col items-center justify-center bg-black/40 p-4 rounded-xl border border-yellow-500/20 shadow-lg min-w-[140px]">
+                                <div className="relative mb-2">
+                                    <Avatar className="w-12 h-12 md:w-16 md:h-16 border-2 border-yellow-500 shadow-xl relative">
+                                        <AvatarImage src={w.picture} className="object-cover" />
+                                        <AvatarFallback className="bg-yellow-500 text-black text-lg md:text-xl font-bold">
+                                            {w.name?.[0]?.toUpperCase()}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="absolute -bottom-1 -right-1 bg-yellow-500 rounded-full p-1 shadow-lg border border-black flex items-center justify-center w-6 h-6">
+                                        <span className="text-[10px] font-bold text-black">{w.position || i + 1}º</span>
+                                    </div>
+                                </div>
+                                <h3 className="text-sm md:text-base font-bold text-white truncate max-w-[120px]">{w.name}</h3>
+                            </div>
+                        ))}
+                    </div>
+
+                    <motion.button
+                        onClick={onClose}
+                        className="px-8 md:px-10 py-3 md:py-4 bg-gradient-to-r from-yellow-500 to-amber-600 text-black font-bold rounded-full shadow-[0_0_30px_rgba(251,191,36,0.4)] hover:shadow-[0_0_50px_rgba(251,191,36,0.6)] transition-all text-sm md:text-base"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 1.5 }}
+                    >
+                        Fechar e Ver Detalhes
+                    </motion.button>
+                </motion.div>
+            ) : status === 'winner' && raffle.winner && (
                 <motion.div
                     className="mt-6 md:mt-12 text-center space-y-4 md:space-y-6 px-4"
                     initial={{ opacity: 0, y: 30 }}
@@ -379,9 +417,9 @@ export function LiveRoulette({ raffle, onClose }: LiveRouletteProps) {
                         <div className="relative">
                             <div className="absolute inset-0 bg-yellow-500/30 blur-xl rounded-full animate-pulse" />
                             <Avatar className="w-16 h-16 md:w-24 md:h-24 border-4 border-yellow-500 shadow-2xl relative">
-                                <AvatarImage src={winner.picture} className="object-cover" />
+                                <AvatarImage src={raffle.winner.picture} className="object-cover" />
                                 <AvatarFallback className="bg-yellow-500 text-black text-xl md:text-3xl font-bold">
-                                    {winner.name?.[0]?.toUpperCase()}
+                                    {raffle.winner.name?.[0]?.toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="absolute -bottom-1.5 -right-1.5 md:-bottom-2 md:-right-2 bg-yellow-500 rounded-full p-1.5 md:p-2 shadow-lg border-2 border-black">
@@ -393,7 +431,7 @@ export function LiveRoulette({ raffle, onClose }: LiveRouletteProps) {
                             <p className="text-xs md:text-sm text-yellow-500/80 font-medium uppercase tracking-wider mb-1">
                                 Grande Vencedor
                             </p>
-                            <h2 className="text-2xl md:text-4xl font-black text-white mb-1 drop-shadow-lg">{winner.name}</h2>
+                            <h2 className="text-2xl md:text-4xl font-black text-white mb-1 drop-shadow-lg">{raffle.winner.name}</h2>
                             <p className="text-white/60 text-sm">Parabéns! 🎊</p>
                         </div>
                     </div>

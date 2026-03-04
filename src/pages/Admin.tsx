@@ -246,8 +246,8 @@ const Admin = () => {
             // 1. Perform the draw on the backend first
             const data = await api.drawRaffle(adminPassword, selectedRaffle.id);
 
-            // 2. Update the raffle with the winner info locally
-            const updatedRaffle = { ...selectedRaffle, winner: data.winner, status: 'encerrado' };
+            // 2. Update the raffle with the winner(s) info locally
+            const updatedRaffle = { ...selectedRaffle, winner: data.winner, winners: data.winners, status: 'encerrado' };
             setSelectedRaffle(updatedRaffle as Raffle);
 
             // 3. Show the new Premium Roulette with the winner already set

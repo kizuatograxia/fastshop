@@ -20,6 +20,7 @@ export interface CreateRaffleDTO {
     draw_date: string;
     category: string;
     rarity: string;
+    winners_amount?: number;
     image_urls?: string[];
 }
 
@@ -50,6 +51,7 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
         draw_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         category: "tech",
         rarity: "comum",
+        winners_amount: 1,
         image_urls: []
     };
 
@@ -68,6 +70,7 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                 draw_date: initialData.dataFim,
                 category: initialData.categoria,
                 rarity: initialData.raridade,
+                winners_amount: initialData.winnersAmount || 1,
                 image_urls: initialData.image_urls || []
             });
         }
@@ -312,6 +315,21 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                                 onChange={(e) => setFormData({ ...formData, max_tickets: Number(e.target.value) })}
                                 className="bg-background/50"
                             />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>Quantidade de Vencedores</Label>
+                            <Input
+                                type="number"
+                                min={1}
+                                max={100}
+                                value={formData.winners_amount}
+                                onChange={(e) => setFormData({ ...formData, winners_amount: Number(e.target.value) })}
+                                className="bg-background/50"
+                            />
+                            <p className="text-[10px] text-muted-foreground">Quantos prêmios/vencedores este sorteio terá.</p>
                         </div>
                     </div>
 
