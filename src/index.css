@@ -53,8 +53,10 @@
     --radius: 0.75rem;
 
     --gradient-primary: linear-gradient(to right, #4ADE80, #22D3EE);
-    --gradient-hero: linear-gradient(135deg, hsl(210, 40%, 98%) 0%, hsl(214, 32%, 91%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(270, 40%, 25%) 0%, hsl(285, 35%, 35%) 15%, hsl(35, 70%, 55%) 40%, hsl(165, 60%, 45%) 65%, hsl(160, 70%, 35%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(0, 0%, 100%) 0%, hsl(210, 40%, 98%) 100%);
+    --gradient-ocean: linear-gradient(180deg, hsl(160, 70%, 35%) 0%, hsl(165, 80%, 25%) 50%, hsl(170, 60%, 15%) 100%);
+    --gradient-sky: linear-gradient(180deg, hsl(270, 40%, 20%) 0%, hsl(285, 35%, 30%) 40%, hsl(35, 60%, 50%) 100%);
 
     --shadow-glow: 0 0 10px rgba(74, 222, 128, 0.3);
     --shadow-card: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -122,8 +124,10 @@
     --sidebar-border: 217 27% 16%;
     --sidebar-ring: 142 71% 58%;
 
-    --gradient-hero: linear-gradient(135deg, #0B0F15 0%, #151B25 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(270, 50%, 12%) 0%, hsl(285, 40%, 18%) 15%, hsl(35, 50%, 25%) 40%, hsl(165, 50%, 20%) 65%, hsl(160, 60%, 12%) 100%);
     --gradient-card: linear-gradient(180deg, #151B25 0%, #0B0F15 100%);
+    --gradient-ocean: linear-gradient(180deg, hsl(160, 60%, 12%) 0%, hsl(165, 70%, 8%) 50%, hsl(170, 50%, 5%) 100%);
+    --gradient-sky: linear-gradient(180deg, hsl(270, 50%, 8%) 0%, hsl(285, 40%, 14%) 40%, hsl(35, 40%, 20%) 100%);
     --shadow-glow: 0 0 20px rgba(74, 222, 128, 0.5);
   }
 }
@@ -150,7 +154,15 @@
   }
 
   .bg-gradient-hero {
-    background-image: var(--gradient-hero);
+    background: var(--gradient-hero);
+  }
+
+  .bg-gradient-ocean {
+    background: var(--gradient-ocean);
+  }
+
+  .bg-gradient-sky {
+    background: var(--gradient-sky);
   }
 
   .shadow-glow {
