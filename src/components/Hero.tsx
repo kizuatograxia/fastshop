@@ -1,76 +1,101 @@
 import React from "react";
-import { Sparkles, Trophy, Ticket, Anchor } from "lucide-react";
+import { Copy, Gift, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Hero: React.FC = () => {
   return (
-    <section className="relative overflow-hidden">
-      {/* DKC2-inspired Caribbean gradient background */}
-      <div className="absolute inset-0 bg-gradient-hero" />
+    <section className="relative overflow-hidden bg-background pt-16 pb-24 md:pt-24 md:pb-32 border-b border-border">
+      {/* Subtle Grid Background for a clean modern look instead of AI blobs */}
+      <div
+        className="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.05]"
+        style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', backgroundSize: '32px 32px' }}
+      />
 
-      {/* Animated water shimmer overlay */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Sky glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[hsl(35,60%,50%)]/15 rounded-full blur-[100px] animate-float" />
-        {/* Horizon line glow */}
-        <div className="absolute top-[38%] left-0 right-0 h-[2px] bg-[hsl(35,70%,60%)]/20 blur-sm" />
-        <div className="absolute top-[40%] left-1/4 w-1/2 h-[80px] bg-[hsl(35,60%,55%)]/10 rounded-full blur-[60px]" />
-        {/* Water reflections */}
-        <div className="absolute bottom-0 left-0 right-0 h-1/2 overflow-hidden">
-          <div className="absolute inset-0 bg-[hsl(160,70%,40%)]/5 animate-float" style={{ animationDelay: "0s" }} />
-          <div className="absolute -left-20 bottom-10 w-[400px] h-[100px] bg-[hsl(165,80%,45%)]/10 rounded-full blur-[80px] animate-float" style={{ animationDelay: "1.5s" }} />
-          <div className="absolute -right-20 bottom-20 w-[350px] h-[80px] bg-[hsl(155,60%,50%)]/10 rounded-full blur-[60px] animate-float" style={{ animationDelay: "3s" }} />
-        </div>
-        {/* Subtle rope/rigging lines (decorative) */}
-        <div className="absolute top-0 right-[15%] w-[1px] h-full bg-foreground/[0.03]" />
-        <div className="absolute top-0 right-[18%] w-[1px] h-full bg-foreground/[0.02] rotate-[2deg]" />
-        <div className="absolute top-0 left-[12%] w-[1px] h-full bg-foreground/[0.03] -rotate-[1deg]" />
-      </div>
+      <div className="container mx-auto px-4 relative z-10 flex flex-col md:flex-row items-center gap-12 md:gap-8">
 
-      <div className="container mx-auto px-4 py-20 md:py-32 relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-card/20 backdrop-blur-sm border border-primary/30 rounded-full px-4 py-2 mb-6 animate-fade-in">
-            <Anchor className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">
-              Sorteios com NFTs exclusivos
-            </span>
+        {/* Left column: Typography and Call to Actions */}
+        <div className="flex-1 text-left w-full max-w-2xl">
+          <div className="inline-flex items-center gap-2 bg-secondary text-secondary-foreground border border-border rounded-md px-3 py-1.5 mb-6 text-xs font-semibold uppercase tracking-wider">
+            <Gift className="h-3.5 w-3.5 text-primary" />
+            <span>MundoPix Sorteios</span>
           </div>
 
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight animate-fade-in text-white drop-shadow-lg" style={{ animationDelay: "0.1s" }}>
-            <span>Colecione NFTs, </span>
-            <br className="hidden sm:block" />
-            <span className="text-gradient">Ganhe Prêmios!</span>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-6 leading-[1.1] tracking-tight text-foreground">
+            A forma mais transparente de participar de sorteios.
           </h1>
 
-          <p className="text-lg md:text-xl text-white/70 mb-8 animate-fade-in max-w-2xl mx-auto drop-shadow" style={{ animationDelay: "0.2s" }}>
-            Compre NFTs de animais fofos e emojis exclusivos para participar de sorteios incríveis.
-            Quanto mais raros seus NFTs, maiores suas chances!
+          <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-xl leading-relaxed">
+            Adquira NFTs exclusivos catalogados na rede, receba seus números da sorte e concorra a prêmios reais com total segurança.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in" style={{ animationDelay: "0.3s" }}>
-            <Button variant="hero" size="xl" onClick={() => document.getElementById('sorteios')?.scrollIntoView({ behavior: 'smooth' })}>
-              <Ticket className="h-5 w-5" />
-              Ver Sorteios
+          <div className="flex flex-col sm:flex-row items-start gap-4">
+            <Button
+              size="xl"
+              className="w-full sm:w-auto font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+              onClick={() => document.getElementById('sorteios')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              Explorar prêmios
+              <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
-            <Button variant="outline" size="xl" className="border-white/20 text-white hover:bg-white/10" onClick={() => document.getElementById('nfts')?.scrollIntoView({ behavior: 'smooth' })}>
-              <Trophy className="h-5 w-5" />
-              Comprar NFTs
+            <Button
+              variant="outline"
+              size="xl"
+              className="w-full sm:w-auto font-semibold border-border bg-card hover:bg-muted"
+              onClick={() => document.getElementById('comofunciona')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              Entender as regras
             </Button>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 md:gap-8 mt-14 animate-fade-in" style={{ animationDelay: "0.4s" }}>
-            {[
-              { value: "2.5K+", label: "Bilhetes Vendidos" },
-              { value: "R$50K+", label: "Em Prêmios" },
-              { value: "100+", label: "Ganhadores" },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center bg-card/10 backdrop-blur-sm rounded-xl py-4 border border-white/5">
-                <p className="text-2xl md:text-4xl font-black text-gradient">{stat.value}</p>
-                <p className="text-xs md:text-sm text-white/50">{stat.label}</p>
-              </div>
-            ))}
+          <div className="mt-10 flex items-center gap-6 text-sm text-muted-foreground font-medium">
+            <div className="flex items-center gap-2">
+              <span className="flex h-2.5 w-2.5 rounded-full bg-primary/20 items-center justify-center">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+              </span>
+              Sorteios ao vivo toda semana
+            </div>
+            <div className="hidden sm:flex items-center gap-2">
+              <span className="flex h-2.5 w-2.5 rounded-full bg-primary/20 items-center justify-center">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
+              </span>
+              Ativos verificáveis
+            </div>
           </div>
+        </div>
+
+        {/* Right column: Main visual representation of the concept */}
+        <div className="flex-1 w-full relative perspective-1000 hidden md:block">
+          <div className="relative mx-auto w-full max-w-[400px] aspect-[4/5] bg-card rounded-2xl border border-border shadow-elevated overflow-hidden group">
+            {/* Mock minimal interface of a ticket/NFT */}
+            <div className="h-1/2 bg-muted/30 p-6 flex flex-col justify-between border-b border-border/50">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-bold text-muted-foreground uppercase">NFT Pass</span>
+                <span className="px-2 py-1 bg-background rounded text-xs font-mono font-bold text-primary">#4829</span>
+              </div>
+              <div>
+                <div className="h-24 w-24 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 mx-auto flex items-center justify-center border border-primary/20">
+                  <Copy className="h-8 w-8 text-primary/60" />
+                </div>
+              </div>
+            </div>
+            <div className="h-1/2 p-6 flex flex-col justify-between bg-card text-card-foreground">
+              <div>
+                <h3 className="font-bold text-xl mb-1">Passe Ouro Mensal</h3>
+                <p className="text-sm text-muted-foreground">Garante 5 números na sorte principal desta sexta-feira.</p>
+              </div>
+              <div className="pt-4 flex justify-between items-end border-t border-border/50 mt-4">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-muted-foreground uppercase font-bold">Valor</span>
+                  <span className="font-black text-lg">R$ 49,90</span>
+                </div>
+                <Button size="sm" className="font-bold">Adquirir</Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Decorative elements to anchor the design instead of floating blurs */}
+          <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-primary/5 rounded-xl border border-primary/10 -z-10 rotate-12"></div>
+          <div className="absolute -top-6 -right-6 w-32 h-32 bg-secondary rounded-full -z-10 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#374151_1px,transparent_1px)] [background-size:8px_8px]"></div>
         </div>
       </div>
 
@@ -85,3 +110,4 @@ const Hero: React.FC = () => {
 };
 
 export default Hero;
+
