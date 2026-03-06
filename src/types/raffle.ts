@@ -4,7 +4,7 @@ export interface NFT {
     emoji: string;
     image?: string;
     preco: number;
-    raridade: "comum" | "raro" | "epico" | "lendario";
+    raridade: "comum" | "raro" | "epico" | "lendario" | "mitico" | "celestial";
     descricao: string;
     cor: string;
 }

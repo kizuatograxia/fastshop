@@ -81,6 +81,46 @@ export const nfts: NFT[] = [
         descricao: "Representa a nota de 200 reais. O grande canídeo do Cerrado.",
         cor: "from-stone-500 to-neutral-600",
     },
+    {
+        id: "nft-9",
+        nome: "Boto-Cor-de-Rosa (R$ 500)",
+        emoji: "🐬",
+        image: "/boto-emoji.png",
+        preco: 500.00,
+        raridade: "lendario",
+        descricao: "Lenda dos rios amazônicos. Traz muita sorte em águas profundas.",
+        cor: "from-pink-400 to-rose-500",
+    },
+    {
+        id: "nft-10",
+        nome: "Jacaré-Açu (R$ 1.000)",
+        emoji: "🐊",
+        image: "/jacare-emoji.png",
+        preco: 1000.00,
+        raridade: "mitico",
+        descricao: "O maior predador da Amazônia. Uma força implacável e grandiosa.",
+        cor: "from-emerald-600 to-green-900",
+    },
+    {
+        id: "nft-11",
+        nome: "Tucano (R$ 1.500)",
+        emoji: "🦤",
+        image: "/tucano-emoji.png",
+        preco: 1500.00,
+        raridade: "mitico",
+        descricao: "Símbolo das florestas tropicais, com cores vibrantes que encantam as aves.",
+        cor: "from-orange-400 to-yellow-600",
+    },
+    {
+        id: "nft-12",
+        nome: "Ararinha-Azul (R$ 2.000)",
+        emoji: "🪶",
+        image: "/ararinha-emoji.png",
+        preco: 2000.00,
+        raridade: "celestial",
+        descricao: "A joia mais rara dos céus do Brasil. Beleza inestimável e proteção divina.",
+        cor: "from-cyan-400 to-blue-700",
+    },
 ];
 
 export const raffles: Raffle[] = [
@@ -184,4 +224,6 @@ export const nftCategories = [
     { id: "raro", nome: "Raros", emoji: "💎" },
     { id: "epico", nome: "Épicos", emoji: "🔮" },
     { id: "lendario", nome: "Lendários", emoji: "👑" },
+    { id: "mitico", nome: "Míticos", emoji: "🌌" },
+    { id: "celestial", nome: "Celestiais", emoji: "✨" },
 ];
