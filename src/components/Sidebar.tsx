@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, User, Ticket, Gift, HelpCircle, Trophy } from "lucide-react";
+import { X, User, Ticket, Gift, HelpCircle, Trophy, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -48,16 +48,19 @@ const Sidebar: React.FC<SidebarProps> = ({
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 bg-gradient-primary">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-lg text-primary-foreground">
-                Mundo Pix
+          <div className="flex items-center justify-between p-4 bg-card border-b border-border">
+            <Link to="/" onClick={onClose} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <div className="relative">
+                <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-primary animate-glow-pulse" />
+              </div>
+              <span className="text-2xl font-black text-gradient">
+                MundoPix
               </span>
-            </div>
+            </Link>
             <Button
               variant="ghost"
               size="icon"
-              className="text-primary-foreground hover:bg-white/20"
+              className="text-muted-foreground hover:bg-secondary"
               onClick={onClose}
             >
               <X className="h-5 w-5" />
