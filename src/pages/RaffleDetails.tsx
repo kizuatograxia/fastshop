@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { rarityColors } from "@/utils/rarity";
 
