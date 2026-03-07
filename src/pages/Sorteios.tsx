@@ -27,6 +27,8 @@ import { api } from "@/lib/api";
 import { Raffle } from "@/types/raffle";
 import { toast } from "sonner";
 
+import RaffleCard from "@/components/RaffleCard";
+
 const RaffleCardWrapper = ({ raffle, index }: { raffle: Raffle; index: number }) => {
   return (
     <motion.div
@@ -35,83 +37,7 @@ const RaffleCardWrapper = ({ raffle, index }: { raffle: Raffle; index: number })
       transition={{ delay: 0.2 + index * 0.05 }}
       className="w-full h-full flex flex-col"
     >
-      <Link to={`/raffle/${raffle.id}`}>
-        <Card className="group bg-card border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-glow hover:-translate-y-1 cursor-pointer">
-          {/* Image */}
-          <div className="relative w-full overflow-hidden">
-            <img
-              src={raffle.imagem}
-              alt={raffle.titulo}
-              className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
-
-            {/* Badges */}
-            <div className="absolute top-3 left-3 flex gap-2">
-              {raffle.participantes && raffle.participantes > 100 && (
-                <Badge className="bg-destructive text-destructive-foreground animate-pulse">
-                  🔥 HOT
-                </Badge>
-              )}
-            </div>
-
-            {/* Time Badge */}
-            <div className="absolute top-3 right-3">
-              <Badge variant="secondary" className="bg-background/80 backdrop-blur-sm gap-1">
-                <Clock className="h-3 w-3" />
-                Ativo
-              </Badge>
-            </div>
-
-            {/* Prize Value */}
-            <div className="absolute bottom-3 left-3">
-              <p className="text-2xl font-bold text-gradient">
-                R$ {raffle.premioValor.toLocaleString("pt-BR")}
-              </p>
-            </div>
-          </div>
-
-          <CardContent className="p-4 space-y-4">
-            {/* Title */}
-            <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors line-clamp-1 pb-2">
-              {raffle.titulo}
-            </h3>
-
-            <div className="space-y-4">
-              {/* Progress */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Progresso</span>
-                  <span className="text-foreground font-medium">
-                    {raffle.participantes}/{raffle.maxParticipantes}
-                  </span>
-                </div>
-                <Progress
-                  value={(raffle.participantes / raffle.maxParticipantes) * 100}
-                  className="h-2 bg-secondary"
-                />
-              </div>
-
-              {/* Footer */}
-              <div className="flex items-center justify-between pt-2">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Ticket className="h-4 w-4" />
-                  <span className="text-sm">{raffle.participantes} <span className="hidden sm:inline">cotas vendidas</span></span>
-                </div>
-                <Badge className="hidden md:inline-flex bg-primary/10 text-primary border-0">
-                  <Ticket className="h-3 w-3 mr-1" />
-                  R$ {raffle.custoNFT}
-                </Badge>
-              </div>
-
-              {/* CTA Button */}
-              <Button className="w-full" variant="default">
-                Participar Agora
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </Link>
+      <RaffleCard raffle={raffle} index={index} />
     </motion.div>
   );
 };
