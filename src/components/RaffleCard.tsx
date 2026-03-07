@@ -61,9 +61,9 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
     const progressPercent = (raffle.participantes / raffle.maxParticipantes) * 100;
 
     return (
-        <div className="flex flex-col h-full md:h-auto justify-start">
+        <div className="group relative flex flex-col h-full md:h-auto justify-start hover:z-50">
             <article
-                className={`group relative bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/30 animate-fade-in flex flex-col h-auto md:h-full shrink-0 ${disableNavigation ? "" : "cursor-pointer"}`}
+                className={`relative bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 group-hover:shadow-2xl group-hover:border-primary/30 animate-fade-in flex flex-col h-auto md:h-full shrink-0 ${disableNavigation ? "" : "cursor-pointer"}`}
                 style={{ animationDelay: `${index * 0.1}s` }}
                 onClick={handleCardClick}
             >
@@ -122,60 +122,54 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
                         </p>
                     </div>
 
-                    <div className="hidden md:block space-y-3 mt-auto">
-                        {/* Progress Bar (Desktop) */}
-                        <div className="space-y-1">
-                            <div className="flex justify-between text-xs text-muted-foreground">
-                                <span className="flex items-center gap-1">
-                                    <Ticket className="h-3 w-3" />
-                                    <span>{raffle.participantes} cotas vendidas</span>
-                                </span>
-                                <span>{Math.round(progressPercent)}%</span>
-                            </div>
-                            <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500"
-                                    style={{ width: `${progressPercent}%` }}
-                                />
-                            </div>
-                        </div>
-
-                        {/* NFT Cost (Desktop) */}
-                        <div className="flex items-center justify-between py-2 px-3 bg-secondary/50 rounded-lg">
-                            <span className="text-xs text-muted-foreground whitespace-nowrap overflow-hidden text-ellipsis mr-2">
-                                Custo para participar
-                            </span>
-                            <span className="font-bold text-sm text-primary whitespace-nowrap">{raffle.custoNFT} NFT</span>
-                        </div>
-
-                        {/* Buttons (Desktop) - Hidden until hover */}
-                        {!disableNavigation && (
-                            <div className="flex gap-2 transition-all duration-300 ease-out md:opacity-0 md:translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 relative z-20">
-                                <Button
-                                    variant="secondary"
-                                    className="flex-1 h-10 text-sm px-2 bg-secondary/80 hover:bg-secondary border border-border/50 transition-all font-medium"
-                                    onClick={handleMoreInfo}
-                                >
-                                    <Info className="h-4 w-4 mr-1.5 text-muted-foreground group-hover:text-foreground transition-colors" />
-                                    <span className="text-muted-foreground group-hover:text-foreground transition-colors">Detalhes</span>
-                                </Button>
-                                <Button
-                                    variant="hero"
-                                    className="flex-1 h-10 text-sm px-2"
-                                    onClick={handleParticipate}
-                                    disabled={alreadyParticipating}
-                                    title={alreadyParticipating ? "Participando" : "Participar"}
-                                >
-                                    <Ticket className="h-4 w-4 mr-2" />
-                                    <span>
-                                        {alreadyParticipating ? "Participando" : "Participar"}
-                                    </span>
-                                </Button>
-                            </div>
-                        )}
-                    </div>
                 </div>
             </article>
+
+            {/* Expanded Content (Desktop Hover) - Absolute positioned to not stretch grid */}
+            <div className="hidden md:block absolute top-[calc(100%-1rem)] left-0 w-full pt-5 opacity-0 -translate-y-4 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto z-40">
+                <div className="space-y-3 px-1">
+                    {/* Progress Bar (Desktop) */}
+                    <div className="space-y-1 bg-background/80 backdrop-blur-md p-2 rounded-lg border border-border shadow-sm">
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                                <Ticket className="h-3 w-3" />
+                                <span>{raffle.participantes} cotas</span>
+                            </span>
+                            <span>{Math.round(progressPercent)}%</span>
+                        </div>
+                        <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500"
+                                style={{ width: `${progressPercent}%` }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* CTA Buttons (Desktop) */}
+                    {!disableNavigation && (
+                        <div className="flex gap-2">
+                            <Button
+                                variant="secondary"
+                                className="flex-1 h-10 text-sm px-2 bg-secondary/90 hover:bg-secondary border border-border/50 shadow-sm"
+                                onClick={handleMoreInfo}
+                            >
+                                <Info className="h-4 w-4 mr-1.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                                <span className="text-muted-foreground group-hover:text-foreground transition-colors">Detalhes</span>
+                            </Button>
+                            <Button
+                                variant="hero"
+                                className="flex-1 h-10 text-sm px-2 shadow-sm"
+                                onClick={handleParticipate}
+                                disabled={alreadyParticipating}
+                                title={alreadyParticipating ? "Participando" : "Participar"}
+                            >
+                                <Ticket className="h-4 w-4 mr-2" />
+                                <span>{alreadyParticipating ? "Participando" : "Participar"}</span>
+                            </Button>
+                        </div>
+                    )}
+                </div>
+            </div>
 
             {/* Expanded Content (Mobile Only) - Renders outside the card body */}
             <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isExpandedOnMobile ? 'max-h-[500px] opacity-100 mt-2 pb-1' : 'max-h-0 opacity-0 m-0'}`}>
