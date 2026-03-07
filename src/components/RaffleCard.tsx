@@ -61,9 +61,9 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
     const progressPercent = (raffle.participantes / raffle.maxParticipantes) * 100;
 
     return (
-        <div className="flex flex-col h-full md:h-auto">
+        <div className="flex flex-col h-full md:h-auto justify-start">
             <article
-                className={`group relative bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/30 animate-fade-in flex flex-col h-full md:h-auto ${disableNavigation ? "" : "cursor-pointer"}`}
+                className={`group relative bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-primary/30 animate-fade-in flex flex-col h-auto md:h-full shrink-0 ${disableNavigation ? "" : "cursor-pointer"}`}
                 style={{ animationDelay: `${index * 0.1}s` }}
                 onClick={handleCardClick}
             >
@@ -176,7 +176,7 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
             </article>
 
             {/* Expanded Content (Mobile Only) - Renders outside the card body */}
-            <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isExpandedOnMobile ? 'max-h-[500px] opacity-100 mt-2' : 'max-h-0 opacity-0 m-0'}`}>
+            <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isExpandedOnMobile ? 'max-h-[500px] opacity-100 mt-2 pb-1' : 'max-h-0 opacity-0 m-0'}`}>
                 <div className="space-y-3 px-1">
                     {/* Progress Bar */}
                     <div className="space-y-1">
