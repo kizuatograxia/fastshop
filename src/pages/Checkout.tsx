@@ -12,14 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
-const rarityColors: Record<string, string> = {
-    comum: "from-gray-400 to-gray-500",
-    raro: "from-blue-400 to-cyan-500",
-    epico: "from-purple-400 to-pink-500",
-    lendario: "from-yellow-400 to-orange-500",
-    mitico: "from-emerald-400 to-green-600",
-    celestial: "from-cyan-400 to-blue-600",
-};
+import { rarityColors } from "@/utils/rarity";
 
 // Estrutura para integração com Pagar.me
 interface PixPayment {
@@ -244,7 +237,7 @@ const Checkout: React.FC = () => {
                                         key={nft.id}
                                         className="flex gap-4 bg-secondary/30 rounded-xl p-3 border border-border"
                                     >
-                                        <div className={`w-14 h-14 rounded-lg bg-gradient-to-br ${rarityColors[nft.raridade]} flex items-center justify-center flex-shrink-0`}>
+                                        <div className={`w-14 h-14 rounded-lg bg-gradient-to-br ${rarityColors[nft.raridade] || rarityColors.comum} flex items-center justify-center flex-shrink-0`}>
                                             <span className="text-2xl">{nft.emoji}</span>
                                         </div>
                                         <div className="flex-1 min-w-0">

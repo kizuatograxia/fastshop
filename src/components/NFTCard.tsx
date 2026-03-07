@@ -10,25 +10,7 @@ interface NFTCardProps {
     index: number;
 }
 
-const rarityColors = {
-    comum: "from-gray-400 to-gray-500",
-    raro: "from-blue-400 to-cyan-500",
-    epico: "from-purple-400 to-pink-500",
-    lendario: "from-yellow-400 to-orange-500",
-    mitico: "from-emerald-400 to-green-600",
-    celestial: "from-cyan-400 to-blue-600",
-};
-
-const rarityLabels = {
-    comum: "Comum",
-    raro: "Raro",
-    epico: "Épico",
-    lendario: "Lendário",
-    mitico: "Mítico",
-    celestial: "Celestial",
-};
-
-const NFTCard: React.FC<NFTCardProps> = ({ nft, index }) => {
+import { rarityColors, rarityLabels } from "@/utils/rarity"; const NFTCard: React.FC<NFTCardProps> = ({ nft, index }) => {
     const { addToCart, getNFTCount } = useWallet();
     const ownedCount = getNFTCount(nft.id);
 
@@ -48,9 +30,9 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft, index }) => {
             {/* Full Card Background Glow based on the animal color */}
             <div className={`absolute inset-0 bg-gradient-to-br ${nft.cor} opacity-20 dark:opacity-10 group-hover:opacity-30 transition-opacity duration-300`} />
             {/* Rarity Badge */}
-            <div className={`absolute top-3 left-3 z-10 flex items-center gap-1 bg-gradient-to-r ${rarityColors[nft.raridade]} text-white px-2 py-1 rounded-lg text-xs font-bold`}>
+            <div className={`absolute top-3 left-3 z-10 flex items-center gap-1 bg-gradient-to-r ${rarityColors[nft.raridade] || rarityColors.comum} text-white px-2 py-1 rounded-lg text-xs font-bold`}>
                 <Sparkles className="h-3 w-3" />
-                {rarityLabels[nft.raridade]}
+                {rarityLabels[nft.raridade] || rarityLabels.comum}
             </div>
 
             {/* Owned Badge */}

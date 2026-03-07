@@ -27,23 +27,7 @@ import { ptBR } from "date-fns/locale";
 import { WinnerAddressDialog } from "@/components/profile/WinnerAddressDialog";
 import DeliveryProgress from "@/components/DeliveryProgress";
 
-const rarityColors: Record<string, string> = {
-    comum: "from-gray-400 to-gray-500",
-    raro: "from-blue-400 to-cyan-400",
-    epico: "from-purple-500 to-pink-500",
-    lendario: "from-yellow-400 to-orange-500",
-    mitico: "from-emerald-400 to-green-600",
-    celestial: "from-cyan-400 to-blue-600",
-};
-
-const rarityLabels: Record<string, string> = {
-    comum: "Comum",
-    raro: "Raro",
-    epico: "Épico",
-    lendario: "Lendário",
-    mitico: "Mítico",
-    celestial: "Celestial",
-};
+import { rarityColors, rarityLabels } from "@/utils/rarity";
 
 const Profile = () => {
     const navigate = useNavigate();
@@ -374,9 +358,9 @@ const Profile = () => {
                                         className="relative p-4 rounded-xl bg-secondary/50 border border-border group hover:border-primary/50 transition-colors"
                                     >
                                         <div
-                                            className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r ${rarityColors[nft.raridade]} text-white`}
+                                            className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs font-medium bg-gradient-to-r ${rarityColors[nft.raridade] || rarityColors.comum} text-white`}
                                         >
-                                            {rarityLabels[nft.raridade]}
+                                            {rarityLabels[nft.raridade] || rarityLabels.comum}
                                         </div>
                                         {nft.image ? (
                                             <div className="flex justify-center mb-3">

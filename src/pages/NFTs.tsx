@@ -30,28 +30,7 @@ interface NFTItem {
   stock?: number;
 }
 
-const rarityConfig = {
-  comum: {
-    label: "Comum",
-    color: "from-gray-400 to-gray-500",
-    badge: "bg-gray-500/20 text-gray-300 border-gray-500/30",
-  },
-  raro: {
-    label: "Raro",
-    color: "from-blue-400 to-cyan-500",
-    badge: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  },
-  epico: {
-    label: "Épico",
-    color: "from-purple-400 to-pink-500",
-    badge: "bg-purple-500/20 text-purple-300 border-purple-500/30",
-  },
-  lendario: {
-    label: "Lendário",
-    color: "from-yellow-400 to-orange-500",
-    badge: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
-  },
-};
+import { getRarityConfig } from "@/utils/rarity";
 
 
 const NFTs: React.FC = () => {
@@ -193,9 +172,9 @@ const NFTs: React.FC = () => {
 
                 {/* Info */}
                 <div className="flex-1 text-center md:text-left">
-                  <Badge className={`${(rarityConfig[currentFeatured.rarity] || rarityConfig.comum).badge} mb-3`}>
+                  <Badge className={`${getRarityConfig(currentFeatured.rarity).badge} mb-3`}>
                     <Star className="h-3 w-3 mr-1 fill-current" />
-                    {(rarityConfig[currentFeatured.rarity] || rarityConfig.comum).label}
+                    {getRarityConfig(currentFeatured.rarity).label}
                   </Badge>
                   <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
                     {currentFeatured.name}
@@ -260,8 +239,8 @@ const NFTs: React.FC = () => {
                 <Card className="group bg-card border-border overflow-hidden hover:border-primary/50 transition-all duration-300 hover:shadow-glow hover:-translate-y-1">
                   {/* ... contents below ... */}
                   <div className="absolute top-2 left-2 z-10">
-                    <Badge className={`${(rarityConfig[nft.rarity] || rarityConfig.comum).badge} text-xs`}>
-                      {(rarityConfig[nft.rarity] || rarityConfig.comum).label}
+                    <Badge className={`${getRarityConfig(nft.rarity).badge} text-xs`}>
+                      {getRarityConfig(nft.rarity).label}
                     </Badge>
                   </div>
 

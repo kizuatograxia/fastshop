@@ -5,6 +5,7 @@ import { NFT } from "@/types/raffle";
 import { useWallet } from "@/contexts/WalletContext";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { getRarityConfig } from "@/utils/rarity";
 
 interface NFTMobilePreviewProps {
     nfts: NFT[];
@@ -35,23 +36,7 @@ const NFTMobilePreview: React.FC<NFTMobilePreviewProps> = ({ nfts }) => {
         });
     };
 
-    const rarityLabels: Record<string, string> = {
-        comum: "Comum",
-        raro: "Raro",
-        epico: "Épico",
-        lendario: "Lendário",
-        mitico: "Mítico",
-        celestial: "Celestial",
-    };
 
-    const rarityClasses: Record<string, string> = {
-        comum: "bg-gray-500/20 text-gray-300 border-gray-500/30",
-        raro: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-        epico: "bg-purple-500/20 text-purple-300 border-purple-500/30",
-        lendario: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
-        mitico: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-        celestial: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
-    };
 
     return (
         <div className="flex flex-col gap-6">
@@ -85,9 +70,9 @@ const NFTMobilePreview: React.FC<NFTMobilePreviewProps> = ({ nfts }) => {
 
                 {/* NFT Info */}
                 <div className="flex-1 text-center md:text-left pb-8 md:pb-0">
-                    <div className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold transition-colors mb-2 ${rarityClasses[currentNFT.raridade] || rarityClasses.comum}`}>
+                    <div className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold transition-colors mb-2 ${getRarityConfig(currentNFT.raridade).badge}`}>
                         <Star className="h-2.5 w-2.5 mr-1 fill-current" />
-                        {rarityLabels[currentNFT.raridade] || "NFT"}
+                        {getRarityConfig(currentNFT.raridade).label}
                     </div>
                     <h3 className="text-xl md:text-3xl font-bold text-foreground mb-1">
                         {currentNFT.nome}

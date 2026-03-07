@@ -20,7 +20,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { rarityColors } from "@/utils/rarity";
 
 // ── Activity Feed ──
 const ActivityFeed: React.FC<{ raffleId: string; autoRefresh?: boolean }> = ({ raffleId, autoRefresh = false }) => {
@@ -373,11 +375,7 @@ const RaffleDetails: React.FC = () => {
     await executeParticipation(ticketsToReceive, selectedValue);
   };
 
-  const rarityColors: Record<string, string> = {
-    comum: "from-gray-400 to-gray-500", raro: "from-blue-400 to-cyan-500",
-    epico: "from-purple-400 to-pink-500", lendario: "from-yellow-400 to-orange-500",
-    mitico: "from-emerald-400 to-green-600", celestial: "from-cyan-400 to-blue-600",
-  };
+
 
   const allImages = raffle.image_urls && raffle.image_urls.length > 0
     ? raffle.image_urls.filter((u: string) => u && !u.includes("example.com"))
