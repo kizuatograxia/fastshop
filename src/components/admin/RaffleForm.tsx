@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { RefreshCw, Plus, ArrowLeft } from "lucide-react";
+import { RefreshCw, Plus, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { Raffle } from "@/types/raffle";
 import { api } from "@/lib/api";
@@ -205,9 +205,45 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                                 {formData.image_urls.map((url, idx) => (
                                     <div key={idx} className="relative w-16 h-16 flex-shrink-0 group">
                                         <img src={url} alt={`Preview ${idx}`} className="w-full h-full object-cover rounded-md border border-border" />
+                                        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+                                            {idx > 0 ? (
+                                                <button
+                                                    type="button"
+                                                    className="bg-black/60 text-white rounded hover:bg-black pointer-events-auto"
+                                                    onClick={() => {
+                                                        setFormData(prev => {
+                                                            const urls = [...(prev.image_urls || [])];
+                                                            const temp = urls[idx];
+                                                            urls[idx] = urls[idx - 1];
+                                                            urls[idx - 1] = temp;
+                                                            return { ...prev, image_urls: urls, image_url: urls[0] };
+                                                        });
+                                                    }}
+                                                >
+                                                    <ChevronLeft className="w-4 h-4" />
+                                                </button>
+                                            ) : <div className="w-4" />}
+                                            {idx < formData.image_urls.length - 1 ? (
+                                                <button
+                                                    type="button"
+                                                    className="bg-black/60 text-white rounded hover:bg-black pointer-events-auto"
+                                                    onClick={() => {
+                                                        setFormData(prev => {
+                                                            const urls = [...(prev.image_urls || [])];
+                                                            const temp = urls[idx];
+                                                            urls[idx] = urls[idx + 1];
+                                                            urls[idx + 1] = temp;
+                                                            return { ...prev, image_urls: urls, image_url: urls[0] };
+                                                        });
+                                                    }}
+                                                >
+                                                    <ChevronRight className="w-4 h-4" />
+                                                </button>
+                                            ) : <div className="w-4" />}
+                                        </div>
                                         <button
                                             type="button"
-                                            className="absolute -top-1 -right-1 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                                            className="absolute -top-1 -right-1 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs z-20"
                                             onClick={() => {
                                                 setFormData(prev => {
                                                     const urls = [...(prev.image_urls || [])];
@@ -216,6 +252,8 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                                                     // If we deleted the main url, replace it if possible
                                                     let newMain = prev.image_url;
                                                     if (prev.image_url === url) {
+                                                        newMain = urls.length > 0 ? urls[0] : "";
+                                                    } else {
                                                         newMain = urls.length > 0 ? urls[0] : "";
                                                     }
 
