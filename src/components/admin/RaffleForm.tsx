@@ -116,8 +116,8 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                             <div className="relative">
                                 <Input
                                     type="number"
-                                    value={formData.ticket_price}
-                                    onChange={(e) => setFormData({ ...formData, ticket_price: Number(e.target.value) })}
+                                    value={formData.ticket_price || ''}
+                                    onChange={(e) => setFormData({ ...formData, ticket_price: e.target.value === '' ? 0 : parseInt(e.target.value.toString().replace(/\D/g, ''), 10) || 0 })}
                                     className="bg-background/50 pl-10"
                                 />
                                 <span className="absolute left-3 top-2.5 text-muted-foreground font-bold">💎</span>
@@ -127,8 +127,8 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                             <Label>Valor Estimado (R$)</Label>
                             <Input
                                 type="number"
-                                value={formData.prize_value}
-                                onChange={(e) => setFormData({ ...formData, prize_value: Number(e.target.value) })}
+                                value={formData.prize_value || ''}
+                                onChange={(e) => setFormData({ ...formData, prize_value: e.target.value === '' ? 0 : Number(e.target.value) })}
                                 className="bg-background/50"
                             />
                         </div>
@@ -349,8 +349,8 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                             <Label>Max Tickets</Label>
                             <Input
                                 type="number"
-                                value={formData.max_tickets}
-                                onChange={(e) => setFormData({ ...formData, max_tickets: Number(e.target.value) })}
+                                value={formData.max_tickets || ''}
+                                onChange={(e) => setFormData({ ...formData, max_tickets: e.target.value === '' ? 0 : parseInt(e.target.value.toString().replace(/\D/g, ''), 10) || 0 })}
                                 className="bg-background/50"
                             />
                         </div>
@@ -363,8 +363,8 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                                 type="number"
                                 min={1}
                                 max={100}
-                                value={formData.winners_amount}
-                                onChange={(e) => setFormData({ ...formData, winners_amount: Number(e.target.value) })}
+                                value={formData.winners_amount || ''}
+                                onChange={(e) => setFormData({ ...formData, winners_amount: e.target.value === '' ? 1 : parseInt(e.target.value.toString().replace(/\D/g, ''), 10) || 1 })}
                                 className="bg-background/50"
                             />
                             <p className="text-[10px] text-muted-foreground">Quantos prêmios/vencedores este sorteio terá.</p>
