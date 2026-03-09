@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, FC, RefObject } from "react";
 import { ArrowRight, Zap, Shield, Users, Ticket, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { raffles as localRaffles } from "@/data/raffles";
@@ -15,7 +15,7 @@ const DecorativeGrid = () => (
 );
 
 // High-impact, minimal showcase
-const LuxuryShowcase: React.FC = () => {
+const LuxuryShowcase: FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [raffles, setRaffles] = useState<Raffle[]>(localRaffles);
 
@@ -133,7 +133,7 @@ const LuxuryShowcase: React.FC = () => {
   );
 };
 
-const Hero: React.FC = () => {
+const Hero: FC = () => {
   const [ticketCount, setTicketCount] = useState(12847);
   const sectionRef = useRef<HTMLElement>(null);
 
@@ -147,7 +147,7 @@ const Hero: React.FC = () => {
   return (
     <section ref={sectionRef} className="relative overflow-hidden bg-background min-h-[90vh] flex items-center border-b border-border/30 pt-16 lg:pt-0">
       {/* Background execution */}
-      <MempoolBackground containerRef={sectionRef as React.RefObject<HTMLElement>} />
+      <MempoolBackground containerRef={sectionRef as RefObject<HTMLElement>} />
       <DecorativeGrid />
 
       {/* Lighting / Atmosphere */}

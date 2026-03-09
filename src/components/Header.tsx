@@ -1,4 +1,4 @@
-import React from "react";
+import { useState, useEffect, FC } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, ShoppingCart, Sparkles, User, LogOut, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,12 +23,12 @@ interface HeaderProps {
   onWalletClick: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
+const Header: FC<HeaderProps> = ({ onMenuClick, onWalletClick }) => {
   const { getTotalNFTs } = useWallet();
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const totalNFTs = getTotalNFTs();
-  const [unreadNotifications, setUnreadNotifications] = React.useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">

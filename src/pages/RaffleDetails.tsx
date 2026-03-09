@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, FC, MouseEvent } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -24,7 +24,7 @@ import {
 import { rarityColors } from "@/utils/rarity";
 
 // ── Activity Feed ──
-const ActivityFeed: React.FC<{ raffleId: string; autoRefresh?: boolean }> = ({ raffleId, autoRefresh = false }) => {
+const ActivityFeed: FC<{ raffleId: string; autoRefresh?: boolean }> = ({ raffleId, autoRefresh = false }) => {
   const [participants, setParticipants] = useState<any[]>([]);
   const [loadingParticipants, setLoadingParticipants] = useState(true);
 
@@ -96,7 +96,7 @@ const ActivityFeed: React.FC<{ raffleId: string; autoRefresh?: boolean }> = ({ r
 };
 
 // ── Star Rating (mock) ──
-const StarRating: React.FC<{ rating: number; count: number }> = ({ rating, count }) => (
+const StarRating: FC<{ rating: number; count: number }> = ({ rating, count }) => (
   <div className="flex items-center gap-1">
     {[1, 2, 3, 4, 5].map(s => (
       <Star key={s} className={`w-[14px] h-[14px] ${s <= Math.floor(rating) ? "text-blue-600 dark:text-blue-400 fill-current" : "text-muted-foreground/30"}`} />
@@ -106,7 +106,7 @@ const StarRating: React.FC<{ rating: number; count: number }> = ({ rating, count
 );
 
 // ── Image Gallery with vertical scroll ──
-const ImageGallery: React.FC<{
+const ImageGallery: FC<{
   images: string[];
   activeImage: string;
   setActiveImage: (url: string) => void;
@@ -137,7 +137,7 @@ const ImageGallery: React.FC<{
     thumbRef.current?.scrollBy({ top: dir * thumbHeight * 4, behavior: "smooth" });
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     setMousePos({
       x: ((e.clientX - rect.left) / rect.width) * 100,
@@ -195,7 +195,7 @@ const ImageGallery: React.FC<{
 };
 
 // ── Main Component ──
-const RaffleDetails: React.FC = () => {
+const RaffleDetails: FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { ownedNFTs, removeNFT, refreshWallet } = useWallet();

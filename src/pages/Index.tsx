@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef, useEffect, FC } from "react";
 import Hero from "@/components/Hero";
 import CategoryNav from "@/components/CategoryNav";
 import RaffleGrid from "@/components/RaffleGrid";
@@ -8,14 +8,15 @@ import MempoolBackground from "@/components/MempoolBackground";
 import { raffles as localRaffles, nfts } from "@/data/raffles";
 import { api } from "@/lib/api";
 import { Raffle } from "@/types/raffle";
+import { motion } from "framer-motion";
 
-const Index: React.FC = () => {
+const Index: FC = () => {
   const [activeCategory, setActiveCategory] = useState("todos");
   const [raffles, setRaffles] = useState<Raffle[]>([]);
   const [liveNfts, setLiveNfts] = useState<any[]>([]);
   const footerRef = useRef<HTMLElement>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     api.getActiveRaffles()
       .then(setRaffles)
       .catch(err => {
@@ -41,15 +42,29 @@ const Index: React.FC = () => {
     <div className="min-h-screen bg-background">
       <Hero />
 
-      <CategoryNav
-        activeCategory={activeCategory}
-        onCategoryChange={setActiveCategory}
-      />
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5, duration: 0.5 }}
+      >
+        <CategoryNav
+          activeCategory={activeCategory}
+          onCategoryChange={setActiveCategory}
+        />
+      </motion.div>
 
       <main className="container mx-auto px-4">
         <RaffleGrid raffles={filteredRaffles} />
         <NFTGrid nfts={liveNfts} />
-        <HowItWorks />
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.7 }}
+        >
+          <HowItWorks />
+        </motion.div>
       </main>
 
       <footer ref={footerRef} className="relative overflow-hidden border-t border-border py-12 mt-12 bg-background">

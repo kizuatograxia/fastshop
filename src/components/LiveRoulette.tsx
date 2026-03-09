@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, useAnimation, useMotionValue } from "framer-motion";
 import { triggerConfetti } from "@/lib/confetti";
 import { Raffle } from "@/types/raffle";

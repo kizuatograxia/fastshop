@@ -1,5 +1,6 @@
-import React from "react";
+import { FC } from "react";
 import { Gift, Ticket, Trophy, Sparkles } from "lucide-react";
+import { motion, Variants } from "framer-motion";
 
 const steps = [
     {
@@ -28,6 +29,19 @@ const steps = [
     },
 ];
 
+const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: { staggerChildren: 0.15 }
+    }
+};
+
+const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+};
+
 const HowItWorks: React.FC = () => {
     return (
         <section id="como-funciona" className="container mx-auto px-4 py-16">
@@ -39,12 +53,18 @@ const HowItWorks: React.FC = () => {
                     Participar é super simples! Siga os passos abaixo e comece a concorrer a prêmios incríveis.
                 </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, margin: "-50px" }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+            >
                 {steps.map((step, index) => (
-                    <div
+                    <motion.div
+                        variants={itemVariants}
                         key={index}
-                        className="relative bg-card rounded-2xl border border-border p-6 text-center hover:shadow-elevated transition-all duration-300 hover:-translate-y-1 animate-fade-in"
-                        style={{ animationDelay: `${index * 0.1}s` }}
+                        className="relative bg-card rounded-2xl border border-border p-6 text-center shadow-sm hover:shadow-elevated transition-shadow duration-300"
                     >
                         {/* Step Number */}
                         <div className="absolute -top-3 -left-3 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-bold text-sm">
@@ -61,9 +81,9 @@ const HowItWorks: React.FC = () => {
                         <p className="text-sm text-muted-foreground">
                             {step.description}
                         </p>
-                    </div>
+                    </motion.div>
                 ))}
-            </div>
+            </motion.div>
         </section>
     );
 };

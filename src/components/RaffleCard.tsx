@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, FC, MouseEvent } from "react";
 import { Clock, Users, Ticket, Info, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Raffle } from "@/types/raffle";
@@ -7,6 +7,7 @@ import { useUserRaffles } from "@/contexts/UserRafflesContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { CountdownBadge } from "@/components/CountdownBadge";
+import { motion, Variants } from "framer-motion";
 
 interface RaffleCardProps {
     raffle: Raffle;
@@ -14,7 +15,16 @@ interface RaffleCardProps {
     disableNavigation?: boolean;
 }
 
-const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigation = false }) => {
+const itemVariants: Variants = {
+    hidden: { opacity: 0, y: 30 },
+    show: {
+        opacity: 1,
+        y: 0,
+        transition: { type: "spring", stiffness: 300, damping: 24 }
+    }
+};
+
+const RaffleCard: FC<RaffleCardProps> = ({ raffle, index, disableNavigation = false }) => {
     const { getTotalNFTs } = useWallet();
     const { addUserRaffle, isParticipating } = useUserRaffles();
     const navigate = useNavigate();
@@ -32,7 +42,7 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
         }
     };
 
-    const handleParticipate = (e: React.MouseEvent) => {
+    const handleParticipate = (e: MouseEvent) => {
         e.stopPropagation();
 
         if (alreadyParticipating) {
@@ -53,7 +63,7 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
         });
     };
 
-    const handleMoreInfo = (e: React.MouseEvent) => {
+    const handleMoreInfo = (e: MouseEvent) => {
         e.stopPropagation();
         navigate(`/raffle/${raffle.id}`);
     };
@@ -62,9 +72,10 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
 
     return (
         <div className="group relative flex flex-col h-full justify-start hover:z-50">
-            <article
-                className={`relative bg-card rounded-xl border border-border/60 overflow-hidden transition-all duration-500 group-hover:shadow-glow group-hover:border-primary/50 flex flex-col h-full shrink-0 ${disableNavigation ? "" : "cursor-pointer"}`}
-                style={{ animationDelay: `${index * 0.1}s` }}
+            <motion.article
+                variants={itemVariants}
+                whileHover={{ y: -5 }}
+                className={`relative bg-card rounded-xl border border-border/60 overflow-hidden transition-all duration-300 group-hover:shadow-glow group-hover:border-primary/50 flex flex-col h-full shrink-0 ${disableNavigation ? "" : "cursor-pointer"}`}
                 onClick={handleCardClick}
             >
                 {/* Subtle internal gradient */}
@@ -181,7 +192,7 @@ const RaffleCard: React.FC<RaffleCardProps> = ({ raffle, index, disableNavigatio
                         </div>
                     )}
                 </div>
-            </article>
+            </motion.article>
 
             {/* Mobile Expand Indicator */}
             {raffle.status !== 'encerrado' && (

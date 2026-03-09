@@ -1,12 +1,21 @@
-import React from "react";
+import { FC } from "react";
 import NFTCard from "./NFTCard";
 import NFTMobilePreview from "./NFTMobilePreview";
 import { NFT } from "@/types/raffle";
 import { Gift } from "lucide-react";
+import { motion, Variants } from "framer-motion";
 
 interface NFTGridProps {
     nfts: NFT[];
 }
+
+const containerVariants: Variants = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: { staggerChildren: 0.1 }
+    }
+};
 
 const NFTGrid: React.FC<NFTGridProps> = ({ nfts }) => {
     return (
@@ -31,13 +40,23 @@ const NFTGrid: React.FC<NFTGridProps> = ({ nfts }) => {
             </div>
 
             {/* Desktop/Tablet View: Grid */}
-            <div className="hidden sm:block columns-3 lg:columns-4 gap-4 md:gap-6">
+            <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, margin: "-50px" }}
+                className="hidden sm:block columns-3 lg:columns-4 gap-4 md:gap-6"
+            >
                 {nfts.map((nft, index) => (
-                    <div key={nft.id} className="inline-block w-full break-inside-avoid mb-6">
+                    <motion.div
+                        key={nft.id}
+                        variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
+                        className="inline-block w-full break-inside-avoid mb-6"
+                    >
                         <NFTCard nft={nft} index={index} />
-                    </div>
+                    </motion.div>
                 ))}
-            </div>
+            </motion.div>
         </section>
     );
 };

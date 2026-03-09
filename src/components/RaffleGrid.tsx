@@ -1,11 +1,22 @@
-import React from "react";
+import { FC } from "react";
 import RaffleCard from "./RaffleCard";
 import { Raffle } from "@/types/raffle";
 import { Trophy } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface RaffleGridProps {
     raffles: Raffle[];
 }
+
+const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.1
+        }
+    }
+};
 
 const RaffleGrid: React.FC<RaffleGridProps> = ({ raffles }) => {
     return (
@@ -24,13 +35,19 @@ const RaffleGrid: React.FC<RaffleGridProps> = ({ raffles }) => {
                 </div>
             </div>
             <div className="w-full">
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 items-stretch">
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true, margin: "-50px" }}
+                    className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 items-stretch"
+                >
                     {raffles.map((raffle, index) => (
                         <div key={raffle.id} className="w-full h-full flex flex-col">
                             <RaffleCard raffle={raffle} index={index} />
                         </div>
                     ))}
-                </div>
+                </motion.div>
             </div>
         </section>
     );

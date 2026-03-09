@@ -1,4 +1,4 @@
-import React from "react";
+import { FC } from "react";
 import { Sparkles, ShoppingCart, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NFT } from "@/types/raffle";
@@ -10,7 +10,7 @@ interface NFTCardProps {
     index: number;
 }
 
-import { rarityColors, rarityLabels } from "@/utils/rarity"; const NFTCard: React.FC<NFTCardProps> = ({ nft, index }) => {
+import { rarityColors, rarityLabels } from "@/utils/rarity"; const NFTCard: FC<NFTCardProps> = ({ nft, index }) => {
     const { addToCart, getNFTCount } = useWallet();
     const ownedCount = getNFTCount(nft.id);
 
