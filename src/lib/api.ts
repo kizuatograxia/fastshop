@@ -1,19 +1,37 @@
-export const API_URL = import.meta.env.VITE_API_URL || (
-    typeof window !== 'undefined' && window.location.hostname === 'localhost'
-        ? "http://localhost:5050/api"
-        : "/api"
-);
+export const API_URL = import.meta.env.VITE_API_URL || "/api";
 console.log("API URL configured as:", API_URL);
+
+/**
+ * Centralized request wrapper to handle headers, authentication, and errors.
+ */
+async function request(path: string, options: RequestInit = {}) {
+    const token = localStorage.getItem('auth_token');
+
+    const headers = {
+        "Content-Type": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        ...(options.headers || {})
+    };
+
+    const res = await fetch(`${API_URL}${path}`, {
+        ...options,
+        headers
+    });
+
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ message: "Erro desconhecido na API" }));
+        throw new Error(errorData.message || errorData.error || `Erro ${res.status}`);
+    }
+
+    return res.json();
+}
 
 export const api = {
     login: async (email, password) => {
-        const res = await fetch(`${API_URL}/login`, {
+        const data = await request("/login", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password }),
         });
-        if (!res.ok) throw new Error((await res.json()).message);
-        const data = await res.json();
 
         // Mock name for standard login if backend doesn't return it
         if (data.user && !data.user.name) {
@@ -25,103 +43,61 @@ export const api = {
     },
 
     googleLogin: async (credential: string) => {
-        const res = await fetch(`${API_URL}/auth/google`, {
+        return request("/auth/google", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token: credential }),
         });
-        if (!res.ok) throw new Error((await res.json()).message);
-        return res.json();
     },
 
     register: async (email, password) => {
-        const res = await fetch(`${API_URL}/register`, {
+        return request("/register", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password }),
         });
-        if (!res.ok) throw new Error((await res.json()).message);
-        return res.json();
     },
 
     updateProfile: async (userId: string | number, profileData: any) => {
-        const token = localStorage.getItem('auth_token');
-        const res = await fetch(`${API_URL}/users/${userId}/profile`, {
+        return request(`/users/${userId}/profile`, {
             method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            },
             body: JSON.stringify(profileData),
         });
-        if (!res.ok) throw new Error((await res.json()).message);
-        return res.json();
     },
 
     forgotPassword: async (email: string) => {
-        const res = await fetch(`${API_URL}/forgot-password`, {
+        return request("/forgot-password", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email }),
         });
-        if (!res.ok) throw new Error((await res.json()).message);
-        return res.json();
     },
 
     resetPassword: async (token: string, password: string) => {
-        const res = await fetch(`${API_URL}/reset-password`, {
+        return request("/reset-password", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ token, password }),
         });
-        if (!res.ok) throw new Error((await res.json()).message);
-        return res.json();
     },
 
     getWallet: async (userId: number | string) => {
-        const token = localStorage.getItem('auth_token');
-        const res = await fetch(`${API_URL}/wallet?userId=${userId}`, {
-            headers: {
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            }
-        });
-        if (!res.ok) throw new Error("Failed to fetch wallet");
-        return res.json();
+        return request(`/wallet?userId=${userId}`);
     },
 
     addToWallet: async (userId: number | string, nft: any) => {
-        const token = localStorage.getItem('auth_token');
-        const res = await fetch(`${API_URL}/wallet`, {
+        return request("/wallet", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            },
             body: JSON.stringify({ userId, nft }),
         });
-        if (!res.ok) throw new Error("Failed to add to wallet");
-        return res.json();
     },
 
     removeFromWallet: async (userId: number | string, nftId: string, quantity: number = 1) => {
-        const token = localStorage.getItem('auth_token');
-        const res = await fetch(`${API_URL}/wallet/remove`, {
+        return request("/wallet/remove", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            },
             body: JSON.stringify({ userId, nftId, quantity }),
         });
-        if (!res.ok) throw new Error("Failed to remove from wallet");
-        return res.json();
     },
 
     // Marketplace
     getNFTCatalog: async () => {
-        const res = await fetch(`${API_URL}/nfts`);
-        if (!res.ok) throw new Error("Failed to fetch NFT catalog");
-        const data = await res.json();
+        const data = await request("/nfts");
         return data.map((item: any) => ({
             id: String(item.id),
             nome: item.nome || item.name,
@@ -136,9 +112,7 @@ export const api = {
 
     // Raffles
     getActiveRaffles: async () => {
-        const res = await fetch(`${API_URL}/raffles`);
-        if (!res.ok) throw new Error("Failed to fetch raffles");
-        const data = await res.json();
+        const data = await request("/raffles");
 
         // Map backend fields to frontend interface
         return data
@@ -162,88 +136,51 @@ export const api = {
     },
 
     getCategories: async () => {
-        const res = await fetch(`${API_URL}/categories`);
-        if (!res.ok) throw new Error("Failed to fetch categories");
-        return res.json();
+        return request("/categories");
     },
 
     getRaffle: async (id: string) => {
-        const res = await fetch(`${API_URL}/raffles/${id}`);
-        if (!res.ok) throw new Error("Failed to fetch raffle details");
-        return res.json();
+        return request(`/raffles/${id}`);
     },
 
     getRaffleParticipants: async (id: string) => {
-        const res = await fetch(`${API_URL}/raffles/${id}/participants`);
-        if (!res.ok) throw new Error("Failed to fetch participants");
-        return res.json();
+        return request(`/raffles/${id}/participants`);
     },
 
     joinRaffle: async (raffleId: number | string, userId: number | string, nfts: Record<string, number>, ticketCount?: number, txHash?: string) => {
-        const token = localStorage.getItem('auth_token');
-        const res = await fetch(`${API_URL}/raffles/${raffleId}/join`, {
+        return request(`/raffles/${raffleId}/join`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            },
             body: JSON.stringify({ userId, nfts, ticketCount, txHash }),
         });
-        if (!res.ok) throw new Error((await res.json()).message);
-        return res.json();
     },
 
     buyNFTs: async (userId: number | string, items: { id: string; quantity: number }[], couponCode?: string) => {
-        const token = localStorage.getItem('auth_token');
-        const res = await fetch(`${API_URL}/shop/buy`, {
+        return request("/shop/buy", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            },
             body: JSON.stringify({ userId, items, couponCode }),
         });
-        if (!res.ok) throw new Error((await res.json()).message);
-        return res.json();
     },
 
     createPayment: async (userId: number | string, amount: number, realItems: any[]) => {
-        const token = localStorage.getItem('auth_token');
-        const res = await fetch(`${API_URL}/payment/create`, {
+        return request("/payment/create", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            },
             body: JSON.stringify({ userId, amount, realItems }),
         });
-        if (!res.ok) throw new Error((await res.json()).message);
-        return res.json();
     },
 
     validateCoupon: async (code: string, cartTotal: number) => {
-        const res = await fetch(`${API_URL}/coupons/validate`, {
+        return request("/coupons/validate", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ code, cartTotal }),
         });
-        if (!res.ok) throw new Error((await res.json()).message);
-        return res.json();
     },
 
     getUserRaffles: async (userId: number | string) => {
-        const token = localStorage.getItem('auth_token');
-        const res = await fetch(`${API_URL}/user/raffles?userId=${userId}`, {
-            headers: {
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            }
-        });
-        if (!res.ok) throw new Error("Failed to fetch user raffles");
-        const data = await res.json();
+        const data = await request(`/user/raffles?userId=${userId}`);
+
         // Ensure IDs are strings to match frontend types
         return data.map((ur: any) => ({
             ...ur,
-            // Explicitly resolve ticket count from any backend field name variant
             ticketsComprados: ur.ticketsComprados ?? ur.ticket_count ?? ur.tickets_purchased ?? ur.tickets ?? 0,
             totalValueContributed: ur.totalValueContributed ?? ur.total_value ?? ur.amount ?? ur.value_contributed ?? 0,
             raffle: {
@@ -273,167 +210,88 @@ export const api = {
                 shippedAt: ur.raffle.shipped_at
             }
         }));
-
     },
 
     // Admin
     verifyAdmin: async (password: string) => {
-        const res = await fetch(`${API_URL}/admin/verify`, {
+        return request("/admin/verify", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ password }),
         });
-        if (!res.ok) throw new Error("Senha incorreta");
-        return res.json();
     },
 
     createRaffle: async (password: string, raffle: any) => {
-        const token = localStorage.getItem('auth_token');
-        const res = await fetch(`${API_URL}/raffles`, {
+        return request("/raffles", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            },
             body: JSON.stringify({ password, raffle }),
         });
-        if (!res.ok) throw new Error("Falha ao criar sorteio");
-        return res.json();
     },
 
     // Admin Coupons
     getCoupons: async () => {
-        const token = localStorage.getItem('auth_token');
-        const res = await fetch(`${API_URL}/admin/coupons`, {
-            headers: {
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            }
-        });
-        if (!res.ok) throw new Error("Falha ao buscar cupons");
-        return res.json();
+        return request("/admin/coupons");
     },
 
     createCoupon: async (coupon: any) => {
-        const token = localStorage.getItem('auth_token');
-        const res = await fetch(`${API_URL}/admin/coupons`, {
+        return request("/admin/coupons", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            },
             body: JSON.stringify(coupon),
         });
-        if (!res.ok) throw new Error((await res.json()).message || "Falha ao criar cupom");
-        return res.json();
     },
 
     deleteCoupon: async (id: number | string) => {
-        const token = localStorage.getItem('auth_token');
-        const res = await fetch(`${API_URL}/admin/coupons/${id}`, {
+        return request(`/admin/coupons/${id}`, {
             method: "DELETE",
-            headers: {
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            }
         });
-        if (!res.ok) throw new Error("Falha ao deletar cupom");
-        return res.json();
     },
 
     // Admin Users & Chat
     getAdminUserDetails: async (userId: number | string) => {
-        const token = localStorage.getItem('auth_token');
-        const res = await fetch(`${API_URL}/admin/users/${userId}`, {
-            headers: {
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            }
-        });
-        if (!res.ok) throw new Error("Falha ao buscar detalhes do usuário");
-        return res.json();
+        return request(`/admin/users/${userId}`);
     },
 
     getMessages: async (userId: number | string) => {
-        const token = localStorage.getItem('auth_token');
-        const res = await fetch(`${API_URL}/chat/${userId}`, {
-            headers: {
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            }
-        });
-        if (!res.ok) throw new Error("Falha ao carregar mensagens");
-        return res.json();
+        return request(`/chat/${userId}`);
     },
 
     sendMessage: async (senderId: number, receiverId: number, content: string) => {
-        const res = await fetch(`${API_URL}/chat/send`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+        return request("/chat/send", {
+            method: "POST",
             body: JSON.stringify({ sender_id: senderId, receiver_id: receiverId, content }),
         });
-        if (!res.ok) throw new Error('Failed to send message');
-        return res.json();
     },
 
     calculateShipping: async (cep: string, items: any[]) => {
-        const res = await fetch(`${API_URL}/shipping/calculate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+        return request("/shipping/calculate", {
+            method: "POST",
             body: JSON.stringify({ cep, items }),
         });
-        if (!res.ok) throw new Error('Failed to calculate shipping');
-        return res.json();
     },
 
     updateTracking: async (raffleId: string, trackingData: { trackingCode: string, carrier: string, status?: string }) => {
-        const token = localStorage.getItem('auth_token');
         const password = localStorage.getItem('admin_key');
-        const res = await fetch(`${API_URL}/admin/raffles/${raffleId}/tracking`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        return request(`/admin/raffles/${raffleId}/tracking`, {
+            method: "PUT",
             body: JSON.stringify({ ...trackingData, password }),
         });
-        if (!res.ok) {
-            const errorData = await res.json().catch(() => ({ message: 'Failed to update tracking' }));
-            throw new Error(errorData.message || 'Failed to update tracking');
-        }
-        return res.json();
     },
 
     updateRaffle: async (password: string, id: string, raffle: any) => {
-        const token = localStorage.getItem('auth_token');
-        const res = await fetch(`${API_URL}/raffles/${id}`, {
+        return request(`/raffles/${id}`, {
             method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            },
             body: JSON.stringify({ password, raffle }),
         });
-        if (!res.ok) throw new Error("Falha ao atualizar sorteio");
-        return res.json();
     },
 
     deleteRaffle: async (password: string, id: string) => {
-        const token = localStorage.getItem('auth_token');
-        const res = await fetch(`${API_URL}/raffles/${id}`, {
+        return request(`/raffles/${id}`, {
             method: "DELETE",
-            headers: {
-                "Content-Type": "application/json",
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            },
             body: JSON.stringify({ password }),
         });
-        if (!res.ok) throw new Error("Falha ao deletar sorteio");
-        return res.json();
     },
 
     getAdminRaffles: async () => {
-        const token = localStorage.getItem('auth_token');
-        const res = await fetch(`${API_URL}/admin/raffles`, {
-            headers: {
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            }
-        });
-        if (!res.ok) throw new Error("Falha ao buscar sorteios");
-        const data = await res.json();
+        const data = await request("/admin/raffles");
         // Map fields
         return data.map((r: any) => ({
             id: String(r.id),
@@ -474,50 +332,24 @@ export const api = {
 
     // Notifications
     getWinners: async () => {
-        const res = await fetch(`${API_URL}/winners`);
-        if (!res.ok) throw new Error("Failed to fetch winners");
-        return res.json(); // Returns simple mapped objects directly suitable for feed
+        return request("/winners");
     },
 
     getNotifications: async (userId: number | string) => {
-        const token = localStorage.getItem('auth_token');
-        const res = await fetch(`${API_URL}/notifications?userId=${userId}`, {
-            headers: {
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            }
-        });
-        if (!res.ok) throw new Error("Failed to fetch notifications");
-        return res.json();
+        return request(`/notifications?userId=${userId}`);
     },
 
     markNotificationRead: async (id: number) => {
-        const token = localStorage.getItem('auth_token');
-        const res = await fetch(`${API_URL}/notifications/${id}/read`, {
+        return request(`/notifications/${id}/read`, {
             method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            },
         });
-        if (!res.ok) throw new Error("Failed to mark notification read");
-        return res.json();
     },
 
     drawRaffle: async (password: string, id: string) => {
-        const token = localStorage.getItem('auth_token');
-        const res = await fetch(`${API_URL}/raffles/${id}/draw`, {
+        return request(`/raffles/${id}/draw`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                ...(token ? { "Authorization": `Bearer ${token}` } : {}),
-            },
             body: JSON.stringify({ password }),
         });
-        if (!res.ok) {
-            const body = await res.json().catch(() => ({}));
-            throw new Error(body?.message || body?.error || `Falha ao realizar sorteio (${res.status})`);
-        }
-        return res.json();
     },
 
     // Gate Verification (Mock)
@@ -538,15 +370,13 @@ export const api = {
 
     // Public submission
     submitTestimonial: async (testimonial: any) => {
-        const res = await fetch(`${API_URL}/winners`, { // Assuming /winners accepts POST for new testimonials, or we need /testimonials
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(testimonial),
-        });
-
-        // Fallback to local if API fails (temporary measure for user satisfaction if backend is broken)
-        if (!res.ok) {
-            console.warn("API submission failed, falling back to local storage");
+        try {
+            return await request("/winners", {
+                method: "POST",
+                body: JSON.stringify(testimonial),
+            });
+        } catch (e) {
+            console.warn("API submission failed, falling back to local storage", e);
             // Simulate API call
             await new Promise(resolve => setTimeout(resolve, 800));
 
@@ -560,39 +390,24 @@ export const api = {
             localStorage.setItem("admin_reviews", JSON.stringify([...storedReviews, newReview]));
             return { success: true, local: true };
         }
-
-        return res.json();
     },
 
     // Admin: Get Pending (Hybrid: Local + API if available)
     getPendingReviews: async (password: string) => {
         try {
-            // Use verifyAdmin endpoint first to actually check password on backend
-            // Though often included in the query... let's just GET pending reviews if the endpoint
-            // supports filtering by status (which is common).
-            // Assuming /winners?status=pending or /testimonials?status=pending
-            const res = await fetch(`${API_URL}/winners?status=pending`);
-            if (res.ok) {
-                const data = await res.json();
-                return data;
-            }
+            return await request("/winners?status=pending");
         } catch (e) {
             console.warn("Failed to fetch pending reviews, falling back to local", e);
         }
 
         const storedReviews = JSON.parse(localStorage.getItem("admin_reviews") || "[]");
-
         return storedReviews.filter((r: any) => r.status === 'pending');
     },
 
     // Public: Get Approved (for landing page)
     getApprovedReviews: async () => {
         try {
-            const res = await fetch(`${API_URL}/winners`);
-            if (res.ok) {
-                const data = await res.json();
-                return data;
-            }
+            return await request("/winners");
         } catch (e) {
             console.warn("Failed to fetch global winners, falling back to local", e);
         }
@@ -603,19 +418,15 @@ export const api = {
 
     approveReview: async (password: string, id: string) => {
         try {
-            const res = await fetch(`${API_URL}/winners/${id}/approve`, {
+            return await request(`/winners/${id}/approve`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ password }),
             });
-            if (res.ok) {
-                return { success: true };
-            }
         } catch (e) {
             console.error("API approve failed", e);
         }
 
-        // Fallback local update (so admin sees immediate feedback even if API fails)
+        // Fallback local update
         await new Promise(resolve => setTimeout(resolve, 500));
         const storedReviews = JSON.parse(localStorage.getItem("admin_reviews") || "[]");
         const updatedReviews = storedReviews.map((r: any) =>
@@ -627,21 +438,16 @@ export const api = {
 
     rejectReview: async (password: string, id: string) => {
         try {
-            const res = await fetch(`${API_URL}/winners/${id}/reject`, {
+            return await request(`/winners/${id}/reject`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ password }),
             });
-            if (res.ok) {
-                return { success: true };
-            }
         } catch (e) {
             console.error("API reject failed", e);
         }
 
         await new Promise(resolve => setTimeout(resolve, 500));
         const storedReviews = JSON.parse(localStorage.getItem("admin_reviews") || "[]");
-        // Remove from list
         const updatedReviews = storedReviews.filter((r: any) => r.id !== id);
         localStorage.setItem("admin_reviews", JSON.stringify(updatedReviews));
         return { success: true };
@@ -649,19 +455,14 @@ export const api = {
 
     deleteReview: async (password: string, id: string) => {
         try {
-            const res = await fetch(`${API_URL}/winners/${id}`, {
+            return await request(`/winners/${id}`, {
                 method: "DELETE",
-                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ password }),
             });
-            if (res.ok) {
-                return { success: true };
-            }
         } catch (e) {
             console.error("API delete failed", e);
         }
 
-        // Fallback local delete
         await new Promise(resolve => setTimeout(resolve, 500));
         const storedReviews = JSON.parse(localStorage.getItem("admin_reviews") || "[]");
         const updatedReviews = storedReviews.filter((r: any) => r.id !== id);
