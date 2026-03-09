@@ -1,5 +1,5 @@
 import { useState, FC, MouseEvent } from "react";
-import { Clock, Users, Ticket, Info, Shield } from "lucide-react";
+import { Clock, Users, Ticket, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Raffle } from "@/types/raffle";
 import { useWallet } from "@/contexts/WalletContext";
@@ -7,22 +7,12 @@ import { useUserRaffles } from "@/contexts/UserRafflesContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { CountdownBadge } from "@/components/CountdownBadge";
-import { motion, Variants } from "framer-motion";
 
 interface RaffleCardProps {
     raffle: Raffle;
     index: number;
     disableNavigation?: boolean;
 }
-
-const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 30 },
-    show: {
-        opacity: 1,
-        y: 0,
-        transition: { type: "spring", stiffness: 300, damping: 24 }
-    }
-};
 
 const RaffleCard: FC<RaffleCardProps> = ({ raffle, index, disableNavigation = false }) => {
     const { getTotalNFTs } = useWallet();
@@ -71,143 +61,162 @@ const RaffleCard: FC<RaffleCardProps> = ({ raffle, index, disableNavigation = fa
     const progressPercent = (raffle.participantes / raffle.maxParticipantes) * 100;
 
     return (
-        <div className="group relative flex flex-col h-full justify-start hover:z-50">
-            <motion.article
-                variants={itemVariants}
-                whileHover={{ y: -5 }}
-                className={`relative bg-card rounded-xl border border-border/60 overflow-hidden transition-all duration-300 group-hover:shadow-glow group-hover:border-primary/50 flex flex-col h-full shrink-0 ${disableNavigation ? "" : "cursor-pointer"}`}
+        <div className="group relative flex flex-col h-full md:h-auto justify-start hover:z-50">
+            <article
+                className={`relative bg-card rounded-2xl border border-border overflow-hidden transition-all duration-300 group-hover:shadow-2xl group-hover:border-primary/30 animate-fade-in flex flex-col h-auto md:h-full shrink-0 ${disableNavigation ? "" : "cursor-pointer"}`}
+                style={{ animationDelay: `${index * 0.1}s` }}
                 onClick={handleCardClick}
             >
-                {/* Subtle internal gradient */}
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/40 pointer-events-none z-0" />
+                {/* Status Badge */}
+                {/* 
+                <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10 scale-[0.85] md:scale-100 origin-top-left">
+                    <CountdownBadge targetDate={raffle.dataFim} />
+                </div> 
+                */}
 
-                {/* Prize Value Badge - Redesigned */}
-                <div className="absolute top-3 right-3 z-20 bg-background/90 backdrop-blur-md text-primary border border-primary/30 px-2 py-1 rounded text-[10px] md:text-xs font-mono font-bold shadow-sm">
+                {/* Prize Value Badge */}
+                <div className="absolute top-2 right-2 md:top-4 md:right-4 z-10 bg-background/80 backdrop-blur-sm text-foreground px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg text-[10px] md:text-xs font-bold border border-border">
                     R$ {raffle.premioValor.toLocaleString("pt-BR")}
                 </div>
 
                 {/* Image Container */}
-                <div className="relative w-full aspect-[4/5] md:aspect-square overflow-hidden bg-muted/20 p-0 m-0 z-10">
+                <div className="relative w-full aspect-[4/5] md:aspect-auto overflow-hidden bg-background p-3 md:p-4">
                     <img
                         src={raffle.imagem}
                         alt={raffle.titulo}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 filter group-hover:contrast-125 group-hover:saturate-110"
+                        className="w-full h-full md:h-auto object-cover rounded-xl transition-transform duration-500 group-hover:scale-105"
                         loading="lazy"
                         onError={(e) => {
                             e.currentTarget.src = "https://images.unsplash.com/photo-1635326444826-06c8f8d2e61d?w=800&q=80";
                         }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-card via-card/20 to-transparent opacity-90 pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
 
-                    {/* Winner Overlay - Refined */}
+                    {/* Winner Overlay */}
                     {raffle.status === 'encerrado' && raffle.winner && (
-                        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center text-center p-4 z-30 transition-all">
-                            <div className="relative mb-3">
-                                <div className="absolute -inset-2 bg-primary/20 rounded-full blur-md animate-pulse"></div>
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex flex-col items-center justify-center text-center p-4 animate-in fade-in zoom-in duration-300">
+                            <div className="relative mb-2">
+                                <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full blur opacity-75 animate-pulse"></div>
                                 <img
                                     src={raffle.winner.picture}
                                     alt={raffle.winner.name}
-                                    className="relative w-16 h-16 rounded-full border border-primary/50 object-cover"
+                                    className="relative w-16 h-16 rounded-full border-2 border-white object-cover shadow-lg"
                                 />
-                                <div className="absolute -bottom-1 -right-1 bg-primary text-primary-foreground p-1 rounded border border-background">
+                                <div className="absolute -bottom-1 -right-1 bg-yellow-500 text-black p-1 rounded-full border border-white">
                                     <Users className="w-3 h-3" />
                                 </div>
                             </div>
-                            <p className="text-primary font-mono text-[10px] uppercase tracking-widest mb-1">Status: Concluído</p>
-                            <p className="text-foreground font-bold text-sm truncate w-full max-w-[150px]">{raffle.winner.name}</p>
+                            <p className="text-yellow-400 font-bold text-xs uppercase tracking-wider mb-0.5">Vencedor</p>
+                            <p className="text-white font-bold text-lg leading-tight">{raffle.winner.name}</p>
                         </div>
                     )}
                 </div>
 
-                {/* Content Section */}
-                <div className="relative p-4 md:p-5 flex flex-col flex-grow z-20">
-                    <div className="flex items-center justify-between mb-3 text-[10px] font-mono uppercase tracking-wider">
-                        <span className="text-primary/80 truncate pr-2 border-l-2 border-primary pl-2 bg-primary/5">
-                            {raffle.categoria}
-                        </span>
-
-                        {!alreadyParticipating && (
-                            <div className="flex items-center gap-1.5 text-muted-foreground bg-secondary/50 px-2 py-0.5 rounded border border-border/50">
-                                <Ticket className="w-3 h-3 text-primary/70" />
-                                <span>{raffle.custoNFT} <span className="hidden sm:inline">req</span></span>
-                            </div>
-                        )}
-                        {alreadyParticipating && (
-                            <div className="flex items-center gap-1 text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20 font-bold">
-                                <Shield className="w-3 h-3" />
-                                <span>Ativo</span>
-                            </div>
-                        )}
-                    </div>
-
-                    <h3 className="font-extrabold text-foreground text-sm md:text-base leading-tight mb-4 line-clamp-2 min-h-[2.5rem] tracking-tight group-hover:text-primary transition-colors">
+                {/* Content Preview (Always visible) */}
+                <div className="p-3 md:p-4 flex-1 flex flex-col justify-end">
+                    <h3 className="font-bold text-sm md:text-lg text-foreground leading-tight group-hover:text-primary transition-colors line-clamp-2 md:mb-2">
                         {raffle.titulo}
                     </h3>
 
-                    <div className="mt-auto pt-2 border-t border-border/30">
-                        <div className="flex justify-between items-end mb-2">
-                            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Preenchido</span>
-                            <span className="text-xs font-mono font-bold text-foreground">
-                                {progressPercent.toFixed(1)}%
+                    <div className="hidden md:block mb-4 flex-1 md:flex-initial">
+                        <p className="text-[11px] md:text-sm text-muted-foreground line-clamp-2">
+                            {raffle.descricao}
+                        </p>
+                    </div>
+
+                </div>
+            </article>
+
+            {/* Expanded Content (Desktop Hover) - Absolute positioned to not stretch grid */}
+            <div className="hidden md:block absolute top-[calc(100%-1rem)] left-0 w-full pt-5 opacity-0 -translate-y-4 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto z-40">
+                <div className="space-y-3 px-1">
+                    {/* Progress Bar (Desktop) */}
+                    <div className="space-y-1 bg-background/80 backdrop-blur-md p-2 rounded-lg border border-border shadow-sm">
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                                <Ticket className="h-3 w-3" />
+                                <span>{raffle.participantes} cotas</span>
                             </span>
+                            <span>{Math.round(progressPercent)}%</span>
                         </div>
-
-                        <div className="w-full h-1 bg-secondary rounded-none overflow-hidden relative">
-                            {alreadyParticipating && (
-                                <div className="absolute inset-0 bg-primary/10 w-full z-0 pointer-events-none" />
-                            )}
+                        <div className="h-2 bg-secondary rounded-full overflow-hidden">
                             <div
-                                className="h-full bg-primary relative overflow-hidden transition-all duration-1000 ease-out"
-                                style={{ width: `${Math.max(progressPercent, 2)}%` }}
-                            >
-                                <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-r from-transparent to-white/30" />
-                            </div>
-                        </div>
-
-                        <div className="flex justify-between items-center text-[10px] mt-2 text-muted-foreground font-mono">
-                            <span>{raffle.participantes} aloc</span>
-                            <span>{raffle.maxParticipantes} total</span>
+                                className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500"
+                                style={{ width: `${progressPercent}%` }}
+                            />
                         </div>
                     </div>
 
-                    {raffle.status !== 'encerrado' && (
-                        <div className={`mt-4 overflow-hidden transition-all duration-300 md:max-h-20 md:opacity-100 ${isExpandedOnMobile ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0'}`}>
-                            {alreadyParticipating ? (
-                                <Button
-                                    variant="outline"
-                                    className="w-full text-xs font-mono tracking-wider h-10 border-primary/30 text-primary hover:bg-primary/10 hover:text-primary rounded"
-                                    onClick={handleMoreInfo}
-                                >
-                                    Ver Alocação
-                                </Button>
-                            ) : (
-                                <Button
-                                    className="w-full text-xs font-bold tracking-wider h-10 bg-foreground text-background hover:bg-primary hover:text-primary-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 shadow-sm rounded uppercase"
-                                    disabled={totalNFTs < raffle.custoNFT}
-                                    onClick={(e) => { e.stopPropagation(); handleParticipate(e); }}
-                                >
-                                    {totalNFTs < raffle.custoNFT ? 'NFTs Insuficientes' : 'Mintar Alocação'}
-                                </Button>
-                            )}
+                    {/* CTA Buttons (Desktop) */}
+                    {!disableNavigation && (
+                        <div className="flex gap-2">
+                            <Button
+                                variant="secondary"
+                                className="flex-1 h-10 text-sm px-2 bg-secondary/90 hover:bg-secondary border border-border/50 shadow-sm"
+                                onClick={handleMoreInfo}
+                            >
+                                <Info className="h-4 w-4 mr-1.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                                <span className="text-muted-foreground group-hover:text-foreground transition-colors">Detalhes</span>
+                            </Button>
+                            <Button
+                                variant="hero"
+                                className="flex-1 h-10 text-sm px-2 shadow-sm"
+                                onClick={handleParticipate}
+                                disabled={alreadyParticipating}
+                                title={alreadyParticipating ? "Participando" : "Participar"}
+                            >
+                                <Ticket className="h-4 w-4 mr-2" />
+                                <span>{alreadyParticipating ? "Participando" : "Participar"}</span>
+                            </Button>
                         </div>
                     )}
                 </div>
-            </motion.article>
+            </div>
 
-            {/* Mobile Expand Indicator */}
-            {raffle.status !== 'encerrado' && (
-                <div
-                    className="md:hidden absolute -bottom-3 left-1/2 -translate-x-1/2 z-20 w-8 h-8 rounded-full bg-background border border-border/50 text-muted-foreground flex items-center justify-center shadow-sm cursor-pointer"
-                    onClick={(e) => { e.stopPropagation(); setIsExpandedOnMobile(!isExpandedOnMobile); }}
-                >
-                    <svg
-                        width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"
-                        className={`transition-transform duration-300 ${isExpandedOnMobile ? 'rotate-180' : ''}`}
-                    >
-                        <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+            {/* Expanded Content (Mobile Only) - Renders outside the card body */}
+            <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isExpandedOnMobile ? 'max-h-[500px] opacity-100 mt-2 pb-1' : 'max-h-0 opacity-0 m-0'}`}>
+                <div className="space-y-3 px-1">
+                    {/* Progress Bar */}
+                    <div className="space-y-1">
+                        <div className="flex justify-between text-[10px] text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                                <Ticket className="h-3 w-3" />
+                                <span>{raffle.participantes}</span>
+                            </span>
+                            <span>{Math.round(progressPercent)}%</span>
+                        </div>
+                        <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500"
+                                style={{ width: `${progressPercent}%` }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Buttons */}
+                    {!disableNavigation && (
+                        <div className="flex gap-1.5 transition-all duration-300 ease-out opacity-100 translate-y-0 relative z-20">
+                            <Button
+                                variant="secondary"
+                                className="flex-1 h-8 text-[10px] px-1 bg-secondary/80 hover:bg-secondary border border-border/50 transition-all font-medium"
+                                onClick={(e) => { e.stopPropagation(); handleMoreInfo(e); }}
+                            >
+                                <Info className="h-3 w-3 mr-1 text-muted-foreground transition-colors" />
+                                <span className="text-muted-foreground transition-colors">Detalhes</span>
+                            </Button>
+                            <Button
+                                variant="hero"
+                                className="w-10 h-8 p-0 shrink-0 flex items-center justify-center rounded-lg"
+                                onClick={(e) => { e.stopPropagation(); handleParticipate(e); }}
+                                disabled={alreadyParticipating}
+                                title={alreadyParticipating ? "Participando" : "Participar"}
+                            >
+                                <Ticket className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
         </div>
     );
 };
