@@ -38,7 +38,6 @@ export const DecorativeBackground = React.memo(() => {
                                 width={cellSize}
                                 height={cellSize}
                                 fill="hsla(160, 80%, 55%, 0.05)"
-                                rx={1}
                             />
                         </Pattern>
                     </Defs>
@@ -48,20 +47,6 @@ export const DecorativeBackground = React.memo(() => {
 
             {/* DYNAMIC PULSE — grid-snapped pulsing blocks like web */}
             <PulsingBlocks step={step} size={cellSize} />
-
-            {/* ATMOSPHERE GLOWS — matching web primary glow */}
-            <LinearGradient
-                colors={['rgba(0, 255, 140, 0.12)', 'transparent']}
-                style={[s.glow, s.glowTopRight]}
-                start={{ x: 0.5, y: 0.5 }}
-                end={{ x: 1, y: 1 }}
-            />
-            <LinearGradient
-                colors={['rgba(0, 160, 255, 0.08)', 'transparent']}
-                style={[s.glow, s.glowBottomLeft]}
-                start={{ x: 0.5, y: 0.5 }}
-                end={{ x: 1, y: 1 }}
-            />
 
             {/* Bottom fade for tab bar readability */}
             <LinearGradient
@@ -122,7 +107,6 @@ const SinglePulse = ({ step, size, delay }: { step: number; size: number; delay:
                 height: size,
                 backgroundColor: '#00FF8C',
                 opacity,
-                borderRadius: 1,
             }}
         />
     );
@@ -132,20 +116,6 @@ const s = StyleSheet.create({
     container: {
         ...StyleSheet.absoluteFillObject,
         overflow: 'hidden',
-    },
-    glow: {
-        position: 'absolute',
-        width: width * 1.2,
-        height: width * 1.2,
-        borderRadius: (width * 1.2) / 2,
-    },
-    glowTopRight: {
-        top: -width * 0.5,
-        right: -width * 0.4,
-    },
-    glowBottomLeft: {
-        bottom: -width * 0.6,
-        left: -width * 0.5,
     },
     bottomFade: {
         position: 'absolute',
