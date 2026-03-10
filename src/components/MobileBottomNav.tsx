@@ -14,7 +14,7 @@ const MobileBottomNav: React.FC = () => {
     const location = useLocation();
 
     return (
-        <nav className="mobile-bottom-nav">
+        <nav className="mobile-bottom-nav" aria-label="Navegação principal">
             {navItems.map(({ to, icon: Icon, label, center }) => {
                 const isActive =
                     to === "/"
@@ -23,9 +23,9 @@ const MobileBottomNav: React.FC = () => {
 
                 if (center) {
                     return (
-                        <Link key={to} to={to} className="mobile-nav-center-item">
+                        <Link key={to} to={to} className="mobile-nav-center-item" aria-current={isActive ? "page" : undefined}>
                             <span className={cn("mobile-nav-center-bubble", isActive && "active")}>
-                                <Icon className="mobile-nav-center-icon" />
+                                <Icon className="mobile-nav-center-icon" strokeWidth={isActive ? 2.5 : 1.8} />
                             </span>
                             <span className={cn("mobile-nav-label", isActive && "active-label")}>{label}</span>
                         </Link>
@@ -33,9 +33,9 @@ const MobileBottomNav: React.FC = () => {
                 }
 
                 return (
-                    <Link key={to} to={to} className={cn("mobile-nav-item", isActive && "active")}>
-                        <Icon className="mobile-nav-icon" />
-                        <span className="mobile-nav-label">{label}</span>
+                    <Link key={to} to={to} className={cn("mobile-nav-item", isActive && "active")} aria-current={isActive ? "page" : undefined}>
+                        <Icon className="mobile-nav-icon" strokeWidth={isActive ? 2.5 : 1.8} />
+                        <span className={cn("mobile-nav-label", isActive && "active-label")}>{label}</span>
                     </Link>
                 );
             })}

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, StatusBar } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
@@ -12,14 +12,13 @@ import { FlashList } from "@shopify/flash-list";
 
 const TypedFlashList = FlashList as any;
 
-// Optimized header matching Web Typography
 const ListHeader = React.memo(({ totalNFTs, onOpenCart }: { totalNFTs: number; onOpenCart: () => void }) => (
     <View style={s.headerContainer}>
         <SafeAreaView edges={['top']} style={s.safeArea} />
         <View style={s.header}>
             <View style={s.headerLeft}>
                 <View style={s.gemBadge}>
-                    <Gem size={20} color="#00FF8C" />
+                    <Gem size={18} color="#00FF8C" />
                 </View>
                 <View>
                     <Text style={s.headerTitle}>Coleção NFT</Text>
@@ -32,7 +31,7 @@ const ListHeader = React.memo(({ totalNFTs, onOpenCart }: { totalNFTs: number; o
                 style={s.cartHeaderBtn}
                 activeOpacity={0.7}
             >
-                <ShoppingCart size={18} color="#0A0B12" />
+                <ShoppingCart size={16} color="#0A0B12" />
                 {totalNFTs > 0 && (
                     <View style={s.cartBadge}>
                         <Text style={s.cartBadgeText}>{totalNFTs}</Text>
@@ -41,10 +40,10 @@ const ListHeader = React.memo(({ totalNFTs, onOpenCart }: { totalNFTs: number; o
             </TouchableOpacity>
         </View>
 
-        {/* Featured Section like Web */}
         <View style={s.featuredDivider}>
-            <TrendingUp size={16} color="#00FF8C" />
+            <TrendingUp size={14} color="#00FF8C" />
             <Text style={s.featuredText}>Marketplace</Text>
+            <View style={s.dividerLine} />
         </View>
     </View>
 ));
@@ -69,22 +68,16 @@ export default function NFTsScreen() {
     }, [user, addToCart]);
 
     const renderItem = useCallback(({ item }: { item: any }) => (
-        <NFTCard
-            nft={item}
-            onBuy={handleBuy}
-            buying={false}
-        />
+        <NFTCard nft={item} onBuy={handleBuy} buying={false} />
     ), [handleBuy]);
 
     const openCart = useCallback(() => setCartVisible(true), []);
     const closeCart = useCallback(() => setCartVisible(false), []);
-
     const cartCount = getTotalNFTs();
 
     return (
         <View style={s.root}>
             <StatusBar barStyle="light-content" />
-
             <TypedFlashList
                 data={nfts}
                 renderItem={renderItem}
@@ -92,21 +85,19 @@ export default function NFTsScreen() {
                 numColumns={2}
                 ListHeaderComponent={<ListHeader totalNFTs={cartCount} onOpenCart={openCart} />}
                 contentContainerStyle={s.grid}
-                estimatedItemSize={180}
+                estimatedItemSize={195}
                 showsVerticalScrollIndicator={false}
                 scrollEventThrottle={16}
                 ListEmptyComponent={
                     isLoading ? (
-                        <View style={s.loadingContainer}><Text style={s.loadingText}>Carregando...</Text></View>
+                        <View style={s.loadingContainer}>
+                            <Text style={s.loadingText}>Carregando coleção...</Text>
+                        </View>
                     ) : null
                 }
                 ListFooterComponent={<View style={{ height: 100 }} />}
             />
-
-            <CartModal
-                visible={cartVisible}
-                onClose={closeCart}
-            />
+            <CartModal visible={cartVisible} onClose={closeCart} />
         </View>
     );
 }
@@ -117,10 +108,11 @@ const s = StyleSheet.create({
     safeArea: { backgroundColor: 'transparent' },
     header: {
         paddingHorizontal: 20,
-        paddingBottom: 20,
+        paddingBottom: 16,
         paddingTop: 10,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
     },
     headerLeft: {
         flexDirection: 'row',
@@ -128,44 +120,51 @@ const s = StyleSheet.create({
         gap: 12,
     },
     gemBadge: {
-        width: 40,
-        height: 40,
-        borderRadius: 12,
-        backgroundColor: 'rgba(0, 255, 140, 0.1)',
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        backgroundColor: 'rgba(0, 255, 140, 0.08)',
+        borderWidth: 1,
+        borderColor: 'rgba(0, 255, 140, 0.15)',
         alignItems: 'center',
         justifyContent: 'center',
     },
     headerTitle: {
         color: '#f9fafb',
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: '900',
         letterSpacing: -0.5,
     },
-    headerSub: { color: '#6b7280', fontSize: 12, marginTop: 1 },
+    headerSub: { color: '#6b7280', fontSize: 11, marginTop: 1 },
     featuredDivider: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
         paddingHorizontal: 20,
-        paddingBottom: 12,
+        paddingBottom: 14,
     },
     featuredText: {
         color: '#f9fafb',
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '700',
     },
+    dividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: 'rgba(31, 41, 55, 0.6)',
+        marginLeft: 8,
+    },
     grid: { paddingHorizontal: 6, paddingTop: 0 },
-    columnWrapper: { justifyContent: 'space-between' },
     loadingContainer: { height: 200, justifyContent: 'center' },
-    loadingText: { color: '#fff', textAlign: 'center', fontSize: 14, opacity: 0.5 },
+    loadingText: { color: '#6b7280', textAlign: 'center', fontSize: 13 },
     cartHeaderBtn: {
-        width: 40,
-        height: 40,
-        borderRadius: 12,
+        width: 36,
+        height: 36,
+        borderRadius: 10,
         backgroundColor: '#00FF8C',
         alignItems: 'center',
         justifyContent: 'center',
-        position: 'relative'
+        position: 'relative',
     },
     cartBadge: {
         position: 'absolute',

@@ -10,19 +10,18 @@ interface NFTCardProps {
 }
 
 const NFTCardComponent = ({ nft, onBuy, buying }: NFTCardProps) => {
-    // Aligned with Web Rarity Config
     const rarityColor = nft.cor ? nft.cor.split(' ')[0].replace('from-', '') : '#1f2937';
 
     return (
         <View style={s.card}>
             <View style={s.rarityContainer}>
                 <View style={[s.rarityBadge, { backgroundColor: rarityColor || '#1f2937' }]}>
-                    <Star size={10} color="#fff" fill="#fff" />
+                    <Star size={8} color="#fff" fill="#fff" />
                     <Text style={s.rarityText}>{nft.raridade}</Text>
                 </View>
             </View>
 
-            <View style={[s.visualArea, { backgroundColor: rarityColor + '15' }]}>
+            <View style={[s.visualArea, { backgroundColor: (rarityColor || '#1f2937') + '10' }]}>
                 {nft.image ? (
                     <Image
                         source={nft.image}
@@ -49,7 +48,7 @@ const NFTCardComponent = ({ nft, onBuy, buying }: NFTCardProps) => {
                         disabled={buying}
                         activeOpacity={0.6}
                     >
-                        <ShoppingCart size={14} color="#0A0B12" />
+                        <ShoppingCart size={13} color="#0A0B12" />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -64,17 +63,18 @@ export const NFTCard = React.memo(NFTCardComponent, (prev, next) => {
 const s = StyleSheet.create({
     card: {
         flex: 1,
-        backgroundColor: 'rgba(20, 24, 39, 0.65)', // Polished glass
-        borderRadius: 20,
+        backgroundColor: 'rgba(17, 24, 39, 0.55)',
+        borderRadius: 16,
         overflow: 'hidden',
-        borderWidth: 1.5,
-        borderColor: 'rgba(56, 189, 248, 0.15)', // Subtle cyan border highlight
+        borderWidth: 1,
+        borderColor: 'rgba(31, 41, 55, 0.6)',
         margin: 6,
         height: 195,
+        // Glassmorphism-like depth
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.25,
+        shadowRadius: 10,
     },
     rarityContainer: {
         position: 'absolute',
@@ -85,31 +85,30 @@ const s = StyleSheet.create({
     rarityBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
+        gap: 3,
         paddingHorizontal: 6,
         paddingVertical: 2,
-        borderRadius: 4,
+        borderRadius: 6,
     },
     rarityText: {
         color: '#fff',
         fontSize: 8,
         fontWeight: '800',
-        textTransform: 'uppercase'
+        textTransform: 'uppercase',
     },
     visualArea: {
         height: 100,
         alignItems: 'center',
         justifyContent: 'center',
-        position: 'relative',
     },
     nftEmoji: { fontSize: 36 },
-    nftImage: { width: '85%', height: '85%' },
+    nftImage: { width: '80%', height: '80%' },
     cardContent: { padding: 10, flex: 1, justifyContent: 'space-between' },
     nftName: {
         color: '#f9fafb',
-        fontWeight: '800',
+        fontWeight: '700',
         fontSize: 12,
-        letterSpacing: 0.2
+        letterSpacing: 0.1,
     },
     priceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     priceWrapper: {
@@ -118,17 +117,17 @@ const s = StyleSheet.create({
         gap: 4,
     },
     ticketIcon: {
-        width: 14,
-        height: 14,
-        borderRadius: 4,
-        backgroundColor: '#16a34a', // Green ticket like web
+        width: 12,
+        height: 12,
+        borderRadius: 3,
+        backgroundColor: '#16a34a',
     },
-    priceText: { color: '#00FF8C', fontWeight: '900', fontSize: 16 },
+    priceText: { color: '#00FF8C', fontWeight: '900', fontSize: 15 },
     buyBtn: {
         backgroundColor: '#00FF8C',
-        width: 32,
-        height: 32,
-        borderRadius: 10,
+        width: 30,
+        height: 30,
+        borderRadius: 8,
         alignItems: 'center',
         justifyContent: 'center',
     },
