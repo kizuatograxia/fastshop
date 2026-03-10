@@ -84,7 +84,7 @@ export default function NFTsScreen() {
                 keyExtractor={(item: any) => item.id}
                 numColumns={2}
                 ListHeaderComponent={<ListHeader totalNFTs={cartCount} onOpenCart={openCart} />}
-                contentContainerStyle={s.grid}
+                contentContainerStyle={[s.grid, { paddingBottom: 80 }]}
                 estimatedItemSize={195}
                 showsVerticalScrollIndicator={false}
                 scrollEventThrottle={16}
@@ -95,7 +95,6 @@ export default function NFTsScreen() {
                         </View>
                     ) : null
                 }
-                ListFooterComponent={<View style={{ height: 100 }} />}
             />
             <CartModal visible={cartVisible} onClose={closeCart} />
         </View>

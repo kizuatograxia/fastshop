@@ -53,8 +53,8 @@ export default function TabLayout() {
                 headerShown: false,
                 tabBarStyle: styles.tabBar,
                 tabBarShowLabel: false,
+                sceneStyle: { backgroundColor: 'transparent' }
             }}
-            sceneContainerStyle={{ backgroundColor: 'transparent' }}
         >
             <Tabs.Screen
                 name="sorteios"
@@ -110,12 +110,17 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
     tabBar: {
-        backgroundColor: '#0A0B12',
-        borderTopColor: '#1a1f2e',
+        backgroundColor: 'rgba(10,11,18,0.92)', // Glassmorphism dark for bottom parity
+        borderTopColor: 'rgba(31,41,55,0.5)',
         borderTopWidth: 1,
         height: 64,
         paddingBottom: 0,
         paddingTop: 0,
+        position: 'absolute', // Let the background flow underneath
+        bottom: 0,
+        left: 0,
+        right: 0,
+        elevation: 0, // Remove android shadow
     },
     tabItem: {
         alignItems: 'center',
