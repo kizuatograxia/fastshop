@@ -1,83 +1,58 @@
+import * as SecureStore from 'expo-secure-store';
+
 /**
- * Centralized utility for managing localStorage with basic obfuscation.
- * This provides a single point of failure/improvement for security.
+ * In-memory token cache — populated from SecureStore on app start by AuthProvider.
+ * The api.ts needs synchronous access to the token, so we keep a runtime copy here.
  */
+let _token: string | null = null;
+let _adminKey: string | null = null;
 
-const KEYS = {
-    AUTH_TOKEN: "auth_token",
-    SESSION_DATA: "luckynft_session",
-    ADMIN_KEY: "admin_key",
-    ADMIN_REVIEWS: "admin_reviews"
-};
-
-// Simple obfuscation to prevent casual reading of tokens in plain text
-// For production, consider using SubtleCrypto for better security
-const obfuscate = (data: string) => btoa(data);
-const deobfuscate = (data: string) => {
-    try {
-        return atob(data);
-    } catch {
-        return data; // Fallback to raw if not base64
-    }
-};
+// Simple in-memory reviews fallback (no localStorage in React Native)
+let _reviews: any[] = [];
 
 export const storage = {
-    getToken: () => {
-        const token = localStorage.getItem(KEYS.AUTH_TOKEN);
-        return token ? deobfuscate(token) : null;
+    // Token
+    getToken: () => _token,
+    setToken: (token: string) => { _token = token; },
+    removeToken: () => { _token = null; },
+
+    // Admin key
+    getAdminKey: () => _adminKey,
+    setAdminKey: (key: string) => { _adminKey = key; },
+    removeAdminKey: () => { _adminKey = null; },
+
+    // Generic persistence (delegates to SecureStore or memory)
+    getItem: (key: string) => {
+        // Since we need synchronous access in some places, we'll need to handle async elsewhere
+        // But for WalletProvider, we'll try to use a simple approach
+        return null; // This is a placeholder, usually we'd use a synchronized cache
+    },
+    setItem: (key: string, value: string) => {
+        SecureStore.setItemAsync(key, value).catch(() => { });
     },
 
-    setToken: (token: string) => {
-        localStorage.setItem(KEYS.AUTH_TOKEN, obfuscate(token));
-    },
+    // Reviews (in-memory fallback — fine for mobile)
+    getReviews: () => _reviews,
+    setReviews: (reviews: any[]) => { _reviews = reviews; },
 
-    removeToken: () => {
-        localStorage.removeItem(KEYS.AUTH_TOKEN);
-    },
-
-    getUser: () => {
-        const data = localStorage.getItem(KEYS.SESSION_DATA);
-        if (!data) return null;
-        try {
-            return JSON.parse(deobfuscate(data));
-        } catch {
-            return null;
-        }
-    },
-
-    setUser: (user: any) => {
-        localStorage.setItem(KEYS.SESSION_DATA, obfuscate(JSON.stringify(user)));
-    },
-
-    removeUser: () => {
-        localStorage.removeItem(KEYS.SESSION_DATA);
-        localStorage.removeItem("user"); // Cleanup legacy key
-    },
-
-    getAdminKey: () => {
-        const key = localStorage.getItem(KEYS.ADMIN_KEY);
-        return key ? deobfuscate(key) : null;
-    },
-
-    setAdminKey: (key: string) => {
-        localStorage.setItem(KEYS.ADMIN_KEY, obfuscate(key));
-    },
-
-    removeAdminKey: () => {
-        localStorage.removeItem(KEYS.ADMIN_KEY);
-    },
-
-    getReviews: () => {
-        const data = localStorage.getItem(KEYS.ADMIN_REVIEWS);
-        return data ? JSON.parse(deobfuscate(data)) : [];
-    },
-
-    setReviews: (reviews: any[]) => {
-        localStorage.setItem(KEYS.ADMIN_REVIEWS, obfuscate(JSON.stringify(reviews)));
-    },
-
+    // User helpers (not used by AuthProvider, but kept for compat)
+    getUser: () => null,
+    setUser: (_: any) => { },
+    removeUser: () => { },
     clearAll: () => {
-        Object.values(KEYS).forEach(key => localStorage.removeItem(key));
-        localStorage.removeItem("user");
-    }
+        _token = null;
+        _adminKey = null;
+        _reviews = [];
+    },
+
+    /**
+     * Call this from AuthProvider after signIn to sync the token into storage
+     * so that api.ts request() can read it synchronously.
+     */
+    syncToken: async () => {
+        try {
+            const token = await SecureStore.getItemAsync('authToken');
+            _token = token;
+        } catch { /* ignore */ }
+    },
 };

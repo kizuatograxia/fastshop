@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter, useSegments } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { User } from '../../types/user';
+import { storage } from '../../lib/storage';
 
 interface AuthContextType {
     user: User | null;
@@ -40,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const userDataStr = await SecureStore.getItemAsync('userData');
 
             if (token && userDataStr) {
-                // In a real app we would validate the token with the backend here
+                storage.setToken(token); // sync to in-memory
                 setUser(JSON.parse(userDataStr));
             }
         } catch (error) {
@@ -56,6 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             await SecureStore.setItemAsync('authToken', token);
             await SecureStore.setItemAsync('userData', JSON.stringify(userData));
+            storage.setToken(token); // sync to in-memory for api.ts
             setUser(userData);
         } catch (error) {
             console.error('Failed to store auth state', error);
@@ -65,6 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async function signOut() {
         await SecureStore.deleteItemAsync('authToken');
         await SecureStore.deleteItemAsync('userData');
+        storage.removeToken(); // clear in-memory
         setUser(null);
     }
 

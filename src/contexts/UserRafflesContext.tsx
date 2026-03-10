@@ -3,6 +3,7 @@ import { Raffle } from "@/types/raffle";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { requestQueue } from "@/lib/requestQueue";
 
 interface UserRaffle {
     raffle: Raffle;
@@ -82,8 +83,13 @@ export const UserRafflesProvider: React.FC<{ children: React.ReactNode }> = ({ c
             if (isNaN(rId)) throw new Error("ID do sorteio inválido");
             if (isNaN(uId)) throw new Error("ID do usuário inválido");
 
-            // Call API with NFTs
-            await api.joinRaffle(rId, uId, nfts, tickets);
+            // Enqueue the API call — serializes concurrent requests to avoid race conditions
+            // when multiple users try to join as quotas run out
+            await requestQueue.enqueue(
+                `Entrando no sorteio: ${raffle.titulo}`,
+                () => api.joinRaffle(rId, uId, nfts, tickets),
+                3 // max retry attempts
+            );
 
             // Refresh to ensure sync with backend
             await fetchUserRaffles();

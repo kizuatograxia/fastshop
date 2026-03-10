@@ -1,59 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import { ScrollView, TouchableOpacity, Text, View } from 'react-native';
-import { api } from '../lib/api';
+import React from 'react';
+import { ScrollView, TouchableOpacity, Text, View, StyleSheet } from 'react-native';
 
 interface CategoryNavProps {
     activeCategory: string;
     onCategoryChange: (category: string) => void;
 }
 
+// Hardcoded categories — backend doesn't have a /categories endpoint
+const CATEGORIES = [
+    { id: 'todos', emoji: '🎯', nome: 'Todos' },
+    { id: 'tech', emoji: '💻', nome: 'Tech' },
+    { id: 'moda', emoji: '👗', nome: 'Moda' },
+    { id: 'eletronicos', emoji: '📱', nome: 'Eletrônicos' },
+    { id: 'esportes', emoji: '⚽', nome: 'Esportes' },
+    { id: 'viagem', emoji: '✈️', nome: 'Viagem' },
+    { id: 'games', emoji: '🎮', nome: 'Games' },
+    { id: 'luxo', emoji: '💎', nome: 'Luxo' },
+];
+
 export function CategoryNav({ activeCategory, onCategoryChange }: CategoryNavProps) {
-    const [categories, setCategories] = useState<any[]>([]);
-
-    useEffect(() => {
-        api.getCategories()
-            .then(setCategories)
-            .catch(err => console.error("Failed to load categories:", err));
-    }, []);
-
-    if (categories.length === 0) return null;
-
     return (
-        <View className="py-4 border-b border-border bg-background">
+        <View style={styles.container}>
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
+                contentContainerStyle={styles.scroll}
             >
-                {/* Fixed "Todos" category if not included by API */}
-                <TouchableOpacity
-                    onPress={() => onCategoryChange("todos")}
-                    className={`px-4 py-2 rounded-full border ${activeCategory === "todos"
-                        ? "bg-primary border-primary"
-                        : "bg-card border-border"
-                        }`}
-                >
-                    <Text className={`font-medium ${activeCategory === "todos" ? "text-primary-foreground" : "text-foreground"}`}>
-                        Todos
-                    </Text>
-                </TouchableOpacity>
-
-                {categories.map((category) => {
-                    const isActive = activeCategory === category.id;
+                {CATEGORIES.map(cat => {
+                    const isActive = activeCategory === cat.id;
                     return (
                         <TouchableOpacity
-                            key={category.id}
-                            onPress={() => onCategoryChange(category.id)}
-                            className={`flex flex-row items-center px-4 py-2 rounded-full border ${isActive
-                                ? "bg-primary border-primary"
-                                : "bg-card border-border"
-                                }`}
+                            key={cat.id}
+                            onPress={() => onCategoryChange(cat.id)}
+                            style={[styles.pill, isActive && styles.pillActive]}
                         >
-                            <Text className={`mr-1 ${isActive ? "text-primary-foreground" : "text-foreground"}`}>
-                                {category.emoji}
-                            </Text>
-                            <Text className={`font-medium ${isActive ? "text-primary-foreground" : "text-foreground"}`}>
-                                {category.nome}
+                            <Text style={styles.emoji}>{cat.emoji}</Text>
+                            <Text style={[styles.label, isActive && styles.labelActive]}>
+                                {cat.nome}
                             </Text>
                         </TouchableOpacity>
                     );
@@ -62,3 +45,13 @@ export function CategoryNav({ activeCategory, onCategoryChange }: CategoryNavPro
         </View>
     );
 }
+
+const styles = StyleSheet.create({
+    container: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#1f2937' },
+    scroll: { paddingHorizontal: 16, gap: 8 },
+    pill: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#1f2937', backgroundColor: '#111827' },
+    pillActive: { backgroundColor: 'rgba(0,255,140,0.15)', borderColor: 'rgba(0,255,140,0.5)' },
+    emoji: { fontSize: 13 },
+    label: { color: '#6b7280', fontSize: 13, fontWeight: '600' },
+    labelActive: { color: '#00FF8C' },
+});

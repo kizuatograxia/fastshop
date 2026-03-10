@@ -3,6 +3,7 @@ import { NFT, OwnedNFT } from "@/types/raffle";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { requestQueue } from "@/lib/requestQueue";
 
 interface WalletContextType {
     cartItems: OwnedNFT[];
@@ -160,8 +161,13 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const buyNFTs = useCallback(async (items: { id: string; quantity: number }[], couponCode?: string) => {
         if (!user) return;
         try {
-            await api.buyNFTs(Number(user.id), items, couponCode);
-            // Refresh wallet
+            // Enqueue so concurrent purchases from the same session don't race each other
+            await requestQueue.enqueue(
+                "Processando compra de NFTs...",
+                () => api.buyNFTs(Number(user.id), items, couponCode),
+                3
+            );
+            // Refresh wallet after successful purchase
             const data = await api.getWallet(Number(user.id));
             setOwnedNFTs(data);
         } catch (error) {
