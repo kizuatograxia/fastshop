@@ -208,6 +208,7 @@ const RaffleDetails: FC = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [isLiveViewActive, setIsLiveViewActive] = useState(false);
   const [activeImage, setActiveImage] = useState<string>("");
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
 
   const [pendingChangeDialog, setPendingChangeDialog] = useState<{
     open: boolean; emptySlots: number; selectedValue: number; changeValue: number; changeNFTs: NFT[];
@@ -659,9 +660,17 @@ const RaffleDetails: FC = () => {
             <h2 className="text-lg font-semibold text-foreground">Descrição do anúncio</h2>
           </div>
           <div className="px-6 py-6">
-            <p className="text-[20px] text-muted-foreground font-light leading-relaxed whitespace-pre-line">
+            <p className={`text-[20px] text-muted-foreground font-light leading-relaxed whitespace-pre-line transition-all duration-300 ${!isDescExpanded && raffle.descricao?.length > 150 ? 'line-clamp-3' : ''}`}>
               {raffle.descricao}
             </p>
+            {raffle.descricao?.length > 150 && (
+              <button
+                onClick={() => setIsDescExpanded(!isDescExpanded)}
+                className="mt-3 text-green-600 dark:text-green-500 font-semibold text-[15px] hover:underline transition-all"
+              >
+                {isDescExpanded ? 'Ver menos' : 'Ver mais'}
+              </button>
+            )}
           </div>
         </div>
 
