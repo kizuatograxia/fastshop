@@ -1,20 +1,18 @@
-import React from 'react';
-import {
-    View, Text, ScrollView, Image, TouchableOpacity,
-    StyleSheet, StatusBar,
-} from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, StatusBar, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
-import { ArrowLeft, Ticket, Clock, Users, ShieldCheck, Zap } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { ShieldCheck, Award, CalendarClock, TrendingUp } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { useState } from 'react';
-import { Alert } from 'react-native';
 import { useAuth } from '../../components/providers/AuthProvider';
+import { DecorativeBackground } from '../../components/DecorativeBackground';
+import { RaffleHero } from '../../components/raffle/RaffleHero';
+import { RaffleStatsBar } from '../../components/raffle/RaffleStatsBar';
+import { RaffleProgress } from '../../components/raffle/RaffleProgress';
+import { RaffleCheckoutBar } from '../../components/raffle/RaffleCheckoutBar';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export default function RaffleDetailsScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -31,7 +29,8 @@ export default function RaffleDetailsScreen() {
 
     if (isLoading) {
         return (
-            <View style={s.loadingContainer}>
+            <View style={s.centered}>
+                <DecorativeBackground />
                 <Text style={s.loadingText}>Carregando sorteio...</Text>
             </View>
         );
@@ -39,7 +38,8 @@ export default function RaffleDetailsScreen() {
 
     if (!raffle) {
         return (
-            <View style={s.loadingContainer}>
+            <View style={s.centered}>
+                <DecorativeBackground />
                 <Text style={s.loadingText}>Sorteio não encontrado.</Text>
             </View>
         );
@@ -49,10 +49,12 @@ export default function RaffleDetailsScreen() {
     const custo = typeof raffle.custoNFT === 'number' ? raffle.custoNFT : 0;
     const imageUri = raffle.imagem || raffle.image_urls?.[0] || 'https://placehold.co/600x400/111827/00FF8C';
     const isAlmostFull = progress >= 80;
-
     const rawDate = raffle.dataFim;
     const endDate = rawDate ? new Date(rawDate) : null;
     const isValidDate = endDate && !isNaN(endDate.getTime());
+    const currentChance = raffle.maxParticipantes > 0
+        ? ((1 / (raffle.maxParticipantes - raffle.participantes || 1)) * 100).toFixed(2)
+        : '0';
 
     const handleJoin = async () => {
         if (!user) {
@@ -75,199 +77,191 @@ export default function RaffleDetailsScreen() {
     return (
         <View style={s.root}>
             <StatusBar barStyle="light-content" />
+            <DecorativeBackground />
 
-            {/* Hero Image */}
-            <View style={s.heroContainer}>
-                <Image source={{ uri: imageUri }} style={s.heroImage} resizeMode="cover" />
-                <LinearGradient colors={['rgba(10,11,18,0.3)', 'rgba(10,11,18,0.98)']} style={s.heroGradient} />
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+                {/* Hero */}
+                <RaffleHero imageUri={imageUri} onBack={() => router.back()} />
 
-                {/* Back button */}
-                <SafeAreaView edges={['top']} style={s.backWrapper}>
-                    <TouchableOpacity
-                        onPress={() => {
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                            router.back();
-                        }}
-                        style={s.backBtn}
-                    >
-                        <ArrowLeft size={20} color="#f9fafb" />
-                    </TouchableOpacity>
-                </SafeAreaView>
-
-                {/* Badge */}
-                <View style={s.statusBadge}>
-                    <View style={s.statusDot} />
-                    <Text style={s.statusText}>{raffle.status === 'ativo' ? 'ATIVO' : 'ENCERRADO'}</Text>
-                </View>
-            </View>
-
-            <ScrollView style={s.content} contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
-                {/* Title */}
-                <Text style={s.title}>{raffle.titulo}</Text>
-                <Text style={s.prize}>{raffle.premio}</Text>
-
-                {/* Stats row */}
-                <View style={s.statsRow}>
-                    <View style={s.statItem}>
-                        <Users size={14} color="#00FF8C" />
-                        <Text style={s.statValue}>{raffle.participantes}</Text>
-                        <Text style={s.statLabel}>Participantes</Text>
-                    </View>
-                    <View style={s.statDivider} />
-                    <View style={s.statItem}>
-                        <Ticket size={14} color="#00FF8C" />
-                        <Text style={s.statValue}>{raffle.maxParticipantes}</Text>
-                        <Text style={s.statLabel}>Cotas Totais</Text>
-                    </View>
-                    <View style={s.statDivider} />
-                    <View style={s.statItem}>
-                        <Clock size={14} color="#00FF8C" />
-                        <Text style={s.statValue} numberOfLines={1}>
-                            {isValidDate
-                                ? formatDistanceToNow(endDate!, { locale: ptBR })
-                                : '—'}
-                        </Text>
-                        <Text style={s.statLabel}>Restam</Text>
-                    </View>
-                </View>
-
-                {/* Progress */}
-                <View style={s.progressSection}>
-                    <View style={s.progressHeader}>
-                        <Text style={s.progressTitle}>Preenchimento</Text>
-                        <Text style={[s.progressPct, isAlmostFull && s.progressPctHot]}>
-                            {progress.toFixed(0)}%
-                        </Text>
-                    </View>
-                    <View style={s.progressBg}>
-                        <View style={[s.progressFill, { width: `${progress}%` as any }, isAlmostFull && s.progressFillHot]} />
-                    </View>
-                    {isAlmostFull && (
-                        <View style={s.urgencyBadge}>
-                            <Zap size={12} color="#f97316" />
-                            <Text style={s.urgencyText}>Quase esgotado — garanta sua cota!</Text>
+                {/* Content */}
+                <View style={s.content}>
+                    {/* Status badge */}
+                    <View style={s.statusRow}>
+                        <View style={[s.statusBadge, raffle.status !== 'ativo' && s.statusInactive]}>
+                            <View style={[s.statusDot, raffle.status !== 'ativo' && { backgroundColor: '#6b7280' }]} />
+                            <Text style={[s.statusText, raffle.status !== 'ativo' && { color: '#6b7280' }]}>
+                                {raffle.status === 'ativo' ? 'SORTEIO ATIVO' : 'ENCERRADO'}
+                            </Text>
                         </View>
-                    )}
-                </View>
+                        <Text style={s.soldCount}>+{raffle.participantes} vendidos</Text>
+                    </View>
 
-                {/* Description */}
-                {raffle.descricao ? (
-                    <View style={s.descSection}>
-                        <Text style={s.sectionTitle}>Sobre o Prêmio</Text>
-                        <Text
-                            style={s.descText}
-                            numberOfLines={isDescExpanded ? undefined : 3}
-                        >
-                            {raffle.descricao}
+                    {/* Title & Prize */}
+                    <Text style={s.title}>{raffle.titulo}</Text>
+                    <Text style={s.prizeLabel}>{raffle.premio}</Text>
+
+                    {/* Price */}
+                    <View style={s.priceCard}>
+                        <Text style={s.priceValue}>R$ {custo.toFixed(2)}</Text>
+                        <Text style={s.installments}>
+                            em 10x R$ {(custo / 10).toFixed(2)} sem juros
                         </Text>
-                        {raffle.descricao.length > 120 && (
-                            <TouchableOpacity
-                                onPress={() => {
-                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                                    setIsDescExpanded(!isDescExpanded);
-                                }}
-                                style={s.readMoreBtn}
-                                activeOpacity={0.7}
-                            >
-                                <Text style={s.readMoreText}>
+                    </View>
+
+                    {/* Stats */}
+                    <RaffleStatsBar
+                        participantes={raffle.participantes}
+                        maxParticipantes={raffle.maxParticipantes}
+                        endDate={endDate}
+                        isValidDate={!!isValidDate}
+                    />
+
+                    {/* Progress */}
+                    <RaffleProgress progress={progress} isAlmostFull={isAlmostFull} />
+
+                    {/* Quick Info */}
+                    <View style={s.infoCard}>
+                        <Text style={s.infoTitle}>Informações do Sorteio</Text>
+                        <InfoRow icon={<Award size={14} color="#00FF8C" />} label="Prêmio Total" value={`R$ ${raffle.premioValor?.toLocaleString('pt-BR') ?? '—'}`} />
+                        <InfoRow icon={<TrendingUp size={14} color="#00FF8C" />} label="Oportunidade Atual" value={`${currentChance}%`} />
+                        <InfoRow
+                            icon={<CalendarClock size={14} color="#00FF8C" />}
+                            label="Encerramento"
+                            value={isValidDate ? format(endDate!, "dd 'de' MMMM, yyyy", { locale: ptBR }) : '—'}
+                        />
+                    </View>
+
+                    {/* Highlights */}
+                    <View style={s.highlightsCard}>
+                        <Text style={s.infoTitle}>O que você precisa saber</Text>
+                        {['Prêmio de luxo verificado', 'Sorteio auditado pela blockchain', 'Entrega digital imediata na carteira', 'Participação garantida ou reembolso'].map((item, i) => (
+                            <View key={i} style={s.bulletRow}>
+                                <Text style={s.bullet}>•</Text>
+                                <Text style={s.bulletText}>{item}</Text>
+                            </View>
+                        ))}
+                    </View>
+
+                    {/* Description */}
+                    {raffle.descricao ? (
+                        <View style={s.descCard}>
+                            <Text style={s.infoTitle}>Descrição</Text>
+                            <Text style={s.descText} numberOfLines={isDescExpanded ? undefined : 4}>
+                                {raffle.descricao}
+                            </Text>
+                            {raffle.descricao.length > 120 && (
+                                <Text
+                                    style={s.readMore}
+                                    onPress={() => {
+                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                        setIsDescExpanded(!isDescExpanded);
+                                    }}
+                                >
                                     {isDescExpanded ? 'Ver menos' : 'Ver mais'}
                                 </Text>
-                            </TouchableOpacity>
-                        )}
-                    </View>
-                ) : null}
+                            )}
+                        </View>
+                    ) : null}
 
-                {/* Guarantee */}
-                <View style={s.guaranteeRow}>
-                    <ShieldCheck size={18} color="#00FF8C" />
-                    <Text style={s.guaranteeText}>Sorteio verificado e auditado pela plataforma MundoPix</Text>
+                    {/* Guarantee */}
+                    <View style={s.guaranteeCard}>
+                        <ShieldCheck size={18} color="#00FF8C" />
+                        <Text style={s.guaranteeText}>
+                            Compra Garantida — receba o bilhete que está esperando ou devolvemos suas NFTs.
+                        </Text>
+                    </View>
                 </View>
             </ScrollView>
 
-            {/* Bottom checkout bar */}
-            <View style={s.checkoutBar}>
-                <View style={s.quantityRow}>
-                    <TouchableOpacity
-                        onPress={() => {
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                            setQuantity(q => Math.max(1, q - 1));
-                        }}
-                        style={s.qBtn}
-                    >
-                        <Text style={s.qBtnText}>−</Text>
-                    </TouchableOpacity>
-                    <Text style={s.qValue}>{quantity}</Text>
-                    <TouchableOpacity
-                        onPress={() => {
-                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                            setQuantity(q => q + 1);
-                        }}
-                        style={s.qBtn}
-                    >
-                        <Text style={s.qBtnText}>+</Text>
-                    </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity
-                    onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                        handleJoin();
-                    }}
-                    disabled={joining}
-                    style={[s.joinBtn, joining && s.joinBtnDisabled]}
-                >
-                    <Text style={s.joinBtnText}>
-                        {joining ? 'Processando...' : `Participar — R$ ${(custo * quantity).toFixed(2)}`}
-                    </Text>
-                </TouchableOpacity>
-            </View>
+            <RaffleCheckoutBar
+                quantity={quantity}
+                setQuantity={setQuantity}
+                custo={custo}
+                joining={joining}
+                onJoin={handleJoin}
+            />
         </View>
     );
 }
 
+const InfoRow = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
+    <View style={s.infoRow}>
+        {icon}
+        <Text style={s.infoLabel}>{label}</Text>
+        <Text style={s.infoValue}>{value}</Text>
+    </View>
+);
+
 const s = StyleSheet.create({
     root: { flex: 1, backgroundColor: '#0A0B12' },
-    loadingContainer: { flex: 1, backgroundColor: '#0A0B12', alignItems: 'center', justifyContent: 'center' },
-    loadingText: { color: '#6b7280' },
-    heroContainer: { height: 280, position: 'relative' },
-    heroImage: { width: '100%', height: '100%' },
-    heroGradient: { position: 'absolute', inset: 0, width: '100%', height: '100%' },
-    backWrapper: { position: 'absolute', top: 0, left: 0, right: 0 },
-    backBtn: { margin: 16, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
-    statusBadge: { position: 'absolute', bottom: 16, left: 16, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(0,255,140,0.15)', borderWidth: 1, borderColor: 'rgba(0,255,140,0.4)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
+    centered: { flex: 1, backgroundColor: '#0A0B12', alignItems: 'center', justifyContent: 'center' },
+    loadingText: { color: '#6b7280', fontSize: 14 },
+    content: { paddingHorizontal: 16, marginTop: -40 },
+
+    // Status
+    statusRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+    statusBadge: {
+        flexDirection: 'row', alignItems: 'center', gap: 6,
+        backgroundColor: 'rgba(0,255,140,0.1)', borderWidth: 1, borderColor: 'rgba(0,255,140,0.3)',
+        borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4,
+    },
+    statusInactive: { backgroundColor: 'rgba(107,114,128,0.1)', borderColor: 'rgba(107,114,128,0.3)' },
     statusDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#00FF8C' },
     statusText: { color: '#00FF8C', fontSize: 10, fontWeight: '700', letterSpacing: 1 },
-    content: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
-    title: { color: '#f9fafb', fontSize: 24, fontWeight: '900', marginBottom: 4 },
-    prize: { color: '#00FF8C', fontSize: 15, fontWeight: '600', marginBottom: 20 },
-    statsRow: { flexDirection: 'row', backgroundColor: '#111827', borderRadius: 16, borderWidth: 1, borderColor: '#1f2937', marginBottom: 24 },
-    statItem: { flex: 1, alignItems: 'center', paddingVertical: 14, gap: 4 },
-    statValue: { color: '#f9fafb', fontSize: 14, fontWeight: '800' },
-    statLabel: { color: '#4b5563', fontSize: 10 },
-    statDivider: { width: 1, backgroundColor: '#1f2937', marginVertical: 12 },
-    progressSection: { marginBottom: 24 },
-    progressHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-    progressTitle: { color: '#9ca3af', fontSize: 13, fontWeight: '600' },
-    progressPct: { color: '#00FF8C', fontSize: 13, fontWeight: '700' },
-    progressPctHot: { color: '#f97316' },
-    progressBg: { height: 6, backgroundColor: '#1f2937', borderRadius: 3, overflow: 'hidden' },
-    progressFill: { height: '100%', backgroundColor: '#00FF8C', borderRadius: 3 },
-    progressFillHot: { backgroundColor: '#f97316' },
-    urgencyBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, backgroundColor: 'rgba(249,115,22,0.1)', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: 'rgba(249,115,22,0.3)' },
-    urgencyText: { color: '#f97316', fontSize: 12, fontWeight: '600' },
-    descSection: { marginBottom: 20 },
-    sectionTitle: { color: '#f9fafb', fontSize: 16, fontWeight: '700', marginBottom: 8 },
+    soldCount: { color: '#6b7280', fontSize: 12 },
+
+    // Title
+    title: { color: '#f9fafb', fontSize: 22, fontWeight: '800', lineHeight: 28, marginBottom: 4 },
+    prizeLabel: { color: '#00FF8C', fontSize: 14, fontWeight: '600', marginBottom: 16 },
+
+    // Price
+    priceCard: {
+        backgroundColor: 'rgba(17,24,39,0.55)', borderRadius: 16,
+        borderWidth: 1, borderColor: 'rgba(31,41,55,0.6)',
+        padding: 16, marginBottom: 20,
+    },
+    priceValue: { color: '#f9fafb', fontSize: 34, fontWeight: '300', letterSpacing: -1 },
+    installments: { color: '#00FF8C', fontSize: 14, fontWeight: '600', marginTop: 4 },
+
+    // Info card
+    infoCard: {
+        backgroundColor: 'rgba(17,24,39,0.55)', borderRadius: 16,
+        borderWidth: 1, borderColor: 'rgba(31,41,55,0.6)',
+        padding: 16, marginBottom: 20,
+    },
+    infoTitle: { color: '#f9fafb', fontSize: 15, fontWeight: '700', marginBottom: 12 },
+    infoRow: {
+        flexDirection: 'row', alignItems: 'center', gap: 8,
+        paddingVertical: 10, borderTopWidth: 1, borderTopColor: 'rgba(31,41,55,0.4)',
+    },
+    infoLabel: { color: '#9ca3af', fontSize: 13, flex: 1 },
+    infoValue: { color: '#f9fafb', fontSize: 13, fontWeight: '600' },
+
+    // Highlights
+    highlightsCard: {
+        backgroundColor: 'rgba(17,24,39,0.55)', borderRadius: 16,
+        borderWidth: 1, borderColor: 'rgba(31,41,55,0.6)',
+        padding: 16, marginBottom: 20,
+    },
+    bulletRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 8 },
+    bullet: { color: '#00FF8C', fontSize: 16, lineHeight: 20 },
+    bulletText: { color: '#9ca3af', fontSize: 13, lineHeight: 20, flex: 1 },
+
+    // Description
+    descCard: {
+        backgroundColor: 'rgba(17,24,39,0.55)', borderRadius: 16,
+        borderWidth: 1, borderColor: 'rgba(31,41,55,0.6)',
+        padding: 16, marginBottom: 20,
+    },
     descText: { color: '#6b7280', fontSize: 14, lineHeight: 22 },
-    readMoreBtn: { marginTop: 6, alignSelf: 'flex-start', paddingVertical: 4 },
-    readMoreText: { color: '#00FF8C', fontSize: 13, fontWeight: '700' },
-    guaranteeRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(0,255,140,0.06)', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: 'rgba(0,255,140,0.2)', marginBottom: 20 },
-    guaranteeText: { color: '#9ca3af', fontSize: 13, flex: 1 },
-    checkoutBar: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, paddingBottom: 32, backgroundColor: '#0d101a', borderTopWidth: 1, borderTopColor: '#1f2937' },
-    quantityRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#111827', borderRadius: 12, borderWidth: 1, borderColor: '#1f2937' },
-    qBtn: { width: 40, height: 48, alignItems: 'center', justifyContent: 'center' },
-    qBtnText: { color: '#f9fafb', fontSize: 20, fontWeight: '700' },
-    qValue: { color: '#f9fafb', fontSize: 16, fontWeight: '800', width: 32, textAlign: 'center' },
-    joinBtn: { flex: 1, backgroundColor: '#00FF8C', borderRadius: 12, height: 48, alignItems: 'center', justifyContent: 'center' },
-    joinBtnDisabled: { opacity: 0.6 },
-    joinBtnText: { color: '#0A0B12', fontSize: 15, fontWeight: '800' },
+    readMore: { color: '#00FF8C', fontSize: 13, fontWeight: '700', marginTop: 8 },
+
+    // Guarantee
+    guaranteeCard: {
+        flexDirection: 'row', alignItems: 'center', gap: 10,
+        backgroundColor: 'rgba(0,255,140,0.06)', borderRadius: 16,
+        padding: 14, borderWidth: 1, borderColor: 'rgba(0,255,140,0.15)',
+        marginBottom: 20,
+    },
+    guaranteeText: { color: '#9ca3af', fontSize: 13, flex: 1, lineHeight: 18 },
 });
