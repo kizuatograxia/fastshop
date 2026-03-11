@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, StatusBar, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, StatusBar, Alert, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
@@ -13,6 +13,7 @@ import { RaffleProgress } from '../../components/raffle/RaffleProgress';
 import { RaffleCheckoutBar } from '../../components/raffle/RaffleCheckoutBar';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Gem, PlusCircle, MinusCircle } from 'lucide-react-native';
 
 export default function RaffleDetailsScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
@@ -21,10 +22,17 @@ export default function RaffleDetailsScreen() {
     const [quantity, setQuantity] = useState(1);
     const [joining, setJoining] = useState(false);
     const [isDescExpanded, setIsDescExpanded] = useState(false);
+    const [selectedNFTs, setSelectedNFTs] = useState<Record<string, number>>({});
 
     const { data: raffle, isLoading } = useQuery({
         queryKey: ['raffle', id],
         queryFn: () => api.getRaffle(id).catch(() => null),
+    });
+
+    const { data: ownedNFTs = [], isLoading: isLoadingNFTs } = useQuery({
+        queryKey: ['owned-nfts', user?.id],
+        queryFn: () => user ? api.getWallet(Number(user.id)).catch(() => []) : [],
+        enabled: !!user,
     });
 
     if (isLoading) {
@@ -63,7 +71,7 @@ export default function RaffleDetailsScreen() {
         }
         setJoining(true);
         try {
-            await api.joinRaffle(Number(id), Number(user.id), {}, quantity);
+            await api.joinRaffle(Number(id), Number(user.id), selectedNFTs, quantity);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             Alert.alert('🎉 Participação confirmada!', `Você está concorrendo com ${quantity} cota(s)!`);
         } catch (err: any) {
@@ -118,6 +126,68 @@ export default function RaffleDetailsScreen() {
 
                     {/* Progress */}
                     <RaffleProgress progress={progress} isAlmostFull={isAlmostFull} />
+
+                    {/* Use NFTs */}
+                    {user && ownedNFTs.length > 0 && (
+                        <View style={s.nftSelectionCard}>
+                            <View style={s.nftSelectionHeader}>
+                                <Gem size={18} color="#00FF8C" />
+                                <Text style={s.infoTitle}>Usar Meus NFTs</Text>
+                            </View>
+                            <Text style={s.nftSelectionSub}>Aumente suas chances utilizando NFTs da sua carteira.</Text>
+
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.nftScroll}>
+                                {ownedNFTs.map((nft: any) => {
+                                    const available = nft.quantidade || 1;
+                                    const selected = selectedNFTs[nft.id] || 0;
+                                    const isSelected = selected > 0;
+
+                                    return (
+                                        <View key={nft.id} style={[s.nftPickCard, isSelected && s.nftPickCardActive]}>
+                                            <View style={s.nftPickImgWrap}>
+                                                {nft.image ? (
+                                                    <View style={{ width: 32, height: 32, backgroundColor: '#111827', borderRadius: 6, alignItems: 'center', justifyContent: 'center' }}>
+                                                        <Text style={{ fontSize: 20 }}>{nft.emoji || '🎲'}</Text>
+                                                    </View>
+                                                ) : <Text style={{ fontSize: 24 }}>{nft.emoji}</Text>}
+                                            </View>
+                                            <View style={{ flex: 1 }}>
+                                                <Text style={s.nftPickName} numberOfLines={1}>{nft.nome}</Text>
+                                                <Text style={s.nftPickQty}>Possui: {available}</Text>
+                                            </View>
+
+                                            <View style={s.nftControls}>
+                                                <TouchableOpacity
+                                                    disabled={selected === 0}
+                                                    onPress={() => {
+                                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                                        setSelectedNFTs(prev => {
+                                                            const next = { ...prev };
+                                                            if (next[nft.id] > 1) { next[nft.id]--; }
+                                                            else { delete next[nft.id]; }
+                                                            return next;
+                                                        });
+                                                    }}
+                                                >
+                                                    <MinusCircle size={20} color={selected > 0 ? '#ef4444' : '#374151'} />
+                                                </TouchableOpacity>
+                                                <Text style={s.nftSelectedVal}>{selected}</Text>
+                                                <TouchableOpacity
+                                                    disabled={selected >= available}
+                                                    onPress={() => {
+                                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+                                                        setSelectedNFTs(prev => ({ ...prev, [nft.id]: (prev[nft.id] || 0) + 1 }));
+                                                    }}
+                                                >
+                                                    <PlusCircle size={20} color={selected < available ? '#00FF8C' : '#374151'} />
+                                                </TouchableOpacity>
+                                            </View>
+                                        </View>
+                                    );
+                                })}
+                            </ScrollView>
+                        </View>
+                    )}
 
                     {/* Quick Info */}
                     <View style={s.infoCard}>
@@ -236,6 +306,27 @@ const s = StyleSheet.create({
     },
     infoLabel: { color: '#9ca3af', fontSize: 13, flex: 1 },
     infoValue: { color: '#f9fafb', fontSize: 13, fontWeight: '600' },
+
+    // NFT Selection
+    nftSelectionCard: {
+        backgroundColor: 'rgba(0,255,140,0.03)', borderRadius: 16,
+        borderWidth: 1, borderColor: 'rgba(0,255,140,0.2)',
+        padding: 16, marginBottom: 20, overflow: 'hidden'
+    },
+    nftSelectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+    nftSelectionSub: { color: '#6b7280', fontSize: 13, marginBottom: 14, lineHeight: 18 },
+    nftScroll: { gap: 10, paddingRight: 20 },
+    nftPickCard: {
+        flexDirection: 'row', alignItems: 'center', gap: 10,
+        backgroundColor: 'rgba(17,24,39,0.8)', borderWidth: 1, borderColor: 'rgba(31,41,55,0.6)',
+        borderRadius: 12, padding: 12, width: 220
+    },
+    nftPickCardActive: { borderColor: '#00FF8C', backgroundColor: 'rgba(0,255,140,0.05)' },
+    nftPickImgWrap: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
+    nftPickName: { color: '#f9fafb', fontSize: 13, fontWeight: '700' },
+    nftPickQty: { color: '#6b7280', fontSize: 10, marginTop: 2 },
+    nftControls: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    nftSelectedVal: { color: '#f9fafb', fontSize: 14, fontWeight: '700', width: 14, textAlign: 'center' },
 
     // Highlights
     highlightsCard: {
