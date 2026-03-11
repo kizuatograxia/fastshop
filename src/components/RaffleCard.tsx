@@ -85,7 +85,7 @@ const RaffleCard: FC<RaffleCardProps> = ({ raffle, index, disableNavigation = fa
                 </div>
 
                 {/* Image Container */}
-                <div className={`relative w-full aspect-[4/5] md:aspect-auto overflow-hidden bg-background ${is3D ? 'p-0 flex items-center justify-center' : 'p-3 md:p-4'}`}>
+                <div className={`relative w-full aspect-[4/5] ${!is3D ? 'md:aspect-auto' : ''} overflow-hidden bg-background ${is3D ? 'p-0 flex items-center justify-center min-h-[250px]' : 'p-3 md:p-4'}`}>
                     {is3D ? (
                         <div className="absolute inset-0 w-full h-full pointer-events-none z-10">
                             <Suspense fallback={null}>
