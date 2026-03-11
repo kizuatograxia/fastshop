@@ -1,11 +1,9 @@
-import { FC, Suspense, lazy } from "react";
+import { FC } from "react";
 import { Sparkles, ShoppingCart, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NFT } from "@/types/raffle";
 import { useWallet } from "@/contexts/WalletContext";
 import { toast } from "sonner";
-
-const Raffle3dModel = lazy(() => import("@/components/Raffle3dModel").then(m => ({ default: m.Raffle3dModel })));
 
 interface NFTCardProps {
     nft: NFT;
@@ -17,7 +15,6 @@ import { rarityColors, rarityLabels } from "@/utils/rarity";
 const NFTCard: FC<NFTCardProps> = ({ nft, index }) => {
     const { addToCart, getNFTCount } = useWallet();
     const ownedCount = getNFTCount(nft.id);
-    const is3D = nft.nome?.toLowerCase().includes("arara") || (nft.image && nft.image.includes(".glb"));
 
     const handleBuy = () => {
         addToCart(nft);
@@ -49,13 +46,7 @@ const NFTCard: FC<NFTCardProps> = ({ nft, index }) => {
 
             {/* NFT Display */}
             <div className={`relative aspect-square overflow-hidden bg-gradient-to-br ${nft.cor} flex items-center justify-center`}>
-                {is3D ? (
-                    <div className="absolute inset-0 w-full h-full pointer-events-none z-10 transition-transform duration-500 group-hover:scale-110">
-                        <Suspense fallback={null}>
-                            <Raffle3dModel url="/glb/arara.glb" />
-                        </Suspense>
-                    </div>
-                ) : nft.image ? (
+                {nft.image ? (
                     <img
                         src={nft.image}
                         alt={nft.nome}
@@ -66,7 +57,7 @@ const NFTCard: FC<NFTCardProps> = ({ nft, index }) => {
                         {nft.emoji}
                     </span>
                 )}
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 pointer-events-none z-20" />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
             </div>
 
             {/* Content */}
