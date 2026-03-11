@@ -3,7 +3,6 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Raffle } from '../types/raffle';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { Raffle3dModel } from './raffle/Raffle3dModel';
 
 interface RaffleCardProps {
     raffle: Raffle;
@@ -38,18 +37,12 @@ const RaffleCardComponent = ({ raffle }: RaffleCardProps) => {
                 </View>
 
                 {/* Image Container (aspect-[4/5] bg-background p-3) */}
-                <View style={[styles.imageContainer, is3D && { padding: 0, justifyContent: 'center' }]}>
-                    {is3D ? (
-                        <View pointerEvents="none" style={{ flex: 1 }}>
-                            <Raffle3dModel />
-                        </View>
-                    ) : (
-                        <Image
-                            source={{ uri: imageUri }}
-                            style={styles.image}
-                            resizeMode="cover"
-                        />
-                    )}
+                <View style={styles.imageContainer}>
+                    <Image
+                        source={{ uri: imageUri }}
+                        style={styles.image}
+                        resizeMode="cover"
+                    />
                 </View>
 
                 {/* Content Preview (Always visible p-3) */}

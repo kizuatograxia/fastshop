@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { ShoppingCart, Star } from 'lucide-react-native';
 import { Image } from 'expo-image';
+import { Raffle3dModel } from './raffle/Raffle3dModel';
 
 interface NFTCardProps {
     nft: any;
@@ -11,6 +12,7 @@ interface NFTCardProps {
 
 const NFTCardComponent = ({ nft, onBuy, buying }: NFTCardProps) => {
     const rarityColor = nft.cor ? nft.cor.split(' ')[0].replace('from-', '') : '#1f2937';
+    const is3D = nft.nome?.toLowerCase().includes('arara') || (nft.image && nft.image.includes('.glb'));
 
     return (
         <View style={s.card}>
@@ -22,7 +24,11 @@ const NFTCardComponent = ({ nft, onBuy, buying }: NFTCardProps) => {
             </View>
 
             <View style={[s.visualArea, { backgroundColor: (rarityColor || '#1f2937') + '10' }]}>
-                {nft.image ? (
+                {is3D ? (
+                    <View pointerEvents="none" style={{ width: '100%', height: '100%' }}>
+                        <Raffle3dModel />
+                    </View>
+                ) : nft.image ? (
                     <Image
                         source={nft.image}
                         style={s.nftImage}
