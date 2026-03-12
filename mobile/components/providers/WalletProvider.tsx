@@ -63,10 +63,19 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const refreshWallet = async () => {
         if (!user) return;
+        const token = storage.getToken();
+        if (!token) {
+            // No valid session — skip silently
+            return;
+        }
         try {
             const data = await api.getWallet(Number(user.id));
             setOwnedNFTs(data);
-        } catch (err) {
+        } catch (err: any) {
+            if (err?.message?.includes('Token') || err?.message?.includes('expirado') || err?.message?.includes('401')) {
+                // Token expired silently — user will re-login
+                return;
+            }
             console.error("Failed to load wallet", err);
         }
     };
@@ -118,6 +127,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const buyNFTs = useCallback(async (items: { id: string; quantity: number }[], couponCode?: string) => {
         if (!user) return;
+        const token = storage.getToken();
+        if (!token) {
+            Alert.alert('Sessão expirada', 'Faça login novamente para continuar.');
+            return;
+        }
         try {
             await api.buyNFTs(Number(user.id), items, couponCode);
             await refreshWallet();

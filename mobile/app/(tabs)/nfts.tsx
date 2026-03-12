@@ -153,7 +153,7 @@ const s = StyleSheet.create({
         backgroundColor: 'rgba(31, 41, 55, 0.6)',
         marginLeft: 8,
     },
-    grid: { paddingHorizontal: 6, paddingTop: 0 },
+    grid: { paddingHorizontal: 12, paddingTop: 4 },
     loadingContainer: { height: 200, justifyContent: 'center' },
     loadingText: { color: '#6b7280', textAlign: 'center', fontSize: 13 },
     cartHeaderBtn: {

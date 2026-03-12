@@ -3,6 +3,7 @@ import { useRouter, useSegments } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { User } from '../../types/user';
 import { storage } from '../../lib/storage';
+import { setOnUnauthorizedHandler } from '../../lib/api';
 
 interface AuthContextType {
     user: User | null;
@@ -21,6 +22,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         checkAuth();
+    }, []);
+
+    // Register auto-logout handler for token expiry
+    useEffect(() => {
+        setOnUnauthorizedHandler(() => {
+            signOut();
+        });
     }, []);
 
     useEffect(() => {

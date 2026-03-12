@@ -135,6 +135,7 @@ export const api = {
                 status: r.status === 'active' ? 'ativo' : 'encerrado',
                 categoria: r.category || 'tech',
                 raridade: r.rarity || 'comum',
+                requirements: r.requirements || "",
                 winnersAmount: r.winners_amount || 1
             }));
     },
@@ -201,6 +202,7 @@ export const api = {
                 status: ur.raffle.status === 'active' ? 'ativo' : 'encerrado',
                 categoria: "geral",
                 raridade: "comum",
+                requirements: ur.raffle.requirements || "",
                 winnersAmount: ur.raffle.winners_amount || 1,
                 winner_id: ur.raffle.winner_id,
                 winner: ur.raffle.winner ? {
@@ -311,6 +313,7 @@ export const api = {
             status: r.status === 'active' ? 'ativo' : 'encerrado',
             categoria: r.category || 'tech',
             raridade: r.rarity || 'comum',
+            requirements: r.requirements || "",
             winnersAmount: r.winners_amount || 1,
             winner: r.winner_name ? {
                 id: r.winner_id,

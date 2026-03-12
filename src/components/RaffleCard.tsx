@@ -75,7 +75,7 @@ const RaffleCard: FC<RaffleCardProps> = ({ raffle, index, disableNavigation = fa
                 */}
 
                 {/* Prize Value Badge */}
-                <div className="absolute top-2 right-2 md:top-4 md:right-4 z-10 glass-card px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg text-[10px] md:text-xs font-bold">
+                <div className="absolute top-2 right-2 md:top-4 md:right-4 z-10 bg-background/95 shadow-sm border border-border px-1.5 py-0.5 md:px-2 md:py-1 rounded-md md:rounded-lg text-[10px] md:text-xs font-bold">
                     R$ {raffle.premioValor.toLocaleString("pt-BR")}
                 </div>
 
@@ -94,7 +94,7 @@ const RaffleCard: FC<RaffleCardProps> = ({ raffle, index, disableNavigation = fa
 
                     {/* Winner Overlay */}
                     {raffle.status === 'encerrado' && raffle.winner && (
-                        <div className="absolute inset-0 glass-overlay flex flex-col items-center justify-center text-center p-4 animate-in fade-in zoom-in duration-300">
+                        <div className="absolute inset-0 bg-background/95 backdrop-blur-none flex flex-col items-center justify-center text-center p-4 animate-in fade-in zoom-in duration-300">
                             <div className="relative mb-2">
                                 <div className="absolute -inset-1 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full blur opacity-75 animate-pulse"></div>
                                 <img
@@ -131,7 +131,7 @@ const RaffleCard: FC<RaffleCardProps> = ({ raffle, index, disableNavigation = fa
             <div className="hidden md:block absolute top-[calc(100%-1rem)] left-0 w-full pt-5 opacity-0 -translate-y-4 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto z-40">
                 <div className="space-y-3 px-1">
                     {/* Progress Bar (Desktop) */}
-                    <div className="space-y-1 glass-card p-2 rounded-lg shadow-sm">
+                    <div className="space-y-1 bg-card border border-border/50 p-2 rounded-lg shadow-sm">
                         <div className="flex justify-between text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">
                                 <Ticket className="h-3 w-3" />

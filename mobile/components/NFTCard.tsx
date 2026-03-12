@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { ShoppingCart, Star } from 'lucide-react-native';
+import { ShoppingCart, Star, Ticket } from 'lucide-react-native';
 import { Image } from 'expo-image';
 
 interface NFTCardProps {
@@ -13,15 +13,15 @@ const NFTCardComponent = ({ nft, onBuy, buying }: NFTCardProps) => {
     const rarityColor = nft.cor ? nft.cor.split(' ')[0].replace('from-', '') : '#1f2937';
 
     return (
-        <View style={s.card}>
+        <View style={[s.card, { borderColor: rarityColor || 'rgba(31, 41, 55, 0.6)' }]}>
             <View style={s.rarityContainer}>
                 <View style={[s.rarityBadge, { backgroundColor: rarityColor || '#1f2937' }]}>
-                    <Star size={8} color="#fff" fill="#fff" />
+                    <Star size={10} color="#fff" fill="#fff" />
                     <Text style={s.rarityText}>{nft.raridade}</Text>
                 </View>
             </View>
 
-            <View style={[s.visualArea, { backgroundColor: (rarityColor || '#1f2937') + '10' }]}>
+            <View style={[s.visualArea, { backgroundColor: (rarityColor || '#1f2937') + '20' }]}>
                 {nft.image ? (
                     <Image
                         source={nft.image}
@@ -36,10 +36,10 @@ const NFTCardComponent = ({ nft, onBuy, buying }: NFTCardProps) => {
             </View>
 
             <View style={s.cardContent}>
-                <Text style={s.nftName} numberOfLines={1}>{nft.nome}</Text>
-                <View style={s.priceRow}>
+                <Text style={s.nftName} numberOfLines={2}>{nft.nome}</Text>
+                <View style={[s.priceRow, { marginTop: 8 }]}>
                     <View style={s.priceWrapper}>
-                        <View style={s.ticketIcon} />
+                        <Ticket size={14} color="#16a34a" />
                         <Text style={s.priceText}>{Math.floor(nft.preco)}</Text>
                     </View>
                     <TouchableOpacity
@@ -48,7 +48,7 @@ const NFTCardComponent = ({ nft, onBuy, buying }: NFTCardProps) => {
                         disabled={buying}
                         activeOpacity={0.6}
                     >
-                        <ShoppingCart size={13} color="#0A0B12" />
+                        <ShoppingCart size={14} color="#0A0B12" />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -63,18 +63,19 @@ export const NFTCard = React.memo(NFTCardComponent, (prev, next) => {
 const s = StyleSheet.create({
     card: {
         flex: 1,
-        backgroundColor: 'rgba(17, 24, 39, 0.55)',
+        backgroundColor: '#111827', // Matching RaffleCard block
         borderRadius: 16,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: 'rgba(31, 41, 55, 0.6)',
-        margin: 6,
-        height: 195,
-        // Glassmorphism-like depth
+        borderColor: '#1f2937',
+        marginHorizontal: 6,
+        marginBottom: 16,
+        height: 220, // Taller size to match web Cyber-Luxury height
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.25,
-        shadowRadius: 10,
+        elevation: 5,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
     },
     rarityContainer: {
         position: 'absolute',
@@ -92,22 +93,24 @@ const s = StyleSheet.create({
     },
     rarityText: {
         color: '#fff',
-        fontSize: 8,
+        fontSize: 10,
         fontWeight: '800',
         textTransform: 'uppercase',
     },
     visualArea: {
-        height: 100,
+        height: 110,
         alignItems: 'center',
         justifyContent: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255,255,255,0.05)'
     },
-    nftEmoji: { fontSize: 36 },
-    nftImage: { width: '80%', height: '80%' },
-    cardContent: { padding: 10, flex: 1, justifyContent: 'space-between' },
+    nftEmoji: { fontSize: 48 },
+    nftImage: { width: '85%', height: '85%' },
+    cardContent: { padding: 12, flex: 1, justifyContent: 'space-between' },
     nftName: {
         color: '#f9fafb',
         fontWeight: '700',
-        fontSize: 12,
+        fontSize: 14,
         letterSpacing: 0.1,
     },
     priceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -115,12 +118,6 @@ const s = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
-    },
-    ticketIcon: {
-        width: 12,
-        height: 12,
-        borderRadius: 3,
-        backgroundColor: '#16a34a',
     },
     priceText: { color: '#00FF8C', fontWeight: '900', fontSize: 15 },
     buyBtn: {

@@ -61,7 +61,7 @@ const NFTCard: FC<NFTCardProps> = ({ nft, index }) => {
             </div>
 
             {/* Content */}
-            <div className="p-4 space-y-3 relative z-10 bg-card/80 backdrop-blur-md border-t border-border/50">
+            <div className="p-4 space-y-3 relative z-10 bg-card border-t border-border/50">
                 <div>
                     <h3 className="font-bold text-foreground group-hover:text-primary transition-colors">
                         {nft.nome}

@@ -7,9 +7,10 @@ import { motion } from 'framer-motion';
 interface CategoryNavProps {
     activeCategory: string;
     onCategoryChange: (category: string) => void;
+    excludeCategories?: string[];
 }
 
-const CategoryNav: FC<CategoryNavProps> = ({ activeCategory, onCategoryChange }) => {
+const CategoryNav: FC<CategoryNavProps> = ({ activeCategory, onCategoryChange, excludeCategories = [] }) => {
     const [categories, setCategories] = useState<any[]>([]);
 
     useEffect(() => {
@@ -20,10 +21,12 @@ const CategoryNav: FC<CategoryNavProps> = ({ activeCategory, onCategoryChange })
 
     if (categories.length === 0) return null;
 
+    const visibleCategories = categories.filter(c => !excludeCategories.includes(c.id));
+
     return (
         <div className="hidden md:block sticky top-16 sm:top-20 z-40 bg-background/80 backdrop-blur-md border-b border-border py-4 overflow-x-auto no-scrollbar">
             <div className="container mx-auto px-4 flex gap-2 md:justify-center min-w-max md:min-w-0">
-                {categories.map((category) => {
+                {visibleCategories.map((category) => {
                     const isActive = activeCategory === category.id;
                     return (
                         <button

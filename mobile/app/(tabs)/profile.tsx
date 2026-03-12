@@ -20,7 +20,7 @@ const DeliveryProgress = ({ status }: { status: string }) => (
     <View style={s.deliveryBox}>
         <View style={s.deliveryHeader}>
             <Text style={s.deliveryTitle}>Status do Envio</Text>
-            <Text style={s.deliveryStatusEm}>Em trânsito</Text>
+            <Text style={s.deliveryStatusEm}>Em trÃ¢nsito</Text>
         </View>
         <View style={s.deliveryBar}>
             <View style={[s.deliveryFill, { width: '50%' as any }]} />
@@ -99,7 +99,7 @@ export default function ProfileScreen() {
                 refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetchAll} tintColor="#00FF8C" colors={['#00FF8C']} />}
                 contentContainerStyle={{ paddingBottom: 100 }}
             >
-                {/* User Info Card — Glassmorphism */}
+                {/* User Info Card â€” Glassmorphism */}
                 <View style={s.userCard}>
                     <LinearGradient colors={['rgba(0,255,140,0.1)', 'transparent']} style={s.userBgGradient} />
                     <View style={s.userContent}>
@@ -133,7 +133,7 @@ export default function ProfileScreen() {
                         { value: totalNFTs, label: 'NFTs' },
                         { value: totalRaffles, label: 'Sorteios' },
                         { value: activeRaffles, label: 'Ativos' },
-                        { value: wonRaffles.length, label: 'Prêmios' },
+                        { value: wonRaffles.length, label: 'PrÃªmios' },
                     ].map((stat, i) => (
                         <View key={i} style={s.gridStatBox}>
                             <Text style={s.gridStatValue}>{stat.value}</Text>
@@ -147,7 +147,7 @@ export default function ProfileScreen() {
                     <View style={s.sectionCardYellow}>
                         <View style={s.sectionHeader}>
                             <Trophy size={18} color="#eab308" />
-                            <Text style={s.sectionTitleYellow}>Meus Prêmios</Text>
+                            <Text style={s.sectionTitleYellow}>Meus PrÃªmios</Text>
                         </View>
                         {wonRaffles.map((ur: any) => (
                             <View key={`won-${ur.raffle.id}`} style={s.wonCard}>
@@ -155,7 +155,7 @@ export default function ProfileScreen() {
                                     <Image source={{ uri: ur.raffle.imagem }} style={s.wonThumb} />
                                     <View style={s.wonInfo}>
                                         <Text style={s.wonTitle}>{ur.raffle.titulo}</Text>
-                                        <Text style={s.wonSubtitle}>Você ganhou este prêmio!</Text>
+                                        <Text style={s.wonSubtitle}>VocÃª ganhou este prÃªmio!</Text>
                                     </View>
                                 </View>
                                 <View style={s.addressBox}>
@@ -167,11 +167,11 @@ export default function ProfileScreen() {
                                         <Text style={s.addressActionBtn}>Alterar</Text>
                                     </View>
                                     <Text style={s.addressTextMain}>{user.address || 'Av. Paulista, 1000'}</Text>
-                                    <Text style={s.addressTextSub}>São Paulo/SP - 01310-100</Text>
+                                    <Text style={s.addressTextSub}>SÃ£o Paulo/SP - 01310-100</Text>
                                 </View>
                                 <DeliveryProgress status="shipped" />
                                 <TouchableOpacity style={s.wonBtn} onPress={() => router.push(`/raffle/${ur.raffle.id}`)}>
-                                    <Text style={s.wonBtnText}>Ver Detalhes do Prêmio</Text>
+                                    <Text style={s.wonBtnText}>Ver Detalhes do PrÃªmio</Text>
                                 </TouchableOpacity>
                             </View>
                         ))}
@@ -187,7 +187,7 @@ export default function ProfileScreen() {
                     {userRaffles.length === 0 ? (
                         <View style={s.emptyState}>
                             <Trophy size={36} color="#374151" style={{ marginBottom: 12 }} />
-                            <Text style={s.emptyText}>Você ainda não participa de nenhum sorteio.</Text>
+                            <Text style={s.emptyText}>VocÃª ainda nÃ£o participa de nenhum sorteio.</Text>
                             <TouchableOpacity style={s.emptyBtn} onPress={() => router.push('/')}>
                                 <Text style={s.emptyBtnText}>Explorar Sorteios</Text>
                             </TouchableOpacity>
@@ -217,7 +217,7 @@ export default function ProfileScreen() {
                                             </View>
                                             {isWinner && (
                                                 <View style={[s.badge, s.badgeWon]}>
-                                                    <Text style={s.badgeTextWon}>🏆 Ganhou</Text>
+                                                    <Text style={s.badgeTextWon}>ðŸ† Ganhou</Text>
                                                 </View>
                                             )}
                                             <Text style={s.listTicketsQty}>{ur.ticketsComprados} ticket{ur.ticketsComprados > 1 ? 's' : ''}</Text>
@@ -232,13 +232,13 @@ export default function ProfileScreen() {
                 {/* My NFTs */}
                 <View style={s.sectionCard}>
                     <View style={s.sectionHeader}>
-                        <Text style={{ fontSize: 16 }}>🎨</Text>
+                        <Text style={{ fontSize: 16 }}>ðŸŽ¨</Text>
                         <Text style={s.sectionTitle}>Meus NFTs</Text>
                     </View>
                     {ownedNFTs.length === 0 ? (
                         <View style={s.emptyState}>
-                            <Text style={{ fontSize: 36, marginBottom: 12 }}>🖼️</Text>
-                            <Text style={s.emptyText}>Você ainda não possui nenhum NFT.</Text>
+                            <Text style={{ fontSize: 36, marginBottom: 12 }}>ðŸ–¼ï¸</Text>
+                            <Text style={s.emptyText}>VocÃª ainda nÃ£o possui nenhum NFT.</Text>
                             <TouchableOpacity style={s.emptyBtn} onPress={() => router.push('/')}>
                                 <Text style={s.emptyBtnText}>Comprar NFTs</Text>
                             </TouchableOpacity>
@@ -270,12 +270,12 @@ export default function ProfileScreen() {
                 {/* Settings */}
                 <View style={s.sectionCard}>
                     <View style={s.sectionHeader}>
-                        <Text style={s.sectionTitle}>Configurações</Text>
+                        <Text style={s.sectionTitle}>ConfiguraÃ§Ãµes</Text>
                     </View>
                     <View style={s.settingsList}>
                         <View style={s.settingsItem}>
                             <View>
-                                <Text style={s.settingsLabel}>ID do Usuário</Text>
+                                <Text style={s.settingsLabel}>ID do UsuÃ¡rio</Text>
                                 <Text style={s.settingsValueMono}>{user.id.toString().slice(0, 8)}...</Text>
                             </View>
                             <TouchableOpacity style={s.settingsActionSquare} onPress={() => copyToClipboard(user.id.toString(), 'id')}>
@@ -301,165 +301,200 @@ export default function ProfileScreen() {
 const s = StyleSheet.create({
     root: { flex: 1, backgroundColor: 'transparent' },
 
-    // Header — glass effect
+    // Header
     stickHeader: {
-        backgroundColor: 'rgba(10, 11, 18, 0.85)',
+        backgroundColor: '#0A0B12',
         borderBottomWidth: 1,
-        borderBottomColor: 'rgba(31, 41, 55, 0.5)',
+        borderBottomColor: '#1f2937',
         zIndex: 10,
     },
     stickInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 12 },
     stickTitle: { color: '#f9fafb', fontSize: 20, fontWeight: '800', letterSpacing: -0.3 },
-    stickLogoutBtn: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+    stickLogoutBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(239,68,68,0.08)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(239,68,68,0.15)' },
     stickLogoutTxt: { color: '#ef4444', fontSize: 13, fontWeight: '600' },
 
-    // User Card — glass
+    // User Card
     userCard: {
         margin: 16,
-        backgroundColor: 'rgba(17, 24, 39, 0.6)',
-        borderRadius: 16,
+        backgroundColor: '#111827',
+        borderRadius: 20,
         borderWidth: 1,
-        borderColor: 'rgba(31, 41, 55, 0.6)',
+        borderColor: '#1f2937',
         overflow: 'hidden',
     },
-    userBgGradient: { height: 50, width: '100%' },
+    userBgGradient: { height: 60, width: '100%' },
     userContent: { padding: 16, paddingTop: 0, flexDirection: 'row', gap: 14 },
-    avatarContainer: { marginTop: -28, width: 76, height: 76, borderRadius: 38, borderWidth: 3, borderColor: 'rgba(17, 24, 39, 0.8)', backgroundColor: '#1f2937', overflow: 'hidden' },
+    avatarContainer: {
+        marginTop: -32,
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        borderWidth: 3,
+        borderColor: '#00FF8C',
+        backgroundColor: '#1f2937',
+        overflow: 'hidden',
+    },
     avatarImage: { width: '100%', height: '100%' },
-    userInfoText: { flex: 1, paddingTop: 6, gap: 4 },
-    userName: { color: '#f9fafb', fontSize: 19, fontWeight: '800', letterSpacing: -0.3 },
+    userInfoText: { flex: 1, paddingTop: 8, gap: 5 },
+    userName: { color: '#f9fafb', fontSize: 20, fontWeight: '800', letterSpacing: -0.4 },
     userMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     userMetaText: { color: '#6b7280', fontSize: 12, flex: 1 },
     userMetaTextMono: { color: '#6b7280', fontSize: 12, fontFamily: 'monospace' },
     copyBtn: { padding: 4 },
 
-    // Stats
+    // Stats Grid
     gridStats: { flexDirection: 'row', marginHorizontal: 16, marginBottom: 16, gap: 8 },
     gridStatBox: {
         flex: 1,
-        backgroundColor: 'rgba(17, 24, 39, 0.5)',
-        borderRadius: 12,
+        backgroundColor: '#111827',
+        borderRadius: 14,
         borderWidth: 1,
-        borderColor: 'rgba(31, 41, 55, 0.5)',
-        paddingVertical: 12,
+        borderColor: '#1f2937',
+        paddingVertical: 14,
         alignItems: 'center',
-        gap: 2,
+        gap: 3,
     },
-    gridStatValue: { color: '#00FF8C', fontSize: 20, fontWeight: '800' },
-    gridStatLabel: { color: '#6b7280', fontSize: 10, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
+    gridStatValue: { color: '#00FF8C', fontSize: 22, fontWeight: '900' },
+    gridStatLabel: { color: '#6b7280', fontSize: 9, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 },
 
-    // Sections — glass cards
+    // Section Cards
     sectionCard: {
         marginHorizontal: 16,
         marginBottom: 16,
-        backgroundColor: 'rgba(17, 24, 39, 0.5)',
-        borderRadius: 16,
+        backgroundColor: '#111827',
+        borderRadius: 18,
         borderWidth: 1,
-        borderColor: 'rgba(31, 41, 55, 0.5)',
+        borderColor: '#1f2937',
         overflow: 'hidden',
     },
     sectionCardYellow: {
         marginHorizontal: 16,
         marginBottom: 16,
-        backgroundColor: 'rgba(234, 179, 8, 0.04)',
-        borderRadius: 16,
+        backgroundColor: '#111827',
+        borderRadius: 18,
         borderWidth: 1,
-        borderColor: 'rgba(234, 179, 8, 0.2)',
+        borderColor: 'rgba(234, 179, 8, 0.25)',
         overflow: 'hidden',
     },
-    sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 16, borderBottomWidth: 1, borderBottomColor: 'rgba(31, 41, 55, 0.4)' },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        padding: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#1f2937',
+    },
     sectionTitle: { color: '#f9fafb', fontSize: 16, fontWeight: '800' },
     sectionTitleYellow: { color: '#eab308', fontSize: 16, fontWeight: '800' },
 
-    emptyState: { padding: 28, alignItems: 'center' },
-    emptyText: { color: '#6b7280', fontSize: 13, textAlign: 'center', marginBottom: 14 },
-    emptyBtn: { backgroundColor: '#00FF8C', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 8 },
-    emptyBtnText: { color: '#0A0B12', fontSize: 13, fontWeight: '700' },
+    emptyState: { padding: 32, alignItems: 'center' },
+    emptyText: { color: '#6b7280', fontSize: 13, textAlign: 'center', marginBottom: 16 },
+    emptyBtn: { backgroundColor: '#00FF8C', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 10 },
+    emptyBtnText: { color: '#0A0B12', fontSize: 13, fontWeight: '800' },
 
+    // Won raffles
     wonCard: { padding: 16, gap: 14 },
     wonCardRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
-    wonThumb: { width: 64, height: 64, borderRadius: 10 },
+    wonThumb: { width: 64, height: 64, borderRadius: 12 },
     wonInfo: { flex: 1, gap: 3 },
     wonTitle: { color: '#f9fafb', fontSize: 15, fontWeight: '800' },
     wonSubtitle: { color: '#eab308', fontSize: 12, fontWeight: '600' },
 
-    addressBox: { backgroundColor: 'rgba(10, 11, 18, 0.3)', borderRadius: 10, padding: 12 },
-    addressHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+    addressBox: { backgroundColor: '#0A0B12', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#1f2937' },
+    addressHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
     addressTitle: { color: '#6b7280', fontSize: 12, fontWeight: '600' },
-    addressActionBtn: { color: '#00FF8C', fontSize: 11, fontWeight: '600' },
+    addressActionBtn: { color: '#00FF8C', fontSize: 11, fontWeight: '700' },
     addressTextMain: { color: '#f9fafb', fontSize: 13, fontWeight: '600', marginBottom: 2 },
     addressTextSub: { color: '#6b7280', fontSize: 11 },
 
-    deliveryBox: { backgroundColor: 'rgba(10, 11, 18, 0.3)', borderRadius: 10, padding: 12 },
-    deliveryHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-    deliveryTitle: { color: '#6b7280', fontSize: 11 },
+    deliveryBox: { backgroundColor: '#0A0B12', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#1f2937' },
+    deliveryHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+    deliveryTitle: { color: '#6b7280', fontSize: 11, fontWeight: '600' },
     deliveryStatusEm: { color: '#f9fafb', fontSize: 11, fontWeight: '700' },
-    deliveryBar: { height: 3, backgroundColor: '#1f2937', borderRadius: 2, overflow: 'hidden' },
+    deliveryBar: { height: 4, backgroundColor: '#1f2937', borderRadius: 2, overflow: 'hidden' },
     deliveryFill: { height: '100%', backgroundColor: '#00FF8C', borderRadius: 2 },
 
-    wonBtn: { borderWidth: 1, borderColor: 'rgba(55, 65, 81, 0.5)', borderRadius: 8, paddingVertical: 11, alignItems: 'center' },
-    wonBtnText: { color: '#f9fafb', fontSize: 13, fontWeight: '600' },
+    wonBtn: { borderWidth: 1, borderColor: '#1f2937', backgroundColor: '#0A0B12', borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
+    wonBtnText: { color: '#f9fafb', fontSize: 13, fontWeight: '700' },
 
-    listWrapper: { padding: 14, gap: 10 },
+    // Raffle list
+    listWrapper: { padding: 12, gap: 8 },
     listItem: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
-        backgroundColor: 'rgba(10, 11, 18, 0.3)',
+        backgroundColor: '#0A0B12',
         padding: 12,
-        borderRadius: 12,
+        borderRadius: 14,
         borderWidth: 1,
-        borderColor: 'rgba(31, 41, 55, 0.4)',
+        borderColor: '#1f2937',
     },
-    listThumb: { width: 52, height: 52, borderRadius: 8 },
-    listInfo: { flex: 1, gap: 3 },
+    listThumb: { width: 54, height: 54, borderRadius: 10 },
+    listInfo: { flex: 1, gap: 4 },
     listTitle: { color: '#f9fafb', fontSize: 14, fontWeight: '700' },
     listMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
     listMetaText: { color: '#6b7280', fontSize: 11 },
-    listRight: { alignItems: 'flex-end', gap: 4 },
+    listRight: { alignItems: 'flex-end', gap: 5 },
     badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-    badgeActive: { backgroundColor: '#00FF8C' },
-    badgeInactive: { backgroundColor: '#374151' },
+    badgeActive: { backgroundColor: 'rgba(0,255,140,0.12)', borderWidth: 1, borderColor: 'rgba(0,255,140,0.3)' },
+    badgeInactive: { backgroundColor: '#1f2937' },
     badgeWon: { backgroundColor: '#eab308' },
     badgeText: { fontSize: 9, fontWeight: '800', textTransform: 'uppercase' },
-    badgeTextActive: { color: '#0A0B12' },
-    badgeTextInactive: { color: '#f9fafb' },
+    badgeTextActive: { color: '#00FF8C' },
+    badgeTextInactive: { color: '#9ca3af' },
     badgeTextWon: { color: '#0A0B12', fontSize: 9, fontWeight: '800', textTransform: 'uppercase' },
-    listTicketsQty: { color: '#6b7280', fontSize: 11 },
+    listTicketsQty: { color: '#4b5563', fontSize: 11, fontWeight: '600' },
 
+    // NFT grid in profile
     nftGrid: { flexDirection: 'row', flexWrap: 'wrap', padding: 12, gap: 10 },
     nftCard: {
         width: '47%',
-        backgroundColor: 'rgba(10, 11, 18, 0.3)',
-        borderRadius: 12,
-        padding: 12,
+        backgroundColor: '#0A0B12',
+        borderRadius: 14,
+        padding: 14,
         borderWidth: 1,
-        borderColor: 'rgba(31, 41, 55, 0.4)',
+        borderColor: '#1f2937',
         alignItems: 'center',
     },
-    nftRarityBadge: { position: 'absolute', top: 8, right: 8, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 },
+    nftRarityBadge: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 8,
+    },
     nftRarityText: { color: '#f9fafb', fontSize: 8, fontWeight: '800', textTransform: 'capitalize' },
-    nftImageContainer: { height: 56, justifyContent: 'center', alignItems: 'center', marginBottom: 8, marginTop: 10 },
-    nftImg: { width: 44, height: 44 },
-    nftEmoji: { fontSize: 36 },
-    nftName: { color: '#f9fafb', fontSize: 12, fontWeight: '600', textAlign: 'center', marginBottom: 6 },
-    nftQtyBadge: { backgroundColor: 'rgba(31, 41, 55, 0.6)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-    nftQtyText: { color: '#6b7280', fontSize: 10, fontWeight: '700' },
+    nftImageContainer: { height: 84, justifyContent: 'center', alignItems: 'center', marginBottom: 8, marginTop: 12 },
+    nftImg: { width: 80, height: 80 },
+    nftEmoji: { fontSize: 56 },
+    nftName: { color: '#f9fafb', fontSize: 12, fontWeight: '700', textAlign: 'center', marginBottom: 8 },
+    nftQtyBadge: { backgroundColor: 'rgba(0,255,140,0.08)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(0,255,140,0.2)' },
+    nftQtyText: { color: '#00FF8C', fontSize: 11, fontWeight: '800' },
 
-    settingsList: { padding: 14, gap: 10 },
+    // Settings
+    settingsList: { padding: 12, gap: 8 },
     settingsItem: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: 'rgba(10, 11, 18, 0.3)',
+        backgroundColor: '#0A0B12',
         padding: 14,
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: 'rgba(31, 41, 55, 0.4)',
+        borderColor: '#1f2937',
     },
     settingsLabel: { color: '#f9fafb', fontSize: 13, fontWeight: '600', marginBottom: 2 },
     settingsValue: { color: '#6b7280', fontSize: 12 },
     settingsValueMono: { color: '#6b7280', fontSize: 12, fontFamily: 'monospace' },
-    settingsActionSquare: { width: 30, height: 30, borderRadius: 8, backgroundColor: 'rgba(55, 65, 81, 0.5)', alignItems: 'center', justifyContent: 'center' },
-    settingsIconWrap: { width: 30, height: 30, alignItems: 'center', justifyContent: 'center' },
+    settingsActionSquare: {
+        width: 32,
+        height: 32,
+        borderRadius: 8,
+        backgroundColor: '#1f2937',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    settingsIconWrap: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
 });
+

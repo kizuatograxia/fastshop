@@ -6,6 +6,16 @@ if (__DEV__) {
 }
 
 /**
+ * Global callback invoked when a 401 / token expired error is detected.
+ * Register this from your AuthProvider to trigger auto-logout.
+ */
+let _onUnauthorized: (() => void) | null = null;
+
+export const setOnUnauthorizedHandler = (cb: () => void) => {
+    _onUnauthorized = cb;
+};
+
+/**
  * Centralized request wrapper to handle headers, authentication, and errors.
  */
 async function request(path: string, options: RequestInit = {}) {
@@ -24,7 +34,16 @@ async function request(path: string, options: RequestInit = {}) {
 
     if (!res.ok) {
         const errorData = await res.json().catch(() => ({ message: "Erro desconhecido na API" }));
-        throw new Error(errorData.message || errorData.error || `Erro ${res.status}`);
+        const message = errorData.message || errorData.error || `Erro ${res.status}`;
+
+        // Auto-logout on token expiry
+        if (res.status === 401 || message.toLowerCase().includes('token') || message.toLowerCase().includes('expirado')) {
+            storage.removeToken();
+            _onUnauthorized?.();
+            throw new Error('Sessão expirada. Faça login novamente.');
+        }
+
+        throw new Error(message);
     }
 
     return res.json();
@@ -82,7 +101,32 @@ export const api = {
     },
 
     getWallet: async (userId: number | string) => {
-        return request(`/wallet?userId=${userId}`);
+        const IMAGE_BASE_URL = "https://mundopix.com";
+        // Local catalog with full absolute image URLs
+        const localCatalog: Record<string, string> = {
+            "nft-1": `${IMAGE_BASE_URL}/beijaflor-emoji.png`,
+            "nft-2": `${IMAGE_BASE_URL}/tartaruga-emoji.png`,
+            "nft-3": `${IMAGE_BASE_URL}/garca-emoji.png`,
+            "nft-4": `${IMAGE_BASE_URL}/arara-emoji.png`,
+            "nft-5": `${IMAGE_BASE_URL}/mico-emoji.png`,
+            "nft-6": `${IMAGE_BASE_URL}/onca-emoji.png`,
+            "nft-7": `${IMAGE_BASE_URL}/garoupa-emoji.png`,
+            "nft-8": `${IMAGE_BASE_URL}/lobo-emoji.png`,
+            "nft-9": `${IMAGE_BASE_URL}/boto-emoji.png`,
+            "nft-10": `${IMAGE_BASE_URL}/jacare-emoji.png`,
+            "nft-11": `${IMAGE_BASE_URL}/tucano-emoji.png`,
+            "nft-12": `${IMAGE_BASE_URL}/ararinha-emoji.png`,
+        };
+        const data = await request(`/wallet?userId=${userId}`);
+        return data.map((nft: any) => {
+            const fullImage = localCatalog[nft.id] || (
+                nft.image && nft.image.startsWith('/')
+                    ? `${IMAGE_BASE_URL}${nft.image}`
+                    : nft.image
+            );
+            const cleanName = nft.nome ? nft.nome.split(' (R$')[0].trim() : nft.nome;
+            return { ...nft, nome: cleanName, image: fullImage };
+        });
     },
 
     addToWallet: async (userId: number | string, nft: any) => {

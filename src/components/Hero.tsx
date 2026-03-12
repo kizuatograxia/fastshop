@@ -145,7 +145,7 @@ const Hero: FC = () => {
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative overflow-hidden bg-background min-h-[90vh] flex items-center border-b border-border/30 pt-16 lg:pt-0">
+    <section ref={sectionRef} className="relative overflow-hidden bg-background min-h-[90vh] flex items-center border-b border-border/30 pt-24 lg:pt-0">
       {/* Background execution */}
       <MempoolBackground containerRef={sectionRef as RefObject<HTMLElement>} />
       <DecorativeGrid />
@@ -206,7 +206,7 @@ const Hero: FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
-              className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto"
+              className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mt-4 sm:mt-0"
             >
               <Button
                 size="xl"

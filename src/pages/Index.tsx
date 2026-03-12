@@ -32,7 +32,7 @@ const Index: FC = () => {
       });
   }, []);
 
-  const activeRaffles = raffles.filter(r => r.status === 'ativo' || r.status === 'active');
+  const activeRaffles = raffles.filter(r => (r.status === 'ativo' || r.status === 'active') && r.categoria !== 'giftcards');
   const filteredRaffles =
     activeCategory === "todos"
       ? activeRaffles
@@ -50,6 +50,7 @@ const Index: FC = () => {
         <CategoryNav
           activeCategory={activeCategory}
           onCategoryChange={setActiveCategory}
+          excludeCategories={["giftcards"]}
         />
       </motion.div>
 
