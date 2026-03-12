@@ -44,10 +44,10 @@ export function AdminLayout({ children, currentView, onViewChange, onLogout, pen
                     onLogout={onLogout}
                     pendingReviews={pendingReviews}
                 />
-                <SidebarInset className="flex-1">
-                    <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border/40 bg-card/30 backdrop-blur-xl px-4 sticky top-0 z-10">
+                <SidebarInset className="flex-1 bg-background">
+                    <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border/40 glass-overlay px-4 sticky top-0 z-30">
                         <SidebarTrigger className="-ml-1" />
-                        <Separator orientation="vertical" className="mr-2 h-4 bg-border/40" />
+                        <Separator orientation="vertical" className="mr-2 h-5 bg-border/40" />
                         <nav className="flex items-center gap-1 text-sm">
                             {parent && (
                                 <>

@@ -265,16 +265,18 @@ const Admin = () => {
     // --- RENDER LOGIN ---
     if (!isAuthenticated) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background/90 to-primary/5">
-                <div className="w-full max-w-md space-y-8 animate-fade-in text-center">
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-4 ring-1 ring-primary/20">
-                        <Lock className="w-10 h-10 text-primary" />
+            <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-ocean">
+                <div className="w-full max-w-md space-y-8 animate-fade-in text-center relative z-10">
+                    <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-primary/20 mb-4 border border-primary/30 shadow-glow backdrop-blur-md relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-primary/20 blur-xl opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                        <Lock className="w-10 h-10 text-primary relative z-10 drop-shadow-[0_0_15px_rgba(0,255,140,0.5)]" />
                     </div>
                     <div className="space-y-2">
                         <h1 className="text-3xl font-bold tracking-tight">Painel Administrativo</h1>
                         <p className="text-muted-foreground">Área restrita. Digite sua senha de acesso.</p>
                     </div>
-                    <form onSubmit={handleLogin} className="space-y-4 bg-card p-8 rounded-2xl border border-white/5 shadow-2xl backdrop-blur-xl">
+                    <form onSubmit={handleLogin} className="space-y-4 glass-card p-8 rounded-3xl shadow-elevated relative overflow-hidden group">
+                        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
                         <div className="space-y-2 text-left">
                             <Label htmlFor="password">Senha de Acesso</Label>
                             <Input
@@ -288,8 +290,8 @@ const Admin = () => {
                                 autoComplete="current-password"
                             />
                         </div>
-                        <Button type="submit" className="w-full h-12 text-lg font-bold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all" disabled={isLoading}>
-                            {isLoading ? "Verificando..." : "Entrar no Painel"}
+                        <Button type="submit" className="w-full h-12 text-lg font-bold shadow-glow hover:shadow-[0_0_30px_rgba(0,255,140,0.4)] transition-all bg-primary text-primary-foreground border-none mt-2" disabled={isLoading}>
+                            {isLoading ? "Acessando Sistema..." : "Entrar no Painel"}
                         </Button>
                     </form>
                 </div>

@@ -48,11 +48,12 @@ export function AdminSidebar({ currentView, onViewChange, onLogout, pendingRevie
     const activeView = currentView === 'details' ? 'raffles' : currentView;
 
     return (
-        <Sidebar className="border-r border-sidebar-border">
+        <Sidebar className="border-r border-sidebar-border glass-overlay">
             <SidebarHeader className="p-4 border-b border-sidebar-border">
                 <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-lg bg-primary/20 flex items-center justify-center ring-1 ring-primary/30">
-                        <Zap className="h-5 w-5 text-primary" />
+                    <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/30 shadow-glow relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-primary/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <Zap className="h-5 w-5 text-primary relative z-10" />
                     </div>
                     <div>
                         <h2 className="text-sm font-bold text-sidebar-foreground">Admin Panel</h2>

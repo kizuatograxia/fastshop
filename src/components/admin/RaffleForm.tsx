@@ -88,9 +88,10 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
     };
 
     return (
-        <div className="grid lg:grid-cols-2 gap-12 items-start animate-fade-in">
-            <div className="bg-card rounded-3xl p-8 border border-white/5 shadow-2xl space-y-6">
-                <div className="flex items-center justify-between border-b border-white/5 pb-4">
+        <div className="grid lg:grid-cols-2 gap-12 items-start animate-fade-in relative">
+            <div className="glass-card rounded-3xl p-8 shadow-elevated space-y-6 relative overflow-hidden">
+                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
+                <div className="flex items-center justify-between border-b border-border/50 pb-4">
                     <div className="flex items-center gap-4">
                         <Button variant="ghost" size="icon" onClick={onCancel}>
                             <ArrowLeft className="w-5 h-5" />
