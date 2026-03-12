@@ -1,24 +1,35 @@
 import React from 'react';
-import { ScrollView, TouchableOpacity, Text, View, StyleSheet } from 'react-native';
+import { ScrollView, TouchableOpacity, Text, View, StyleSheet, ActivityIndicator } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../lib/api';
+import { theme } from '../lib/theme';
 
 interface CategoryNavProps {
     activeCategory: string;
     onCategoryChange: (category: string) => void;
 }
 
-// Hardcoded categories — backend doesn't have a /categories endpoint
-const CATEGORIES = [
-    { id: 'todos', emoji: '🎯', nome: 'Todos' },
-    { id: 'tech', emoji: '💻', nome: 'Tech' },
-    { id: 'moda', emoji: '👗', nome: 'Moda' },
-    { id: 'eletronicos', emoji: '📱', nome: 'Eletrônicos' },
-    { id: 'esportes', emoji: '⚽', nome: 'Esportes' },
-    { id: 'viagem', emoji: '✈️', nome: 'Viagem' },
-    { id: 'games', emoji: '🎮', nome: 'Games' },
-    { id: 'luxo', emoji: '💎', nome: 'Luxo' },
-];
-
 export function CategoryNav({ activeCategory, onCategoryChange }: CategoryNavProps) {
+    const { data: categories = [], isLoading } = useQuery({
+        queryKey: ['categories'],
+        queryFn: () => api.getCategories(),
+    });
+
+    if (isLoading && categories.length === 0) {
+        return (
+            <View style={styles.container}>
+                <ActivityIndicator size="small" color={theme.colors.primary} style={{ marginLeft: 16 }} />
+            </View>
+        );
+    }
+
+    // Default categories if API fails or is empty
+    const displayCategories = categories.length > 0 ? categories : [
+        { id: 'todos', emoji: '🎯', nome: 'Todos' },
+        { id: 'tech', emoji: '💻', nome: 'Tech' },
+        { id: 'moda', emoji: '👗', nome: 'Moda' },
+    ];
+
     return (
         <View style={styles.container}>
             <ScrollView
@@ -26,7 +37,7 @@ export function CategoryNav({ activeCategory, onCategoryChange }: CategoryNavPro
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.scroll}
             >
-                {CATEGORIES.map(cat => {
+                {displayCategories.map((cat: any) => {
                     const isActive = activeCategory === cat.id;
                     return (
                         <TouchableOpacity
@@ -47,11 +58,33 @@ export function CategoryNav({ activeCategory, onCategoryChange }: CategoryNavPro
 }
 
 const styles = StyleSheet.create({
-    container: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#1f2937' },
-    scroll: { paddingHorizontal: 16, gap: 8 },
-    pill: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#1f2937', backgroundColor: '#111827' },
-    pillActive: { backgroundColor: 'rgba(0,255,140,0.15)', borderColor: 'rgba(0,255,140,0.5)' },
-    emoji: { fontSize: 13 },
-    label: { color: '#6b7280', fontSize: 13, fontWeight: '600' },
-    labelActive: { color: '#00FF8C' },
+    container: { 
+        paddingVertical: 12, 
+        borderBottomWidth: 1, 
+        borderBottomColor: 'rgba(255, 255, 255, 0.05)',
+        backgroundColor: '#0A0B12',
+    },
+    scroll: { paddingHorizontal: 16, gap: 10 },
+    pill: { 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        gap: 6, 
+        paddingHorizontal: 16, 
+        paddingVertical: 10, 
+        borderRadius: 24, 
+        borderWidth: 1, 
+        borderColor: 'rgba(255, 255, 255, 0.1)', 
+        backgroundColor: 'rgba(255, 255, 255, 0.03)' 
+    },
+    pillActive: { 
+        backgroundColor: 'rgba(0, 255, 140, 0.1)', 
+        borderColor: 'rgba(0, 255, 140, 0.4)' 
+    },
+    emoji: { fontSize: 14 },
+    label: { 
+        color: theme.colors.mutedForeground, 
+        fontSize: 13, 
+        fontWeight: '700' 
+    },
+    labelActive: { color: theme.colors.primary },
 });

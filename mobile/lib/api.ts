@@ -1,6 +1,6 @@
 import { storage } from "./storage";
 
-export const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://10.131.254.179:5050/api";
+export const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:5050/api";
 if (__DEV__) {
     console.log("API URL configured as:", API_URL);
 }
@@ -143,23 +143,19 @@ export const api = {
         });
     },
 
-    // Marketplace — NFT catalog is static, served locally (no /nfts endpoint in backend)
+    // Marketplace
     getNFTCatalog: async () => {
-        const IMAGE_BASE_URL = "https://mundopix.com";
-        return [
-            { id: "nft-1", nome: "Beija-flor", emoji: "🐦", image: `${IMAGE_BASE_URL}/beijaflor-emoji.png`, preco: 1.00, raridade: "comum", descricao: "NFT que garante até 10 cotas." },
-            { id: "nft-2", nome: "Tartaruga", emoji: "🐢", image: `${IMAGE_BASE_URL}/tartaruga-emoji.png`, preco: 2.00, raridade: "comum", descricao: "NFT que garante até 10 cotas." },
-            { id: "nft-3", nome: "Garça", emoji: "🦢", image: `${IMAGE_BASE_URL}/garca-emoji.png`, preco: 5.00, raridade: "comum", descricao: "NFT que garante até 10 cotas." },
-            { id: "nft-4", nome: "Arara", emoji: "🦜", image: `${IMAGE_BASE_URL}/arara-emoji.png`, preco: 10.00, raridade: "raro", descricao: "NFT que garante até 10 cotas." },
-            { id: "nft-5", nome: "Mico-Leão", emoji: "🐒", image: `${IMAGE_BASE_URL}/mico-emoji.png`, preco: 20.00, raridade: "raro", descricao: "NFT que garante até 10 cotas." },
-            { id: "nft-6", nome: "Onça-Pintada", emoji: "🐆", image: `${IMAGE_BASE_URL}/onca-emoji.png`, preco: 50.00, raridade: "epico", descricao: "NFT que garante até 10 cotas." },
-            { id: "nft-7", nome: "Garoupa", emoji: "🐟", image: `${IMAGE_BASE_URL}/garoupa-emoji.png`, preco: 100.00, raridade: "epico", descricao: "NFT que garante até 10 cotas." },
-            { id: "nft-8", nome: "Lobo-Guará", emoji: "🐺", image: `${IMAGE_BASE_URL}/lobo-emoji.png`, preco: 200.00, raridade: "lendario", descricao: "NFT que garante até 10 cotas." },
-            { id: "nft-9", nome: "Boto-Cor-de-Rosa", emoji: "🐬", image: `${IMAGE_BASE_URL}/boto-emoji.png`, preco: 500.00, raridade: "lendario", descricao: "Lenda dos rios amazônicos." },
-            { id: "nft-10", nome: "Jacaré-Açu", emoji: "🐊", image: `${IMAGE_BASE_URL}/jacare-emoji.png`, preco: 1000.00, raridade: "mitico", descricao: "O maior predador da Amazônia." },
-            { id: "nft-11", nome: "Tucano", emoji: "🦤", image: `${IMAGE_BASE_URL}/tucano-emoji.png`, preco: 1500.00, raridade: "mitico", descricao: "Símbolo das florestas tropicais." },
-            { id: "nft-12", nome: "Ararinha-Azul", emoji: "🪶", image: `${IMAGE_BASE_URL}/ararinha-emoji.png`, preco: 2000.00, raridade: "celestial", descricao: "A joia mais rara dos céus do Brasil." },
-        ];
+        const data = await request("/nfts");
+        return data.map((item: any) => ({
+            id: String(item.id),
+            nome: item.nome || item.name,
+            emoji: item.emoji,
+            image: item.image,
+            preco: Number(item.preco || item.price),
+            raridade: item.raridade || item.rarity,
+            descricao: item.descricao || item.description,
+            cor: item.cor || item.gradient || "from-primary/20 to-accent/20"
+        }));
     },
 
     // Raffles
@@ -183,6 +179,7 @@ export const api = {
                 status: r.status === 'active' ? 'ativo' : 'encerrado',
                 categoria: r.category || 'tech',
                 raridade: r.rarity || 'comum',
+                requirements: r.requirements || "",
                 winnersAmount: r.winners_amount || 1
             }));
     },
@@ -210,6 +207,7 @@ export const api = {
             categoria: r.category ?? r.categoria ?? 'geral',
             raridade: r.rarity ?? r.raridade ?? 'comum',
             winnersAmount: r.winners_amount ?? 1,
+            requirements: r.requirements || "",
         };
     },
 
