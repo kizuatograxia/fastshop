@@ -7,6 +7,7 @@ import { Bell, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 interface NotificationListProps {
     onUnreadCountChange?: (count: number) => void;
@@ -18,10 +19,7 @@ const NotificationList: React.FC<NotificationListProps> = ({ onUnreadCountChange
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Request browser permission for system notifications
-        if ('Notification' in window && Notification.permission === 'default') {
-            Notification.requestPermission();
-        }
+        // We now use in-app toasts, so no need for system notification permission
     }, []);
 
     const fetchNotifications = async () => {
@@ -35,11 +33,11 @@ const NotificationList: React.FC<NotificationListProps> = ({ onUnreadCountChange
                     !n.read && !notifications.some(existing => existing.id === n.id)
                 );
 
-                if (newUnread.length > 0 && 'Notification' in window && Notification.permission === 'granted') {
+                if (newUnread.length > 0) {
                     newUnread.forEach((n: NotificationType) => {
-                        new Notification(n.title, {
-                            body: n.message,
-                            icon: '/favicon.ico' // Assuming favicon exists
+                        toast.info(n.title, {
+                            description: n.message,
+                            duration: 5000,
                         });
                     });
                 }
@@ -93,14 +91,15 @@ const NotificationList: React.FC<NotificationListProps> = ({ onUnreadCountChange
                 {notifications.map((notification) => (
                     <div
                         key={notification.id}
-                        className={`p-3 rounded-lg border transition-colors ${notification.read
-                            ? 'bg-background border-transparent'
-                            : 'bg-secondary/30 border-secondary'
+                        className={`p-3 rounded-lg border transition-colors relative overflow-hidden group ${notification.read
+                            ? 'bg-background hover:bg-secondary/40 border-border/50'
+                            : 'bg-primary/5 hover:bg-primary/10 border-primary/20 shadow-[0_0_10px_rgba(0,196,140,0.1)]'
                             }`}
                     >
                         <div className="flex items-start justify-between gap-2">
                             <div className="flex-1">
-                                <h4 className={`text-sm font-semibold ${!notification.read ? 'text-primary' : 'text-foreground'}`}>
+                                <h4 className={`text-sm font-semibold flex items-center gap-2 ${!notification.read ? 'text-primary' : 'text-foreground'}`}>
+                                    {!notification.read && <span className="h-2 w-2 rounded-full bg-primary animate-pulse"></span>}
                                     {notification.title}
                                 </h4>
                                 <p className="text-xs text-muted-foreground mt-1 leading-relaxed">

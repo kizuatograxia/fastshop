@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Loader2, MapPin } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -16,7 +16,6 @@ interface WinnerAddressDialogProps {
 
 export function WinnerAddressDialog({ isOpen, onOpenChange, onSuccess }: WinnerAddressDialogProps) {
     const { user, updateUser } = useAuth();
-    const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         cep: user?.cep || "",
@@ -43,10 +42,10 @@ export function WinnerAddressDialog({ isOpen, onOpenChange, onSuccess }: WinnerA
                         state: data.uf,
                     }));
                 } else {
-                    toast({ title: "CEP não encontrado", variant: "destructive" });
+                    toast.error("CEP não encontrado");
                 }
             } catch (error) {
-                toast({ title: "Erro ao buscar CEP", variant: "destructive" });
+                toast.error("Erro ao buscar CEP");
             } finally {
                 setLoading(false);
             }
@@ -55,7 +54,7 @@ export function WinnerAddressDialog({ isOpen, onOpenChange, onSuccess }: WinnerA
 
     const handleSave = async () => {
         if (!formData.cep || !formData.address || !formData.city || !formData.state) {
-            toast({ title: "Preencha todos os campos", variant: "destructive" });
+            toast.error("Preencha todos os campos");
             return;
         }
 
@@ -78,11 +77,11 @@ export function WinnerAddressDialog({ isOpen, onOpenChange, onSuccess }: WinnerA
                 city: formData.city,
                 state: formData.state
             });
-            toast({ title: "Endereço salvo com sucesso!" });
+            toast.success("Endereço salvo com sucesso!");
             onSuccess();
             onOpenChange(false);
         } catch (error) {
-            toast({ title: "Erro ao salvar endereço", variant: "destructive" });
+            toast.error("Erro ao salvar endereço");
         } finally {
             setLoading(false);
         }

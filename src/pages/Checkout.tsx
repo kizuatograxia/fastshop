@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useWallet } from "@/contexts/WalletContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
@@ -26,7 +26,6 @@ interface PixPayment {
 const Checkout: React.FC = () => {
     const navigate = useNavigate();
     const { cartItems, getTotalNFTs, addNFT, buyNFTs, clearCart, ownedNFTs } = useWallet();
-    const { toast } = useToast();
     const { user, login } = useAuth(); // Need login to refresh user data if profile updates
 
     const [isLoading, setIsLoading] = useState(false);
@@ -55,16 +54,13 @@ const Checkout: React.FC = () => {
                 discount: res.discount,
                 type: res.coupon.type
             });
-            toast({
-                title: "Cupom aplicado!",
+            toast.success("Cupom aplicado!", {
                 description: `Desconto de ${Math.floor(res.discount)}`,
             });
         } catch (error: any) {
             setAppliedCoupon(null);
-            toast({
-                title: "Erro no cupom",
+            toast.error("Erro no cupom", {
                 description: error.message || "Cupom inválido",
-                variant: "destructive"
             });
         } finally {
             setCouponLoading(false);
@@ -73,7 +69,7 @@ const Checkout: React.FC = () => {
 
     const handlePayWithPix = async () => {
         if (!user) {
-            toast({ title: "Login necessário", description: "Faça login para continuar.", variant: "destructive" });
+            toast.error("Login necessário", { description: "Faça login para continuar." });
             navigate("/login");
             return;
         }
@@ -95,17 +91,14 @@ const Checkout: React.FC = () => {
                 transactionId: data.transactionId,
             });
 
-            toast({
-                title: "PIX Gerado!",
+            toast.success("PIX Gerado!", {
                 description: "Escaneie o QR Code ou use o Copia e Cola.",
             });
 
         } catch (error) {
             console.error("Payment Error:", error);
-            toast({
-                title: "Erro no Pagamento",
+            toast.error("Erro no Pagamento", {
                 description: "Não foi possível gerar o PIX. Tente novamente.",
-                variant: "destructive"
             });
         } finally {
             setIsLoading(false);
@@ -131,8 +124,7 @@ const Checkout: React.FC = () => {
                         await buyNFTs(itemsToBuy, appliedCoupon?.code);
 
                         clearCart();
-                        toast({
-                            title: "Pagamento Aprovado!",
+                        toast.success("Pagamento Aprovado!", {
                             description: "Seus NFTs foram adicionados à sua carteira.",
                         });
                         navigate("/checkout/success");
@@ -146,7 +138,7 @@ const Checkout: React.FC = () => {
         return () => {
             if (interval) clearInterval(interval);
         };
-    }, [pixData, cartItems, appliedCoupon, buyNFTs, clearCart, navigate, toast]);
+    }, [pixData, cartItems, appliedCoupon, buyNFTs, clearCart, navigate]);
 
     // Função de teste para simular o callback de sucesso
     const simulateSuccessfulPayment = async () => {
@@ -156,16 +148,13 @@ const Checkout: React.FC = () => {
             await buyNFTs(itemsToBuy, appliedCoupon?.code);
 
             clearCart();
-            toast({
-                title: "Compra simulada com sucesso!",
+            toast.success("Compra simulada com sucesso!", {
                 description: "Seus NFTs foram adicionados à sua carteira (Modo Teste).",
             });
             navigate("/profile");
         } catch (error) {
-            toast({
-                title: "Erro na compra",
+            toast.error("Erro na compra", {
                 description: "Não foi possível finalizar a compra. Tente novamente.",
-                variant: "destructive"
             });
         }
     };
@@ -174,8 +163,7 @@ const Checkout: React.FC = () => {
         if (pixData) {
             navigator.clipboard.writeText(pixData.copyPasteCode);
             setCopied(true);
-            toast({
-                title: "Código copiado!",
+            toast.success("Código copiado!", {
                 description: "Cole no seu app de pagamento.",
             });
             setTimeout(() => setCopied(false), 3000);
