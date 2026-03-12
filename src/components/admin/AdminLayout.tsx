@@ -37,7 +37,7 @@ export function AdminLayout({ children, currentView, onViewChange, onLogout, pen
 
     return (
         <SidebarProvider>
-            <div className="min-h-screen flex w-full">
+            <div className="dark text-foreground min-h-screen flex w-full">
                 <AdminSidebar
                     currentView={currentView}
                     onViewChange={onViewChange}

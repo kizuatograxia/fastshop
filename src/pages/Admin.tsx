@@ -265,7 +265,7 @@ const Admin = () => {
     // --- RENDER LOGIN ---
     if (!isAuthenticated) {
         return (
-            <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-ocean">
+            <div className="dark text-foreground min-h-screen flex items-center justify-center p-4 bg-gradient-ocean">
                 <div className="w-full max-w-md space-y-8 animate-fade-in text-center relative z-10">
                     <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-primary/20 mb-4 border border-primary/30 shadow-glow backdrop-blur-md relative overflow-hidden group">
                         <div className="absolute inset-0 bg-primary/20 blur-xl opacity-50 group-hover:opacity-100 transition-opacity"></div>
