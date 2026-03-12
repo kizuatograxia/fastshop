@@ -106,6 +106,7 @@ const initDB = async () => {
                 prize_value DECIMAL(10,2) DEFAULT 0,
                 category VARCHAR(50) DEFAULT 'tech',
                 rarity VARCHAR(50) DEFAULT 'comum',
+                requirements TEXT,
                 winner_id INTEGER REFERENCES users(id),
                 tracking_code VARCHAR(255),
                 carrier VARCHAR(100),
@@ -125,6 +126,7 @@ const initDB = async () => {
             await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS winner_id INTEGER;`);
             await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS image_urls JSONB DEFAULT '[]'::jsonb;`);
             await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS winners_amount INTEGER DEFAULT 1;`);
+            await pool.query(`ALTER TABLE raffles ADD COLUMN IF NOT EXISTS requirements TEXT;`);
 
             await pool.query(`
                 CREATE TABLE IF NOT EXISTS raffle_winners (

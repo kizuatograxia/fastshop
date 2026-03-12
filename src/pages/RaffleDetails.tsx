@@ -229,9 +229,10 @@ const RaffleDetails: FC = () => {
             participantes: parseInt(data.tickets_sold) || 0,
             maxParticipantes: parseInt(data.max_tickets) || parseInt(data.total_tickets) || 0,
             categoria: data.category || "geral", raridade: "comum", emoji: "🎫",
-            image_urls: data.image_urls || [data.image_url],
+            image_urls: (typeof data.image_urls === 'string' ? JSON.parse(data.image_urls) : data.image_urls) || [data.image_url],
             winner: data.winner_name ? { name: data.winner_name, picture: data.winner_picture } : undefined,
             winnersAmount: parseInt(data.winners_amount) || 1,
+            requirements: data.requirements || "",
           };
           setRaffle(mapped);
           setActiveImage(mapped.imagem);
@@ -574,11 +575,21 @@ const RaffleDetails: FC = () => {
               <div className="bg-muted/50 rounded-md p-4 mb-5 space-y-2">
                 <p className="text-sm font-semibold text-foreground mb-2">O que você precisa saber:</p>
                 <ul className="space-y-1.5 text-sm text-muted-foreground">
-                  <li className="flex items-start gap-2"><span className="text-foreground">•</span> Prêmio Total: <strong className="text-foreground">{raffle.premio}</strong></li>
-                  <li className="flex items-start gap-2"><span className="text-foreground">•</span> Vencedores: <strong className="text-foreground">{raffle.winnersAmount > 1 ? `${raffle.winnersAmount} prêmios disponíveis` : '1'}</strong></li>
-                  <li className="flex items-start gap-2"><span className="text-foreground">•</span> Oportunidade Atual: <strong className="text-foreground">{currentChance.toFixed(1)}%</strong></li>
-                  <li className="flex items-start gap-2"><span className="text-foreground">•</span> Encerramento: <strong className="text-foreground">{dataFimFormatted}</strong></li>
-                  <li className="flex items-start gap-2"><span className="text-foreground">•</span> Prêmio de luxo • Sorteio auditado</li>
+                  {raffle.requirements ? (
+                    raffle.requirements.split('\n').filter((line: string) => line.trim() !== '').map((reqLine: string, idx: number) => (
+                       <li key={idx} className="flex items-start gap-2">
+                         <span className="text-foreground">•</span> {reqLine.replace(/^[•\-\*]\s*/, '')}
+                       </li>
+                    ))
+                  ) : (
+                    <>
+                      <li className="flex items-start gap-2"><span className="text-foreground">•</span> Prêmio Total: <strong className="text-foreground">{raffle.premio}</strong></li>
+                      <li className="flex items-start gap-2"><span className="text-foreground">•</span> Vencedores: <strong className="text-foreground">{raffle.winnersAmount > 1 ? `${raffle.winnersAmount} prêmios disponíveis` : '1'}</strong></li>
+                      <li className="flex items-start gap-2"><span className="text-foreground">•</span> Oportunidade Atual: <strong className="text-foreground">{currentChance.toFixed(1)}%</strong></li>
+                      <li className="flex items-start gap-2"><span className="text-foreground">•</span> Encerramento: <strong className="text-foreground">{dataFimFormatted}</strong></li>
+                      <li className="flex items-start gap-2"><span className="text-foreground">•</span> Prêmio de luxo • Sorteio auditado</li>
+                    </>
+                  )}
                 </ul>
               </div>
 

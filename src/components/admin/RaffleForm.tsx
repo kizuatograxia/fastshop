@@ -22,6 +22,7 @@ export interface CreateRaffleDTO {
     rarity: string;
     winners_amount?: number;
     image_urls?: string[];
+    requirements?: string;
 }
 
 interface RaffleFormProps {
@@ -52,7 +53,8 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
         category: "tech",
         rarity: "comum",
         winners_amount: 1,
-        image_urls: []
+        image_urls: [],
+        requirements: ""
     };
 
     const [formData, setFormData] = useState<CreateRaffleDTO>(defaultFormData);
@@ -71,7 +73,8 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                 category: initialData.categoria,
                 rarity: initialData.raridade,
                 winners_amount: initialData.winnersAmount || 1,
-                image_urls: initialData.image_urls || []
+                image_urls: initialData.image_urls || [],
+                requirements: initialData.requirements || ""
             });
         }
     }, [initialData]);
@@ -190,6 +193,7 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                                             reader.readAsDataURL(file);
                                         });
 
+                                        e.target.value = ''; // Reset input to allow selecting same files again
                                         toast.success("Imagens processadas!");
                                     }}
                                 />
@@ -282,6 +286,17 @@ export function RaffleForm({ initialData, onSubmit, onCancel, isLoading }: Raffl
                             placeholder="Descreva os detalhes do prêmio..."
                             className="bg-background/50 min-h-[120px]"
                         />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>O que você precisa saber (Requisitos / Termos)</Label>
+                        <Textarea
+                            value={formData.requirements || ''}
+                            onChange={(e) => setFormData({ ...formData, requirements: e.target.value })}
+                            placeholder="Ex:&#10;• Prêmio Total: ...&#10;• Vencedores: ...&#10;• Entrega garantida..."
+                            className="bg-background/50 min-h-[100px]"
+                        />
+                        <p className="text-[10px] text-muted-foreground">Estes itens serão mostrados na lista 'O que você precisa saber' no lado direito da página. Cada quebra de linha vira um tópico.</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

@@ -24,6 +24,7 @@ export interface Raffle {
     status: "ativo" | "encerrado" | "em_breve" | "active";
     categoria: string;
     raridade?: string;
+    requirements?: string;
     winnersAmount?: number;
     winner_id?: number;
     winner?: RaffleWinner;
