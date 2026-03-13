@@ -48,7 +48,6 @@ const s = StyleSheet.create({
         padding: 16, paddingBottom: 34,
         backgroundColor: 'rgba(10,11,18,0.85)',
         borderTopWidth: 1, borderTopColor: 'rgba(31,41,55,0.6)',
-        backdropFilter: 'blur(20px)' as any,
     },
     qRow: {
         flexDirection: 'row', alignItems: 'center',

@@ -23,7 +23,7 @@ interface WalletContextType {
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { user } = useAuth();
+    const { user, isLoading: isAuthLoading } = useAuth();
     const [ownedNFTs, setOwnedNFTs] = useState<OwnedNFT[]>([]);
     const [cartItems, setCartItems] = useState<OwnedNFT[]>([]);
     const [balance] = useState(0);
@@ -37,16 +37,21 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
     }, [user]);
 
-    // Load cart from storage on mount
+    // Load cart from storage once auth hydration is done
     useEffect(() => {
-        loadCart();
-    }, []);
+        if (!isAuthLoading) {
+            loadCart();
+        }
+    }, [isAuthLoading]);
 
     const loadCart = async () => {
         try {
             const saved = storage.getItem("fastshop_cart");
             if (saved) {
-                setCartItems(JSON.parse(saved));
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed)) {
+                    setCartItems(parsed);
+                }
             }
         } catch (e) {
             console.error("Failed to load cart", e);

@@ -1,13 +1,13 @@
 import * as SecureStore from 'expo-secure-store';
 
 /**
- * In-memory token cache — populated from SecureStore on app start by AuthProvider.
- * The api.ts needs synchronous access to the token, so we keep a runtime copy here.
+ * In-memory cache — populated from SecureStore on app start.
+ * We need synchronous access to many items (token, cart, etc.), 
+ * so we keep a runtime copy here.
  */
 let _token: string | null = null;
 let _adminKey: string | null = null;
-
-// Simple in-memory reviews fallback (no localStorage in React Native)
+let _cache: Record<string, string> = {};
 let _reviews: any[] = [];
 
 export const storage = {
@@ -21,38 +21,69 @@ export const storage = {
     setAdminKey: (key: string) => { _adminKey = key; },
     removeAdminKey: () => { _adminKey = null; },
 
-    // Generic persistence (delegates to SecureStore or memory)
+    // Generic persistence
     getItem: (key: string) => {
-        // Since we need synchronous access in some places, we'll need to handle async elsewhere
-        // But for WalletProvider, we'll try to use a simple approach
-        return null; // This is a placeholder, usually we'd use a synchronized cache
+        return _cache[key] || null;
     },
     setItem: (key: string, value: string) => {
-        SecureStore.setItemAsync(key, value).catch(() => { });
+        _cache[key] = value;
+        SecureStore.setItemAsync(key, value).catch((e) => { 
+            console.warn(`Failed to persist key ${key}`, e);
+        });
+    },
+    removeItem: (key: string) => {
+        delete _cache[key];
+        SecureStore.deleteItemAsync(key).catch(() => { });
     },
 
-    // Reviews (in-memory fallback — fine for mobile)
+    // Reviews (in-memory fallback)
     getReviews: () => _reviews,
     setReviews: (reviews: any[]) => { _reviews = reviews; },
 
-    // User helpers (not used by AuthProvider, but kept for compat)
-    getUser: () => null,
-    setUser: (_: any) => { },
-    removeUser: () => { },
-    clearAll: () => {
+    // User helpers
+    getUser: () => {
+        const data = _cache['userData'];
+        return data ? JSON.parse(data) : null;
+    },
+    setUser: (user: any) => {
+        storage.setItem('userData', JSON.stringify(user));
+    },
+    removeUser: () => {
+        storage.removeItem('userData');
+    },
+
+    clearAll: async () => {
         _token = null;
         _adminKey = null;
         _reviews = [];
+        const keys = Object.keys(_cache);
+        _cache = {};
+        
+        for (const key of keys) {
+            try {
+                await SecureStore.deleteItemAsync(key);
+            } catch (e) {}
+        }
+        // Specific keys we always want to ensure are gone
+        await SecureStore.deleteItemAsync('authToken');
+        await SecureStore.deleteItemAsync('userData');
+        await SecureStore.deleteItemAsync('fastshop_cart');
     },
 
     /**
-     * Call this from AuthProvider after signIn to sync the token into storage
-     * so that api.ts request() can read it synchronously.
+     * Call this during app initialization to hydrate the cache.
      */
-    syncToken: async () => {
-        try {
-            const token = await SecureStore.getItemAsync('authToken');
-            _token = token;
-        } catch { /* ignore */ }
+    hydrate: async (keys: string[]) => {
+        for (const key of keys) {
+            try {
+                const value = await SecureStore.getItemAsync(key);
+                if (value !== null) {
+                    _cache[key] = value;
+                    if (key === 'authToken') _token = value;
+                }
+            } catch (e) {
+                console.warn(`Failed to hydrate key: ${key}`, e);
+            }
+        }
     },
 };

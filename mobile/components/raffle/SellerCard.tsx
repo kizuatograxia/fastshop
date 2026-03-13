@@ -13,22 +13,21 @@ interface SellerCardProps {
     }
 }
 
-export const SellerCard = ({ seller = { 
-    name: 'Mundo Pix Oficial', 
-    avatar: 'https://mundopix.com/logo.png', 
-    verified: true, 
-    stats: 'Vendedor Diamante • 12k+ Vendas' 
-} }: SellerCardProps) => {
+export const SellerCard = ({ seller }: SellerCardProps) => {
+    if (!seller) return null;
     return (
         <View style={styles.container}>
             <View style={styles.content}>
-                <Image source={{ uri: seller.avatar }} style={styles.avatar} />
+                <Image 
+                    source={{ uri: seller.avatar || 'https://mundopix.com/logo.png' }} 
+                    style={styles.avatar} 
+                />
                 <View style={styles.info}>
                     <View style={styles.nameRow}>
-                        <Text style={styles.name}>{seller.name}</Text>
+                        <Text style={styles.name}>{seller.name || 'Mundo Pix'}</Text>
                         {seller.verified && <BadgeCheck size={14} color={theme.colors.primary} />}
                     </View>
-                    <Text style={styles.stats}>{seller.stats}</Text>
+                    <Text style={styles.stats}>{seller.stats || 'Distribuidor Autorizado'}</Text>
                 </View>
             </View>
         </View>

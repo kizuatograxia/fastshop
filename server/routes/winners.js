@@ -150,4 +150,22 @@ router.delete('/winners/:id', async (req, res) => {
     }
 });
 
+// Like Testimonial
+router.post('/reviews/:id/like', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query(
+            `UPDATE testimonials SET likes = COALESCE(likes, 0) + 1 WHERE id = $1 RETURNING *`,
+            [id]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Depoimento não encontrado' });
+        }
+        res.json({ success: true, likes: result.rows[0].likes });
+    } catch (error) {
+        console.error('Error liking testimonial:', error);
+        res.status(500).json({ message: 'Erro ao curtir depoimento' });
+    }
+});
+
 export default router;

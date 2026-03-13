@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { ShoppingCart, Star, Ticket } from 'lucide-react-native';
 import { Image } from 'expo-image';
+import { theme } from '../lib/theme';
+import { getRarityConfig } from '../lib/rarity';
 
 interface NFTCardProps {
     nft: any;
@@ -10,45 +12,45 @@ interface NFTCardProps {
 }
 
 const NFTCardComponent = ({ nft, onBuy, buying }: NFTCardProps) => {
-    const rarityColor = nft.cor ? nft.cor.split(' ')[0].replace('from-', '') : '#1f2937';
+    const rarity = getRarityConfig(nft.raridade);
 
     return (
-        <View style={[s.card, { borderColor: rarityColor || 'rgba(31, 41, 55, 0.6)' }]}>
-            <View style={s.rarityContainer}>
-                <View style={[s.rarityBadge, { backgroundColor: rarityColor || '#1f2937' }]}>
-                    <Star size={10} color="#fff" fill="#fff" />
-                    <Text style={s.rarityText}>{nft.raridade}</Text>
+        <View style={[styles.card, { borderColor: rarity.border }]}>
+            <View style={styles.rarityContainer}>
+                <View style={[styles.rarityBadge, { backgroundColor: rarity.bg, borderColor: rarity.border, borderWidth: 1 }]}>
+                    <Star size={10} color={rarity.color} fill={rarity.color} />
+                    <Text style={[styles.rarityText, { color: rarity.color }]}>{rarity.label}</Text>
                 </View>
             </View>
 
-            <View style={[s.visualArea, { backgroundColor: (rarityColor || '#1f2937') + '20' }]}>
+            <View style={[styles.visualArea, { backgroundColor: rarity.bg }]}>
                 {nft.image ? (
                     <Image
                         source={nft.image}
-                        style={s.nftImage}
+                        style={styles.nftImage}
                         contentFit="contain"
-                        transition={200}
+                        transition={300}
                         cachePolicy="memory-disk"
                     />
                 ) : (
-                    <Text style={s.nftEmoji}>{nft.emoji}</Text>
+                    <Text style={styles.nftEmoji}>{nft.emoji}</Text>
                 )}
             </View>
 
-            <View style={s.cardContent}>
-                <Text style={s.nftName} numberOfLines={2}>{nft.nome}</Text>
-                <View style={[s.priceRow, { marginTop: 8 }]}>
-                    <View style={s.priceWrapper}>
-                        <Ticket size={14} color="#16a34a" />
-                        <Text style={s.priceText}>{Math.floor(nft.preco)}</Text>
+            <View style={styles.cardContent}>
+                <Text style={styles.nftName} numberOfLines={1}>{nft.nome}</Text>
+                <View style={styles.priceRow}>
+                    <View style={styles.priceWrapper}>
+                        <Ticket size={14} color={theme.colors.success} />
+                        <Text style={styles.priceText}>{Math.floor(nft.preco)}</Text>
                     </View>
                     <TouchableOpacity
-                        style={s.buyBtn}
+                        style={styles.buyBtn}
                         onPress={() => onBuy(nft)}
                         disabled={buying}
-                        activeOpacity={0.6}
+                        activeOpacity={0.7}
                     >
-                        <ShoppingCart size={14} color="#0A0B12" />
+                        <ShoppingCart size={14} color={theme.colors.primaryForeground} />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -57,25 +59,22 @@ const NFTCardComponent = ({ nft, onBuy, buying }: NFTCardProps) => {
 };
 
 export const NFTCard = React.memo(NFTCardComponent, (prev, next) => {
-    return prev.nft.id === next.nft.id && prev.buying === next.buying;
+    return prev.nft.id === next.nft.id && 
+           prev.buying === next.buying && 
+           prev.nft.quantidade === next.nft.quantidade;
 });
 
-const s = StyleSheet.create({
+const styles = StyleSheet.create({
     card: {
         flex: 1,
-        backgroundColor: '#111827', // Matching RaffleCard block
-        borderRadius: 16,
+        backgroundColor: 'rgba(17, 24, 39, 0.4)',
+        borderRadius: theme.radius.xl,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: '#1f2937',
+        borderColor: 'rgba(255, 255, 255, 0.05)',
         marginHorizontal: 6,
         marginBottom: 16,
-        height: 220, // Taller size to match web Cyber-Luxury height
-        shadowColor: '#000',
-        elevation: 5,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
+        height: 230,
     },
     rarityContainer: {
         position: 'absolute',
@@ -86,46 +85,63 @@ const s = StyleSheet.create({
     rarityBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 3,
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        borderRadius: 6,
+        gap: 4,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: theme.radius.md,
     },
     rarityText: {
-        color: '#fff',
         fontSize: 10,
-        fontWeight: '800',
+        fontWeight: '900',
         textTransform: 'uppercase',
     },
     visualArea: {
-        height: 110,
+        height: 130,
         alignItems: 'center',
         justifyContent: 'center',
         borderBottomWidth: 1,
-        borderBottomColor: 'rgba(255,255,255,0.05)'
+        borderBottomColor: 'rgba(255, 255, 255, 0.03)',
     },
     nftEmoji: { fontSize: 48 },
-    nftImage: { width: '85%', height: '85%' },
-    cardContent: { padding: 12, flex: 1, justifyContent: 'space-between' },
-    nftName: {
-        color: '#f9fafb',
-        fontWeight: '700',
-        fontSize: 14,
-        letterSpacing: 0.1,
+    nftImage: { width: '80%', height: '80%' },
+    cardContent: { 
+        padding: 12, 
+        flex: 1, 
+        justifyContent: 'space-between',
+        backgroundColor: 'rgba(255, 255, 255, 0.02)',
     },
-    priceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    nftName: {
+        color: theme.colors.foreground,
+        fontWeight: '700',
+        fontSize: 13,
+        letterSpacing: 0.2,
+    },
+    priceRow: { 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        justifyContent: 'space-between',
+    },
     priceWrapper: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 4,
+        gap: 5,
     },
-    priceText: { color: '#00FF8C', fontWeight: '900', fontSize: 15 },
+    priceText: { 
+        color: theme.colors.primary, 
+        fontWeight: '900', 
+        fontSize: 16 
+    },
     buyBtn: {
-        backgroundColor: '#00FF8C',
-        width: 30,
-        height: 30,
-        borderRadius: 8,
+        backgroundColor: theme.colors.primary,
+        width: 32,
+        height: 32,
+        borderRadius: theme.radius.md,
         alignItems: 'center',
         justifyContent: 'center',
+        shadowColor: theme.colors.primary,
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 3,
     },
 });

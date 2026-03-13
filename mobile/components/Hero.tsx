@@ -102,7 +102,8 @@ export const Hero = ({ onCtaPress, onCollectionPress, activeRafflesCount = 0 }: 
             {/* Live Showcase - Simplified for mobile */}
             <View style={styles.showcase}>
                 <LinearGradient
-                    colors={['transparent', theme.colors.background]}
+                    colors={['transparent', 'rgba(7, 8, 14, 0.18)', 'transparent']}
+                    locations={[0, 0.55, 1]}
                     style={styles.showcaseOverlay}
                 />
                 {/* Showcase content (e.g., small cards or carousel) would go here */}
@@ -115,7 +116,7 @@ const styles = StyleSheet.create({
     container: {
         position: 'relative',
         paddingTop: 20,
-        backgroundColor: theme.colors.background,
+        backgroundColor: 'transparent',
     },
     glow: {
         position: 'absolute',

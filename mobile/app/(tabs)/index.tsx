@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
     View, Text, ScrollView, RefreshControl, 
     StatusBar, StyleSheet, TextInput,
@@ -17,6 +17,7 @@ import { Hero } from '../../components/Hero';
 
 export default function Home() {
     const router = useRouter();
+    const scrollRef = useRef<ScrollView>(null);
     const [search, setSearch] = useState('');
     const [activeCategory, setActiveCategory] = useState('todos');
 
@@ -43,6 +44,7 @@ export default function Home() {
             <StatusBar barStyle="light-content" />
 
             <ScrollView
+                ref={scrollRef}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
                     <RefreshControl
@@ -59,7 +61,9 @@ export default function Home() {
                     <Hero 
                         activeRafflesCount={activeCount}
                         onCollectionPress={() => router.push('/(tabs)/nfts')}
-                        onCtaPress={() => { /* scroll to list logic can be added later */ }}
+                        onCtaPress={() => {
+                            scrollRef.current?.scrollTo({ y: 400, animated: true });
+                        }}
                     />
                 </SafeAreaView>
 

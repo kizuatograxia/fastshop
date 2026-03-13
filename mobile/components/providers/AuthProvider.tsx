@@ -45,12 +45,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     async function checkAuth() {
         try {
-            const token = await SecureStore.getItemAsync('authToken');
-            const userDataStr = await SecureStore.getItemAsync('userData');
+            // Hydrate all necessary persistence keys into memory cache
+            await storage.hydrate(['authToken', 'userData', 'fastshop_cart']);
+            
+            const token = storage.getToken();
+            const userData = storage.getUser();
 
-            if (token && userDataStr) {
-                storage.setToken(token); // sync to in-memory
-                setUser(JSON.parse(userDataStr));
+            if (token && userData) {
+                setUser(userData);
             }
         } catch (error) {
             console.error('Failed to restore auth state', error);
@@ -73,10 +75,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     async function signOut() {
-        await SecureStore.deleteItemAsync('authToken');
-        await SecureStore.deleteItemAsync('userData');
-        storage.removeToken(); // clear in-memory
+        await storage.clearAll();
         setUser(null);
+        router.replace('/(auth)/login');
     }
 
     return (

@@ -1,20 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Image, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Dimensions, Platform } from 'react-native';
 import { useWallet } from '../components/providers/WalletProvider';
 import { useAuth } from '../components/providers/AuthProvider';
 import { api } from '../lib/api';
-import { ArrowLeft, Ticket, ShoppingCart, QrCode, Copy, Check } from 'lucide-react-native';
+import { ArrowLeft, Ticket, ShoppingCart, QrCode, Copy, Check, Info, ShieldCheck, Zap } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ScreenWrapper } from '../components/ScreenWrapper';
+import { theme } from '../lib/theme';
+import { Image } from 'expo-image';
 import * as Clipboard from 'expo-clipboard';
 import * as Haptics from 'expo-haptics';
+import { BlurView } from 'expo-blur';
+
+const { width } = Dimensions.get('window');
 
 export default function CheckoutScreen() {
     const router = useRouter();
     const { user } = useAuth();
-    const { cartItems, getTotalNFTs, clearCart, buyNFTs } = useWallet();
+    const { cartItems, clearCart, buyNFTs } = useWallet();
 
     const [isLoading, setIsLoading] = useState(false);
     const [pixData, setPixData] = useState<any>(null);
@@ -39,11 +44,10 @@ export default function CheckoutScreen() {
                 type: res.coupon.type
             });
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            Alert.alert("Sucesso", `Cupom aplicado! Desconto de ${Math.floor(res.discount)}`);
         } catch (error: any) {
             setAppliedCoupon(null);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-            Alert.alert("Erro", error.message || "Cupom inválido");
+            Alert.alert("Cupom Inválido", error.message || "Este cupom não é válido ou já expirou.");
         } finally {
             setCouponLoading(false);
         }
@@ -63,7 +67,7 @@ export default function CheckoutScreen() {
             });
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         } catch (error: any) {
-            Alert.alert("Erro no Pagamento", error.message || "Não foi possível gerar o PIX.");
+            Alert.alert("Erro no Pagamento", error.message || "Não foi possível gerar o código PIX no momento.");
         } finally {
             setIsLoading(false);
         }
@@ -76,10 +80,14 @@ export default function CheckoutScreen() {
             await buyNFTs(itemsToBuy, appliedCoupon?.code);
             clearCart();
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            Alert.alert("Sucesso!", "Seus NFTs foram adicionados à sua carteira.");
-            router.replace('/(tabs)/profile');
+            
+            Alert.alert(
+                "Compra Realizada!", 
+                "Seus NFTs foram adicionados à sua carteira com sucesso. Você pode vê-los no seu perfil.",
+                [{ text: "Ver no Perfil", onPress: () => router.replace('/(tabs)/profile') }]
+            );
         } catch (error: any) {
-            Alert.alert("Erro", "Falha ao finalizar compra.");
+            Alert.alert("Erro", "Falha ao processar compra. Verifique sua conexão.");
         } finally {
             setIsLoading(false);
         }
@@ -98,10 +106,13 @@ export default function CheckoutScreen() {
         return (
             <ScreenWrapper style={s.root}>
                 <SafeAreaView style={s.empty}>
-                    <ShoppingCart size={64} color="#1f2937" />
-                    <Text style={s.emptyText}>Carrinho vazio</Text>
-                    <TouchableOpacity onPress={() => router.back()} style={s.backBtn}>
-                        <Text style={s.backBtnText}>Voltar</Text>
+                    <View style={s.emptyIconCircle}>
+                        <ShoppingCart size={40} color={theme.colors.mutedForeground} />
+                    </View>
+                    <Text style={s.emptyTitle}>Carrinho Vazio</Text>
+                    <Text style={s.emptySub}>Você ainda não adicionou nenhum NFT para checkout.</Text>
+                    <TouchableOpacity onPress={() => router.back()} style={s.emptyBtn}>
+                        <Text style={s.emptyBtnText}>Explorar Catálogo</Text>
                     </TouchableOpacity>
                 </SafeAreaView>
             </ScreenWrapper>
@@ -110,54 +121,59 @@ export default function CheckoutScreen() {
 
     return (
         <ScreenWrapper style={s.root}>
-            <SafeAreaView edges={['top']} style={{ backgroundColor: '#0A0B12' }}>
+            <SafeAreaView edges={['top']} style={s.headerWrap}>
                 <View style={s.header}>
                     <TouchableOpacity onPress={() => router.back()} style={s.headerBtn}>
-                        <ArrowLeft size={24} color="#f9fafb" />
+                        <ArrowLeft size={22} color={theme.colors.foreground} />
                     </TouchableOpacity>
-                    <Text style={s.headerTitle}>Checkout</Text>
-                    <View style={{ width: 40 }} />
+                    <Text style={s.headerTitle}>Finalizar Compra</Text>
+                    <View style={{ width: 44 }} />
                 </View>
             </SafeAreaView>
 
-            <ScrollView contentContainerStyle={s.scroll}>
+            <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
                 {!pixData ? (
                     <>
+                        {/* Order Summary */}
                         <View style={s.section}>
                             <View style={s.sectionHeader}>
-                                <ShoppingCart size={18} color="#00FF8C" />
-                                <Text style={s.sectionTitle}>Resumo do Pedido</Text>
+                                <ShoppingCart size={18} color={theme.colors.primary} />
+                                <Text style={s.sectionTitle}>Seu Pedido</Text>
+                                <View style={s.itemCountBadge}>
+                                    <Text style={s.itemCountText}>{cartItems.length}</Text>
+                                </View>
                             </View>
 
                             {cartItems.map((item) => (
                                 <View key={item.id} style={s.itemRow}>
-                                    <View style={[s.itemIcon, { backgroundColor: item.cor + '20' || '#1f2937', overflow: 'hidden' }]}>
-                                        {item.image ? (
-                                            <Image source={{ uri: item.image }} style={s.itemRowImage} resizeMode="contain" />
-                                        ) : (
-                                            <Text style={s.itemEmoji}>{item.emoji}</Text>
-                                        )}
+                                    <View style={[s.itemImageWrap, { backgroundColor: item.cor ? `${item.cor}20` : theme.colors.accent }]}>
+                                        <Image source={item.image} style={s.itemImage} contentFit="contain" />
                                     </View>
                                     <View style={s.itemInfo}>
-                                        <Text style={s.itemName}>{item.nome}</Text>
-                                        <Text style={s.itemMeta}>x{item.quantidade}</Text>
+                                        <Text style={s.itemName} numberOfLines={1}>{item.nome}</Text>
+                                        <Text style={s.itemRarity}>{item.raridade || 'Comum'}</Text>
                                     </View>
-                                    <View style={s.itemPriceCol}>
+                                    <View style={s.itemPriceWrap}>
                                         <View style={s.priceRow}>
-                                            <Ticket size={12} color="#00FF8C" />
+                                            <Ticket size={14} color={theme.colors.primary} style={{ marginRight: 4 }} />
                                             <Text style={s.priceValue}>{Math.floor(item.preco * item.quantidade)}</Text>
                                         </View>
+                                        <Text style={s.itemQty}>x{item.quantidade}</Text>
                                     </View>
                                 </View>
                             ))}
                         </View>
 
+                        {/* Coupon Section */}
                         <View style={s.section}>
-                            <Text style={s.sectionTitleSmall}>Cupom de Desconto</Text>
+                            <View style={s.sectionHeader}>
+                                <Ticket size={18} color={theme.colors.primary} />
+                                <Text style={s.sectionTitle}>Cupom de Desconto</Text>
+                            </View>
                             <View style={s.couponRow}>
                                 <TextInput
-                                    placeholder="INSIRA SEU CUPOM"
-                                    placeholderTextColor="#4b5563"
+                                    placeholder="DIGITE O CÓDIGO"
+                                    placeholderTextColor={theme.colors.mutedForeground}
                                     style={s.couponInput}
                                     value={couponCode}
                                     onChangeText={setCouponCode}
@@ -170,38 +186,58 @@ export default function CheckoutScreen() {
                                     disabled={couponLoading}
                                 >
                                     {couponLoading ? (
-                                        <ActivityIndicator size="small" color="#0A0B12" />
+                                        <ActivityIndicator size="small" color={theme.colors.primaryForeground} />
                                     ) : (
                                         <Text style={s.couponBtnText}>{appliedCoupon ? 'Remover' : 'Aplicar'}</Text>
                                     )}
                                 </TouchableOpacity>
                             </View>
                             {appliedCoupon && (
-                                <Text style={s.discountText}>Desconto de {Math.floor(appliedCoupon.discount)} aplicado!</Text>
+                                <View style={s.couponSuccessBadge}>
+                                    <Zap size={14} color={theme.colors.primary} fill={theme.colors.primary} />
+                                    <Text style={s.couponSuccessText}>Economia de {Math.floor(appliedCoupon.discount)} LP garantida!</Text>
+                                </View>
                             )}
                         </View>
 
+                        {/* Payment Summary */}
                         <View style={s.summaryCard}>
+                            <LinearGradient 
+                                colors={['rgba(0,255,140,0.05)', 'transparent']} 
+                                style={StyleSheet.absoluteFill} 
+                                start={{x: 0, y: 0}} 
+                                end={{x: 1, y: 1}} 
+                            />
+                            
                             <View style={s.summaryRow}>
                                 <Text style={s.summaryLabel}>Subtotal</Text>
-                                <View style={s.summaryPrice}>
-                                    <Ticket size={14} color="#6b7280" />
+                                <View style={s.summaryValRow}>
+                                    <Ticket size={12} color={theme.colors.mutedForeground} />
                                     <Text style={s.summaryValue}>{Math.floor(totalPrice)}</Text>
                                 </View>
                             </View>
+
                             {appliedCoupon && (
                                 <View style={s.summaryRow}>
-                                    <Text style={s.summaryLabel}>Desconto</Text>
-                                    <View style={s.summaryPrice}>
-                                        <Ticket size={14} color="#ef4444" />
-                                        <Text style={[s.summaryValue, { color: '#ef4444' }]}>-{Math.floor(discount)}</Text>
+                                    <Text style={s.summaryLabel}>Desconto Cupom</Text>
+                                    <View style={s.summaryValRow}>
+                                        <Text style={[s.summaryValue, { color: theme.colors.destructive }]}>-{Math.floor(discount)}</Text>
                                     </View>
                                 </View>
                             )}
-                            <View style={[s.summaryRow, s.totalRowTop]}>
-                                <Text style={s.totalLabel}>Total</Text>
-                                <View style={s.summaryPrice}>
-                                    <Ticket size={24} color="#00FF8C" />
+
+                            <View style={s.divider} />
+
+                            <View style={s.totalRow}>
+                                <View>
+                                    <Text style={s.totalLabel}>Total a pagar</Text>
+                                    <View style={s.secureRow}>
+                                        <ShieldCheck size={12} color={theme.colors.primary} />
+                                        <Text style={s.secureText}>Pagamento Seguro</Text>
+                                    </View>
+                                </View>
+                                <View style={s.totalValRow}>
+                                    <Ticket size={24} color={theme.colors.primary} style={{ marginRight: 6 }} />
                                     <Text style={s.totalValue}>{Math.floor(finalPrice)}</Text>
                                 </View>
                             </View>
@@ -210,12 +246,13 @@ export default function CheckoutScreen() {
                                 style={s.payBtn}
                                 onPress={handlePayWithPix}
                                 disabled={isLoading}
+                                activeOpacity={0.8}
                             >
                                 {isLoading ? (
-                                    <ActivityIndicator color="#0A0B12" />
+                                    <ActivityIndicator color={theme.colors.primaryForeground} />
                                 ) : (
                                     <>
-                                        <QrCode size={20} color="#0A0B12" />
+                                        <QrCode size={20} color={theme.colors.primaryForeground} />
                                         <Text style={s.payBtnText}>Pagar com PIX</Text>
                                     </>
                                 )}
@@ -223,39 +260,67 @@ export default function CheckoutScreen() {
                         </View>
                     </>
                 ) : (
-                    <View style={s.pixSection}>
+                    /* PIX Interface */
+                    <View style={s.pixContainer}>
                         <View style={s.pixCard}>
                             <View style={s.pixHeader}>
-                                <QrCode size={24} color="#00FF8C" />
-                                <Text style={s.pixTitle}>Pagamento via PIX</Text>
-                            </View>
-
-                            <View style={s.qrWrapper}>
-                                <Image source={{ uri: pixData.qrCode }} style={s.qrImage} />
-                            </View>
-
-                            <View style={s.copySection}>
-                                <Text style={s.copyLabel}>Copia e Cola</Text>
-                                <View style={s.copyRow}>
-                                    <Text style={s.copyText} numberOfLines={1}>{pixData.copyPasteCode}</Text>
-                                    <TouchableOpacity onPress={handleCopy} style={s.copyBtn}>
-                                        {copied ? <Check size={20} color="#00FF8C" /> : <Copy size={20} color="#f9fafb" />}
-                                    </TouchableOpacity>
+                                <View style={s.pixIconCircle}>
+                                    <QrCode size={24} color={theme.colors.primary} />
+                                </View>
+                                <View>
+                                    <Text style={s.pixTitle}>Aguardando Pagamento</Text>
+                                    <Text style={s.pixSubtitle}>Finalize o pagamento no seu app de banco</Text>
                                 </View>
                             </View>
 
-                            <View style={s.pixSteps}>
-                                <Text style={s.stepText}>1. Abra o app do seu banco</Text>
-                                <Text style={s.stepText}>2. Escolha pagar via PIX</Text>
-                                <Text style={s.stepText}>3. Escaneie o QR Code ou cole o código</Text>
+                            <View style={s.qrSection}>
+                                <View style={s.qrWrapper}>
+                                    <Image source={pixData.qrCode} style={s.qrImage} />
+                                </View>
+                                <View style={s.timerRow}>
+                                    <Info size={14} color={theme.colors.mutedForeground} />
+                                    <Text style={s.timerText}>O código expira em 30 minutos</Text>
+                                </View>
+                            </View>
+
+                            <View style={s.copyLabelRow}>
+                                <Text style={s.copyLabel}>Copia e Cola</Text>
+                                {copied && <Text style={s.copiedFeedback}>Copiado!</Text>}
+                            </View>
+                            
+                            <TouchableOpacity style={s.copyBox} activeOpacity={0.7} onPress={handleCopy}>
+                                <Text style={s.copyCode} numberOfLines={1}>{pixData.copyPasteCode}</Text>
+                                <View style={s.copyActionBtn}>
+                                    {copied ? <Check size={18} color={theme.colors.primary} /> : <Copy size={18} color={theme.colors.foreground} />}
+                                </View>
+                            </TouchableOpacity>
+
+                            <View style={s.instructions}>
+                                <Text style={s.instructionTitle}>Como pagar:</Text>
+                                <View style={s.instructionItem}>
+                                    <View style={s.dot} />
+                                    <Text style={s.instructionText}>Copie o código acima ou escaneie o QR Code.</Text>
+                                </View>
+                                <View style={s.instructionItem}>
+                                    <View style={s.dot} />
+                                    <Text style={s.instructionText}>Abra o app do seu banco e escolha 'Pagar via PIX'.</Text>
+                                </View>
+                                <View style={s.instructionItem}>
+                                    <View style={s.dot} />
+                                    <Text style={s.instructionText}>Cole o código e confirme o pagamento.</Text>
+                                </View>
                             </View>
 
                             <TouchableOpacity
-                                style={s.simulateBtn}
+                                style={s.confirmBtn}
                                 onPress={simulateSuccess}
                                 disabled={isLoading}
                             >
-                                <Text style={s.simulateText}>Simular Pagamento Confirmado</Text>
+                                {isLoading ? (
+                                    <ActivityIndicator color={theme.colors.primary} />
+                                ) : (
+                                    <Text style={s.confirmBtnText}>Já realizei o pagamento</Text>
+                                )}
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -266,58 +331,87 @@ export default function CheckoutScreen() {
 }
 
 const s = StyleSheet.create({
-    root: { flex: 1, backgroundColor: '#0A0B12' },
+    root: { flex: 1, backgroundColor: theme.colors.background },
+    headerWrap: { backgroundColor: theme.colors.background, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' },
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
-    headerBtn: { padding: 8, backgroundColor: '#111827', borderRadius: 12, borderWidth: 1, borderColor: '#1f2937' },
-    headerTitle: { color: '#f9fafb', fontSize: 18, fontWeight: '800' },
-    scroll: { padding: 16, paddingBottom: 60 },
-    section: { backgroundColor: '#111827', borderRadius: 20, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: '#1f2937' },
+    headerBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: theme.colors.card, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+    headerTitle: { color: theme.colors.foreground, fontSize: 18, fontWeight: '900', letterSpacing: -0.5 },
+    
+    scroll: { padding: 16, paddingBottom: 100 },
+    
+    section: { backgroundColor: theme.colors.card, borderRadius: 24, padding: 20, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
     sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20 },
-    sectionTitle: { color: '#f9fafb', fontSize: 16, fontWeight: '700' },
-    sectionTitleSmall: { color: '#6b7280', fontSize: 12, fontWeight: '700', marginBottom: 12, letterSpacing: 1 },
+    sectionTitle: { color: theme.colors.foreground, fontSize: 16, fontWeight: '800' },
+    itemCountBadge: { backgroundColor: 'rgba(0,255,140,0.1)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+    itemCountText: { color: theme.colors.primary, fontSize: 11, fontWeight: '800' },
+    
     itemRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-    itemIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-    itemEmoji: { fontSize: 24 },
-    itemRowImage: { width: '100%', height: '100%' },
-    itemInfo: { flex: 1, marginLeft: 12 },
-    itemName: { color: '#f9fafb', fontWeight: '700', fontSize: 14 },
-    itemMeta: { color: '#6b7280', fontSize: 12 },
-    itemPriceCol: { alignItems: 'flex-end' },
-    priceRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-    priceValue: { color: '#00FF8C', fontWeight: '800', fontSize: 16 },
+    itemImageWrap: { width: 56, height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+    itemImage: { width: '80%', height: '80%' },
+    itemInfo: { flex: 1, marginLeft: 14, gap: 2 },
+    itemName: { color: theme.colors.foreground, fontWeight: '700', fontSize: 15 },
+    itemRarity: { color: theme.colors.mutedForeground, fontSize: 11, textTransform: 'uppercase', fontWeight: '800', letterSpacing: 0.5 },
+    itemPriceWrap: { alignItems: 'flex-end', gap: 2 },
+    priceRow: { flexDirection: 'row', alignItems: 'center' },
+    priceValue: { color: theme.colors.primary, fontWeight: '900', fontSize: 18 },
+    itemQty: { color: theme.colors.mutedForeground, fontSize: 12, fontWeight: '600' },
+
     couponRow: { flexDirection: 'row', gap: 10 },
-    couponInput: { flex: 1, backgroundColor: '#0A0B12', borderRadius: 12, borderWidth: 1, borderColor: '#1f2937', paddingHorizontal: 16, paddingVertical: 12, color: '#f9fafb', fontSize: 14, fontWeight: '700' },
-    couponBtn: { backgroundColor: '#00FF8C', borderRadius: 12, paddingHorizontal: 16, justifyContent: 'center' },
-    couponBtnRemove: { backgroundColor: '#ef4444' },
-    couponBtnText: { color: '#0A0B12', fontWeight: '800', fontSize: 12 },
-    discountText: { color: '#00FF8C', fontSize: 12, marginTop: 8, fontWeight: '600' },
-    summaryCard: { backgroundColor: '#111827', borderRadius: 24, padding: 24, borderWidth: 1, borderColor: '#00FF8C30' },
-    summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-    summaryLabel: { color: '#6b7280', fontSize: 14 },
-    summaryPrice: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    summaryValue: { color: '#f9fafb', fontWeight: '700' },
-    totalRowTop: { marginTop: 8, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#1f2937' },
-    totalLabel: { color: '#f9fafb', fontSize: 18, fontWeight: '800' },
-    totalValue: { color: '#00FF8C', fontSize: 32, fontWeight: '900' },
-    payBtn: { backgroundColor: '#00FF8C', borderRadius: 16, paddingVertical: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 20 },
-    payBtnText: { color: '#0A0B12', fontSize: 16, fontWeight: '900' },
-    pixSection: { paddingVertical: 10 },
-    pixCard: { backgroundColor: '#111827', borderRadius: 32, padding: 24, borderWidth: 1, borderColor: '#1f2937' },
-    pixHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 24 },
-    pixTitle: { color: '#f9fafb', fontSize: 18, fontWeight: '800' },
-    qrWrapper: { backgroundColor: '#fff', padding: 20, borderRadius: 24, alignItems: 'center', alignSelf: 'center', marginBottom: 24 },
+    couponInput: { flex: 1, backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 16, paddingVertical: 14, color: theme.colors.foreground, fontSize: 14, fontWeight: '800' },
+    couponBtn: { backgroundColor: theme.colors.primary, borderRadius: 14, paddingHorizontal: 20, justifyContent: 'center' },
+    couponBtnRemove: { backgroundColor: theme.colors.destructive },
+    couponBtnText: { color: theme.colors.primaryForeground, fontWeight: '900', fontSize: 13 },
+    couponSuccessBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(0,255,140,0.05)', padding: 12, borderRadius: 12, marginTop: 12, borderWidth: 1, borderColor: 'rgba(0,255,140,0.1)' },
+    couponSuccessText: { color: theme.colors.primary, fontSize: 12, fontWeight: '700' },
+
+    summaryCard: { backgroundColor: theme.colors.card, borderRadius: 28, padding: 24, borderWidth: 1, borderColor: 'rgba(0,255,140,0.15)', overflow: 'hidden' },
+    summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 },
+    summaryLabel: { color: theme.colors.mutedForeground, fontSize: 14, fontWeight: '600' },
+    summaryValRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    summaryValue: { color: theme.colors.foreground, fontWeight: '700', fontSize: 15 },
+    divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 16 },
+    totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    totalLabel: { color: theme.colors.foreground, fontSize: 14, fontWeight: '600' },
+    secureRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+    secureText: { color: theme.colors.primary, fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
+    totalValRow: { flexDirection: 'row', alignItems: 'center' },
+    totalValue: { color: theme.colors.primary, fontSize: 36, fontWeight: '900', letterSpacing: -1 },
+    payBtn: { backgroundColor: theme.colors.primary, borderRadius: 20, paddingVertical: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 24, shadowColor: theme.colors.primary, shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 8 },
+    payBtnText: { color: theme.colors.primaryForeground, fontSize: 17, fontWeight: '900' },
+
+    pixContainer: { paddingVertical: 10 },
+    pixCard: { backgroundColor: theme.colors.card, borderRadius: 32, padding: 24, borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
+    pixHeader: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 30 },
+    pixIconCircle: { width: 52, height: 52, borderRadius: 26, backgroundColor: 'rgba(0,255,140,0.1)', alignItems: 'center', justifyContent: 'center' },
+    pixTitle: { color: theme.colors.foreground, fontSize: 18, fontWeight: '800' },
+    pixSubtitle: { color: theme.colors.mutedForeground, fontSize: 13, marginTop: 2 },
+    
+    qrSection: { alignItems: 'center', marginBottom: 30 },
+    qrWrapper: { backgroundColor: '#fff', padding: 16, borderRadius: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.2, shadowRadius: 20 },
     qrImage: { width: 220, height: 220 },
-    copySection: { marginBottom: 24 },
-    copyLabel: { color: '#6b7280', fontSize: 12, marginBottom: 8 },
-    copyRow: { flexDirection: 'row', backgroundColor: '#0A0B12', borderRadius: 16, padding: 12, alignItems: 'center', gap: 10, borderWidth: 1, borderColor: '#1f2937' },
-    copyText: { flex: 1, color: '#6b7280', fontSize: 12, fontFamily: 'monospace' },
-    copyBtn: { padding: 8, backgroundColor: '#111827', borderRadius: 10 },
-    pixSteps: { gap: 8, marginBottom: 24 },
-    stepText: { color: '#6b7280', fontSize: 13 },
-    simulateBtn: { borderStyle: 'dotted', borderWidth: 1, borderColor: '#4b5563', borderRadius: 16, paddingVertical: 14, alignItems: 'center' },
-    simulateText: { color: '#4b5563', fontSize: 13, fontWeight: '600' },
-    empty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 20 },
-    emptyText: { color: '#6b7280', fontSize: 18, fontWeight: '600' },
-    backBtn: { paddingHorizontal: 24, paddingVertical: 12, backgroundColor: '#111827', borderRadius: 12 },
-    backBtnText: { color: '#00FF8C', fontWeight: '700' },
+    timerRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 20 },
+    timerText: { color: theme.colors.mutedForeground, fontSize: 12, fontWeight: '600' },
+    
+    copyLabelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 10, paddingHorizontal: 4 },
+    copyLabel: { color: theme.colors.mutedForeground, fontSize: 13, fontWeight: '700' },
+    copiedFeedback: { color: theme.colors.primary, fontSize: 12, fontWeight: '800' },
+    copyBox: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: 18, padding: 14, alignItems: 'center', gap: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+    copyCode: { flex: 1, color: theme.colors.foreground, fontSize: 13, fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', fontWeight: '600' },
+    copyActionBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center' },
+    
+    instructions: { marginBottom: 30, paddingHorizontal: 4 },
+    instructionTitle: { color: theme.colors.foreground, fontSize: 14, fontWeight: '800', marginBottom: 12 },
+    instructionItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 12 },
+    dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.colors.primary },
+    instructionText: { color: theme.colors.mutedForeground, fontSize: 13, lineHeight: 18 },
+    
+    confirmBtn: { paddingVertical: 18, alignItems: 'center', borderRadius: 18, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+    confirmBtnText: { color: theme.colors.mutedForeground, fontSize: 14, fontWeight: '800' },
+
+    empty: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
+    emptyIconCircle: { width: 100, height: 100, borderRadius: 50, backgroundColor: 'rgba(255,255,255,0.03)', alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
+    emptyTitle: { color: theme.colors.foreground, fontSize: 24, fontWeight: '900', marginBottom: 12 },
+    emptySub: { color: theme.colors.mutedForeground, fontSize: 15, textAlign: 'center', lineHeight: 22, marginBottom: 32 },
+    emptyBtn: { backgroundColor: theme.colors.primary, paddingHorizontal: 32, paddingVertical: 16, borderRadius: 16 },
+    emptyBtnText: { color: theme.colors.primaryForeground, fontWeight: '900', fontSize: 15 },
 });

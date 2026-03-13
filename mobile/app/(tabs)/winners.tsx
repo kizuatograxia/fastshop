@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, StatusBar, RefreshControl, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar, RefreshControl, Dimensions } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../lib/api';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,10 +10,17 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FlashList } from "@shopify/flash-list";
 import * as Haptics from 'expo-haptics';
+import { SubmitTestimonialModal } from '../../components/winners/SubmitTestimonialModal';
+import { useAuth } from '../../components/providers/AuthProvider';
+import { theme } from '../../lib/theme';
+import { Image } from 'expo-image';
 
 const TypedFlashList = FlashList as any;
 
 export default function WinnersScreen() {
+    const { user } = useAuth();
+    const [modalVisible, setModalVisible] = useState(false);
+
     const { data: winners = [], isLoading, refetch, isRefetching } = useQuery({
         queryKey: ['winners_reviews'],
         queryFn: async () => {
@@ -28,27 +35,28 @@ export default function WinnersScreen() {
                 testimonial: r.comment || r.testimonial || "",
                 rating: r.rating || 5,
                 verified: true,
-                likes: r.likes || Math.floor(Math.random() * 50) + 10,
+                likes: r.likes || 0,
                 prizeImage: r.photoUrl || r.photo_url || r.image_url || "https://images.unsplash.com/photo-1635326444826-06c8f8d2e61d?w=800&q=80"
             })).reverse();
         },
         staleTime: 60000,
     });
 
-    const renderItem = useCallback(({ item }: { item: any }) => (
-        <WinnerCard winner={item} />
-    ), []);
+    const averageRating = useMemo(() => {
+        if (winners.length === 0) return "5.0";
+        return (winners.reduce((sum: number, w: any) => sum + w.rating, 0) / winners.length).toFixed(1);
+    }, [winners]);
 
-    const averageRating = winners.length > 0
-        ? (winners.reduce((sum: number, w: any) => sum + w.rating, 0) / winners.length).toFixed(1)
-        : "5.0";
+    const handleOpenModal = () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        setModalVisible(true);
+    };
 
-    const ListHeader = () => (
+    const ListHeader = useCallback(() => (
         <View style={s.headerContent}>
-            {/* Hero Section */}
             <View style={s.heroSection}>
                 <View style={s.badgeWrap}>
-                    <Sparkles size={14} color="#00FF8C" />
+                    <Sparkles size={14} color={theme.colors.primary} />
                     <Text style={s.badgeText}>Histórias Reais de Ganhadores</Text>
                 </View>
 
@@ -57,34 +65,35 @@ export default function WinnersScreen() {
                     Confira quem já está comemorando e junte-se a eles! Veja os depoimentos de quem já ganhou na MundoPix.
                 </Text>
 
-                <TouchableOpacity style={s.heroBtn} activeOpacity={0.8} onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
-                    <MessageSquarePlus size={18} color="#0A0B12" />
+                <TouchableOpacity style={s.heroBtn} activeOpacity={0.8} onPress={handleOpenModal}>
+                    <MessageSquarePlus size={18} color={theme.colors.primaryForeground} />
                     <Text style={s.heroBtnText}>Enviar meu Depoimento</Text>
                 </TouchableOpacity>
             </View>
 
-            {/* Stats Section */}
-            {winners.length > 0 && (
-                <View style={s.statsRow}>
-                    <View style={s.statCard}>
-                        <Trophy size={20} color="#00FF8C" style={s.statIcon} />
-                        <Text style={s.statValue}>{winners.length}</Text>
-                        <Text style={s.statLabel}>Depoimentos</Text>
-                    </View>
-                    <View style={s.statCard}>
-                        <Sparkles size={20} color="#00FF8C" style={s.statIcon} />
-                        <Text style={s.statValue}>{averageRating}/5</Text>
-                        <Text style={s.statLabel}>Avaliação Média</Text>
-                    </View>
+            <View style={s.statsRow}>
+                <View style={s.statCard}>
+                    <Trophy size={20} color={theme.colors.primary} style={s.statIcon} />
+                    <Text style={s.statValue}>{winners.length}</Text>
+                    <Text style={s.statLabel}>Depoimentos</Text>
                 </View>
-            )}
+                <View style={s.statCard}>
+                    <Star size={20} color={theme.colors.primary} style={s.statIcon} fill={theme.colors.primary} />
+                    <Text style={s.statValue}>{averageRating}/5</Text>
+                    <Text style={s.statLabel}>Avaliação Média</Text>
+                </View>
+            </View>
 
             <View style={s.listHeaderRow}>
-                <Trophy size={22} color="#00FF8C" />
+                <Trophy size={22} color={theme.colors.primary} />
                 <Text style={s.listHeaderTitle}>Depoimentos Recentes</Text>
             </View>
         </View>
-    );
+    ), [winners.length, averageRating]);
+
+    const renderItem = useCallback(({ item }: { item: any }) => (
+        <WinnerCard winner={item} />
+    ), []);
 
     return (
         <ScreenWrapper style={s.root}>
@@ -100,17 +109,23 @@ export default function WinnersScreen() {
                 estimatedItemSize={400}
                 showsVerticalScrollIndicator={false}
                 refreshControl={
-                    <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#00FF8C" colors={['#00FF8C']} />
+                    <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={theme.colors.primary} colors={[theme.colors.primary]} />
                 }
                 ListEmptyComponent={
                     !isLoading && winners.length === 0 ? (
                         <View style={s.emptyState}>
-                            <Trophy size={48} color="#1f2937" />
+                            <Trophy size={48} color={theme.colors.muted} />
                             <Text style={s.emptyText}>Nenhum ganhador recente encontrado.</Text>
                         </View>
                     ) : null
                 }
                 ListFooterComponent={<View style={{ height: 100 }} />}
+            />
+            
+            <SubmitTestimonialModal 
+                visible={modalVisible} 
+                onClose={() => setModalVisible(false)} 
+                onSuccess={() => refetch()}
             />
         </ScreenWrapper>
     );
@@ -120,12 +135,17 @@ function WinnerCard({ winner }: { winner: any }) {
     const [likes, setLikes] = useState(winner.likes);
     const [liked, setLiked] = useState(false);
 
-    const handleLike = () => {
+    const handleLike = async () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         if (liked) {
             setLikes((prev: number) => prev - 1);
         } else {
             setLikes((prev: number) => prev + 1);
+            try {
+                await api.likeReview(winner.id);
+            } catch (error) {
+                console.warn('Silent fail on like', error);
+            }
         }
         setLiked(!liked);
     };
@@ -135,11 +155,8 @@ function WinnerCard({ winner }: { winner: any }) {
         locale: ptBR,
     });
 
-    const initials = winner.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().substring(0, 2);
-
     return (
         <View style={wc.card}>
-            {/* Header User Info */}
             <View style={wc.header}>
                 <View style={wc.userInfo}>
                     <View style={wc.avatar}>
@@ -148,27 +165,24 @@ function WinnerCard({ winner }: { winner: any }) {
                     <View>
                         <View style={wc.nameRow}>
                             <Text style={wc.name}>{winner.name}</Text>
-                            {winner.verified && <CheckCircle size={14} color="#00FF8C" fill="rgba(0,255,140,0.2)" />}
+                            {winner.verified && <CheckCircle size={14} color={theme.colors.primary} fill="rgba(0,255,140,0.2)" />}
                         </View>
                         <Text style={wc.date}>{formattedDate}</Text>
                     </View>
                 </View>
                 <View style={wc.winnerBadge}>
-                    <Trophy size={10} color="#00FF8C" style={{ marginRight: 4 }} />
+                    <Trophy size={10} color={theme.colors.primary} style={{ marginRight: 4 }} />
                     <Text style={wc.winnerBadgeText}>Ganhador</Text>
                 </View>
             </View>
 
-            {/* Content Space */}
             <View style={wc.content}>
-                {/* Prize Image - aspect video */}
                 <View style={wc.prizeContainer}>
-                    <Image source={{ uri: winner.prizeImage }} style={wc.prizeImg} resizeMode="cover" />
+                    <Image source={{ uri: winner.prizeImage }} style={wc.prizeImg} contentFit="cover" />
                     <LinearGradient colors={['transparent', 'rgba(10,11,18,0.9)']} style={wc.prizeGradient} />
                     <Text style={wc.prizeTitle} numberOfLines={2}>{winner.prize}</Text>
                 </View>
 
-                {/* Rating */}
                 <View style={wc.ratingRow}>
                     {[1, 2, 3, 4, 5].map((star) => (
                         <Star
@@ -181,19 +195,17 @@ function WinnerCard({ winner }: { winner: any }) {
                     <Text style={wc.ratingText}>({winner.rating}.0/5)</Text>
                 </View>
 
-                {/* Testimonial */}
                 <Text style={wc.testimonialText}>"{winner.testimonial}"</Text>
             </View>
 
-            {/* Footer */}
             <View style={wc.footer}>
                 <TouchableOpacity style={wc.likeBtn} activeOpacity={0.7} onPress={handleLike}>
                     <Heart
                         size={16}
-                        color={liked ? "#ef4444" : "#9ca3af"}
-                        fill={liked ? "#ef4444" : "transparent"}
+                        color={liked ? theme.colors.destructive : theme.colors.mutedForeground}
+                        fill={liked ? theme.colors.destructive : "transparent"}
                     />
-                    <Text style={[wc.likesText, liked && { color: '#ef4444' }]}>{likes}</Text>
+                    <Text style={[wc.likesText, liked && { color: theme.colors.destructive }]}>{likes}</Text>
                     <Text style={wc.likeSub}>Parabéns!</Text>
                 </TouchableOpacity>
             </View>
@@ -207,20 +219,20 @@ const s = StyleSheet.create({
     headerContent: { marginBottom: 20 },
     heroSection: { alignItems: 'center', marginBottom: 30, paddingTop: 10 },
     badgeWrap: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, backgroundColor: 'rgba(0,255,140,0.1)', borderWidth: 1, borderColor: 'rgba(0,255,140,0.3)', marginBottom: 20 },
-    badgeText: { color: '#00FF8C', fontSize: 12, fontWeight: '600' },
-    heroTitle: { fontSize: 32, fontWeight: '900', color: '#00FF8C', textAlign: 'center', marginBottom: 12 },
-    heroSub: { fontSize: 15, color: '#9ca3af', textAlign: 'center', marginHorizontal: 20, marginBottom: 24, lineHeight: 22 },
-    heroBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#00FF8C', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 12, shadowColor: '#00FF8C', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 },
-    heroBtnText: { color: '#0A0B12', fontSize: 15, fontWeight: '800' },
+    badgeText: { color: theme.colors.primary, fontSize: 12, fontWeight: '600' },
+    heroTitle: { fontSize: 32, fontWeight: '900', color: theme.colors.primary, textAlign: 'center', marginBottom: 12 },
+    heroSub: { fontSize: 15, color: theme.colors.mutedForeground, textAlign: 'center', marginHorizontal: 20, marginBottom: 24, lineHeight: 22 },
+    heroBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: theme.colors.primary, paddingHorizontal: 24, paddingVertical: 14, borderRadius: 12, shadowColor: theme.colors.primary, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 5 },
+    heroBtnText: { color: theme.colors.primaryForeground, fontSize: 15, fontWeight: '800' },
     statsRow: { flexDirection: 'row', gap: 12, marginBottom: 30 },
     statCard: { flex: 1, backgroundColor: 'rgba(17, 24, 39, 0.5)', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(31, 41, 55, 0.5)', padding: 16, alignItems: 'center' },
     statIcon: { marginBottom: 8 },
-    statValue: { fontSize: 24, fontWeight: '800', color: '#f9fafb' },
-    statLabel: { fontSize: 12, color: '#6b7280', marginTop: 2 },
+    statValue: { fontSize: 24, fontWeight: '800', color: theme.colors.foreground },
+    statLabel: { fontSize: 12, color: theme.colors.mutedForeground, marginTop: 2 },
     listHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
-    listHeaderTitle: { fontSize: 20, fontWeight: '800', color: '#f9fafb' },
+    listHeaderTitle: { fontSize: 20, fontWeight: '800', color: theme.colors.foreground },
     emptyState: { paddingTop: 40, alignItems: 'center', gap: 12 },
-    emptyText: { color: '#6b7280', textAlign: 'center' },
+    emptyText: { color: theme.colors.mutedForeground, textAlign: 'center' },
 });
 
 const wc = StyleSheet.create({
@@ -230,21 +242,20 @@ const wc = StyleSheet.create({
     avatar: { width: 40, height: 40, borderRadius: 20, overflow: 'hidden', borderWidth: 1.5, borderColor: 'rgba(0,255,140,0.3)', backgroundColor: '#1f2937' },
     avatarImg: { width: '100%', height: '100%' },
     nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    name: { fontSize: 15, fontWeight: '700', color: '#f9fafb' },
-    date: { fontSize: 11, color: '#6b7280', marginTop: 2 },
+    name: { fontSize: 15, fontWeight: '700', color: theme.colors.foreground },
+    date: { fontSize: 11, color: theme.colors.mutedForeground, marginTop: 2 },
     winnerBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,255,140,0.1)', borderWidth: 1, borderColor: 'rgba(0,255,140,0.2)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-    winnerBadgeText: { color: '#00FF8C', fontSize: 10, fontWeight: '700' },
+    winnerBadgeText: { color: theme.colors.primary, fontSize: 10, fontWeight: '700' },
     content: { paddingHorizontal: 16, paddingBottom: 16 },
     prizeContainer: { width: '100%', aspectRatio: 16 / 9, borderRadius: 12, overflow: 'hidden', position: 'relative', marginBottom: 16 },
     prizeImg: { width: '100%', height: '100%' },
-    prizeGradient: { position: 'absolute', inset: 0 },
-    prizeTitle: { position: 'absolute', bottom: 12, left: 12, right: 12, color: '#f9fafb', fontSize: 18, fontWeight: '800', textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 },
+    prizeGradient: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+    prizeTitle: { position: 'absolute', bottom: 12, left: 12, right: 12, color: theme.colors.foreground, fontSize: 18, fontWeight: '800', textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 },
     ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 12 },
-    ratingText: { color: '#6b7280', fontSize: 13, marginLeft: 6 },
+    ratingText: { color: theme.colors.mutedForeground, fontSize: 13, marginLeft: 6 },
     testimonialText: { color: '#d1d5db', fontSize: 14, lineHeight: 22, fontStyle: 'italic' },
     footer: { borderTopWidth: 1, borderTopColor: 'rgba(31, 41, 55, 0.5)', padding: 12, paddingHorizontal: 16 },
     likeBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    likesText: { color: '#9ca3af', fontSize: 14, fontWeight: '600' },
-    likeSub: { color: '#6b7280', fontSize: 11, marginLeft: 2 },
+    likesText: { color: theme.colors.mutedForeground, fontSize: 14, fontWeight: '600' },
+    likeSub: { color: theme.colors.mutedForeground, fontSize: 11, marginLeft: 2 },
 });
-

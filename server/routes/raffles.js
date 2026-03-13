@@ -57,6 +57,16 @@ router.get('/raffles/:id', async (req, res) => {
         const ticketsResult = await pool.query('SELECT count(*) FROM tickets WHERE raffle_id = $1', [id]);
         raffle.tickets_sold = parseInt(ticketsResult.rows[0].count);
 
+        // Institutional fallback for seller if not provided
+        if (!raffle.seller) {
+            raffle.seller = {
+                name: 'Mundo Pix Oficial',
+                avatar: 'https://mundopix.com/logo.png',
+                verified: true,
+                stats: 'Distribuidor Autorizado'
+            };
+        }
+
         res.json(raffle);
     } catch (error) {
         console.error('Error fetching raffle details:', error);
@@ -74,10 +84,13 @@ router.get('/raffles/:id/participants', async (req, res) => {
                 t.hash,
                 u.id as user_id,
                 u.name,
-                u.picture
+                u.picture,
+                t.created_at,
+                (SELECT count(*) FROM tickets t2 WHERE t2.raffle_id = t.raffle_id AND t2.user_id = t.user_id AND t2.hash = t.hash) as tickets
             FROM tickets t
             JOIN users u ON t.user_id = u.id
             WHERE t.raffle_id = $1
+            GROUP BY t.id, u.id
             ORDER BY t.created_at DESC
         `;
         const result = await pool.query(query, [id]);
@@ -108,7 +121,7 @@ router.post('/raffles/:id/join', authenticateToken, async (req, res) => {
         const ticketPrice = parseFloat(raffle.ticket_price);
 
         let calculatedTickets = 0;
-        let totalValue = 0;
+        let totalNFTTickets = 0;
 
         // 2. Process NFTs (if provided)
         if (nfts && Object.keys(nfts).length > 0) {
@@ -129,13 +142,13 @@ router.post('/raffles/:id/join', authenticateToken, async (req, res) => {
                     ? JSON.parse(walletItem.nft_metadata)
                     : walletItem.nft_metadata;
 
-                const nftPrice = parseFloat(metadata.price || metadata.preco || 0);
+                const nftTicketValue = Math.max(0, Math.floor(parseFloat(metadata.ticketValue || metadata.price || metadata.preco || 0)));
 
                 if (currentQty < qtyRequested) {
                     throw new Error(`Quantidade insuficiente do NFT ${metadata.nome || nftId}`);
                 }
 
-                totalValue += nftPrice * Number(qtyRequested);
+                totalNFTTickets += nftTicketValue * Number(qtyRequested);
 
                 // Deduct NFT
                 if (currentQty == qtyRequested) {
@@ -145,24 +158,25 @@ router.post('/raffles/:id/join', authenticateToken, async (req, res) => {
                 }
             }
 
-            calculatedTickets = Math.floor(totalValue / ticketPrice);
+            calculatedTickets = totalNFTTickets;
 
             // Respect the explicit limit provided by the frontend if applying change logic
             if (ticketCount && ticketCount > 0 && ticketCount < calculatedTickets) {
                 calculatedTickets = ticketCount;
             }
 
-        } else if (ticketCount) {
-            if (txHash === 'OFF_CHAIN_SIMULATION') {
-                calculatedTickets = ticketCount; // Allow legacy/test
-            } else {
-                calculatedTickets = 0;
-            }
+        } 
+        
+        // Final ticket resolution: 
+        // If a transaction hash is provided (PIX payment or Simulation), trust the count sent by the frontend
+        // If NO hash is provided, only allow tickets covered by the direct ticket value of the NFTs
+        if (txHash) {
+            calculatedTickets = ticketCount || calculatedTickets;
         }
 
         if (calculatedTickets <= 0) {
             await client.query('ROLLBACK');
-            return res.status(400).json({ message: 'Nenhum bilhete gerado. Verifique os NFTs selecionados. Valor insuficiente.' });
+            return res.status(400).json({ message: 'Nenhum bilhete gerado. Verifique os NFTs selecionados.' });
         }
 
         // 3. Generate Tickets

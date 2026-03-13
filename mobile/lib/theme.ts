@@ -1,6 +1,6 @@
 export const theme = {
     colors: {
-        background: '#0A0B12',
+        background: '#07080E',
         foreground: '#F8FAFC',
         card: '#111421',
         cardForeground: '#F8FAFC',
@@ -20,9 +20,9 @@ export const theme = {
     },
     gradients: {
         primary: ['#00FF8C', '#00D172'],
-        hero: ['rgba(10, 11, 18, 0)', '#0A0B12'],
+        hero: ['rgba(7, 8, 14, 0)', '#07080E'],
         card: ['rgba(30, 35, 54, 0.5)', '#111421'],
-        ocean: ['#0A0B12', '#111827', '#0A0B12'],
+        ocean: ['#07080E', '#111827', '#07080E'],
     },
     spacing: {
         xs: 4,

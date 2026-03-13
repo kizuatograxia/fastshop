@@ -1,9 +1,8 @@
 import { storage } from "./storage";
 
-export const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:5050/api";
-if (__DEV__) {
-    console.log("API URL configured as:", API_URL);
-}
+// For physical devices, you should use your machine's local IP (e.g., 192.168.x.x)
+// EXPO_PUBLIC_API_URL should be set in .env or eas.json
+export const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://10.0.2.2:5050/api"; // 10.0.2.2 is the alias for localhost in Android emulators
 
 /**
  * Global callback invoked when a 401 / token expired error is detected.
@@ -208,11 +207,20 @@ export const api = {
             raridade: r.rarity ?? r.raridade ?? 'comum',
             winnersAmount: r.winners_amount ?? 1,
             requirements: r.requirements || "",
+            seller: r.seller ?? null,
         };
     },
 
     getRaffleParticipants: async (id: string) => {
-        return request(`/raffles/${id}/participants`);
+        const data = await request(`/raffles/${id}/participants`);
+        return data.map((p: any) => ({
+            ticket_id: p.ticket_id,
+            user_id: p.user_id,
+            name: p.name,
+            picture: p.picture,
+            created_at: p.created_at,
+            tickets: parseInt(p.tickets) || 1
+        }));
     },
 
     joinRaffle: async (raffleId: number | string, userId: number | string, nfts: Record<string, number>, ticketCount?: number, txHash?: string) => {
@@ -298,6 +306,24 @@ export const api = {
     // Admin Coupons
     getCoupons: async () => {
         return request("/admin/coupons");
+    },
+
+    // User Data
+    getUserProfile: async (userId: string | number) => {
+        return request(`/user/profile?userId=${userId}`);
+    },
+
+    updateUserAddress: async (data: any) => {
+        return request('/profile/address', {
+            method: "PUT",
+            body: JSON.stringify(data)
+        });
+    },
+
+    likeReview: async (reviewId: string | number) => {
+        return request(`/reviews/${reviewId}/like`, {
+            method: "POST"
+        });
     },
 
     createCoupon: async (coupon: any) => {

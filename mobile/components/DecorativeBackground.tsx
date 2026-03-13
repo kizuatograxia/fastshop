@@ -20,7 +20,7 @@ export const DecorativeBackground = React.memo(() => {
             <style>
                 html, body { 
                     margin: 0; padding: 0; width: 100%; height: 100%; 
-                    background-color: #0A0B12; overflow: hidden;
+                    background-color: #07080E; overflow: hidden;
                 }
                 canvas { display: block; width: 100vw; height: 100vh; }
             </style>
@@ -56,8 +56,8 @@ export const DecorativeBackground = React.memo(() => {
                                 x: c * step,
                                 y: r * step,
                                 size: cellSize,
-                                opacity: 0.03 + Math.random() * 0.12,
-                                targetOpacity: 0.03 + Math.random() * 0.12,
+                                opacity: 0.02 + Math.random() * 0.09,
+                                targetOpacity: 0.02 + Math.random() * 0.09,
                                 hue: 160 + Math.random() * 40,
                             });
                         }
@@ -71,11 +71,11 @@ export const DecorativeBackground = React.memo(() => {
                     const count = Math.floor(blocks.length * 0.05);
                     for (let i = 0; i < count; i++) {
                         const idx = Math.floor(Math.random() * blocks.length);
-                        blocks[idx].targetOpacity = 0.15 + Math.random() * 0.4;
+                        blocks[idx].targetOpacity = 0.12 + Math.random() * 0.28;
                     }
                     for (let i = 0; i < blocks.length; i++) {
                         if (Math.random() > 0.85) {
-                            blocks[i].targetOpacity = 0.02 + Math.random() * 0.08;
+                            blocks[i].targetOpacity = 0.015 + Math.random() * 0.06;
                         }
                     }
                 }, 1200);
@@ -112,7 +112,7 @@ export const DecorativeBackground = React.memo(() => {
 
             {/* Bottom fade overlay just like before to guarantee tab bar reading */}
             <LinearGradient
-                colors={['transparent', 'rgba(10, 11, 18, 0.8)', '#0A0B12']}
+                colors={['transparent', 'rgba(7, 8, 14, 0.84)', '#07080E']}
                 locations={[0, 0.6, 1]}
                 style={s.bottomFade}
             />
@@ -123,7 +123,7 @@ export const DecorativeBackground = React.memo(() => {
 const s = StyleSheet.create({
     container: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: '#0A0B12',
+        backgroundColor: '#07080E',
     },
     webview: {
         flex: 1,

@@ -288,4 +288,28 @@ router.put('/users/:id/profile', authenticateToken, async (req, res) => {
     }
 });
 
+// Update User Profile/Address
+router.put('/profile/address', authenticateToken, async (req, res) => {
+    const { address, city, state, cep, number, district } = req.body;
+    const userId = req.user.id;
+
+    try {
+        const result = await pool.query(
+            `UPDATE users 
+             SET address = $1, city = $2, state = $3, cep = $4, number = $5, district = $6 
+             WHERE id = $7 RETURNING *`,
+            [address, city, state, cep, number, district, userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Usuário não encontrado' });
+        }
+
+        res.json({ success: true, user: result.rows[0] });
+    } catch (error) {
+        console.error('Error updating user address:', error);
+        res.status(500).json({ message: 'Erro ao atualizar endereço' });
+    }
+});
+
 export default router;

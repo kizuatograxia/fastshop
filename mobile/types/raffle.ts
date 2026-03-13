@@ -32,6 +32,12 @@ export interface Raffle {
     carrier?: string;
     shippingStatus?: 'preparing' | 'shipped' | 'in_transit' | 'delivered';
     shippedAt?: string;
+    seller?: {
+        name: string;
+        avatar: string;
+        verified: boolean;
+        stats: string;
+    };
 }
 
 export interface RaffleWinner {

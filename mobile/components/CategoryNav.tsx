@@ -23,12 +23,17 @@ export function CategoryNav({ activeCategory, onCategoryChange }: CategoryNavPro
         );
     }
 
-    // Default categories if API fails or is empty
-    const displayCategories = categories.length > 0 ? categories : [
+    // Always include "Todos" and merge with API categories
+    const displayCategories = [
         { id: 'todos', emoji: '🎯', nome: 'Todos' },
-        { id: 'tech', emoji: '💻', nome: 'Tech' },
-        { id: 'moda', emoji: '👗', nome: 'Moda' },
-    ];
+        ...(categories || [])
+    ].reduce((acc: any[], current) => {
+        // Simple de-duplication if API also returns "todos"
+        if (!acc.find(item => item.id === current.id)) {
+            acc.push(current);
+        }
+        return acc;
+    }, []);
 
     return (
         <View style={styles.container}>
