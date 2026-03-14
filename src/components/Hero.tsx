@@ -58,7 +58,7 @@ const LuxuryShowcase: FC = () => {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
             </span>
-            <span className="text-[10px] font-mono tracking-[0.2em] font-semibold uppercase text-muted-foreground">Drop Ao Vivo</span>
+            <span className="text-[10px] font-mono tracking-[0.2em] font-semibold uppercase text-muted-foreground">Sorteios ocorrendo no momento</span>
           </div>
           <span className="text-[12px] font-mono text-foreground font-medium">#{activeIndex + 1} / {featured.length}</span>
         </div>
@@ -95,16 +95,12 @@ const LuxuryShowcase: FC = () => {
               >
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-background/80 backdrop-blur-sm border border-border/50 mb-4">
                   <Ticket className="h-3 w-3 text-primary" />
-                  <span className="text-[11px] font-bold text-foreground">R$ {current.custoNFT} <span className="text-muted-foreground font-normal">/ quota</span></span>
+                  <span className="text-[11px] font-bold text-foreground">1 (ticker) / cota</span>
                 </div>
 
                 <h3 className="font-extrabold text-2xl md:text-3xl text-foreground leading-[1.1] tracking-tight mb-2 line-clamp-2">
                   {current.titulo}
                 </h3>
-
-                <p className="font-mono text-xl text-primary mb-6">
-                  R$ {current.premioValor.toLocaleString("pt-BR")}
-                </p>
 
                 {/* Technical Progress */}
                 <div className="space-y-2">
